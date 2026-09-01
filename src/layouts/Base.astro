@@ -1,6 +1,6 @@
 ---
 import '../styles/atlas.css';
-import { SITE } from '../site';
+import { SITE, LINKS } from '../site';
 import { collections, colOrder, absolute, ogImage } from '../lib/seo';
 import { SEARCH_INDEX, DIAGRAM_COUNT, PLATE_COUNT } from '../data/collections.js';
 
@@ -76,7 +76,12 @@ const searchJson = JSON.stringify(SEARCH_INDEX).replace(/</g, '\\u003c');
 
   <footer><div class="wrap foot-in">
     <span style="font-weight:700;color:var(--ink2)">AI Systems Atlas</span>
-    <span>An interactive reference for how modern AI agents are built, secured, evaluated and fed context. <a href={SITE.repo} rel="noopener">Source on GitHub</a></span>
+    <span>An interactive reference for how modern AI agents are built, secured, evaluated and fed context.</span>
+    <span class="foot-links">
+      <a href={SITE.repo} rel="noopener">Source on GitHub</a>
+      <a href={LINKS.newsletter.href} rel="noopener">{LINKS.newsletter.name}</a>
+      <a href={LINKS.lab.href} rel="noopener">Built by {LINKS.lab.name}</a>
+    </span>
     <span class="mono">DIAGRAMS: {DIAGRAM_COUNT} · PLATES: {PLATE_COUNT}</span>
   </div></footer>
 
