@@ -1,0 +1,30 @@
+---
+/* A diagram mount point. The definition(s) are inlined as JSON next to the
+   mount so the page ships exactly the data it renders; src/scripts/atlas.js
+   hydrates it with the vanilla engine. A same-size placeholder is rendered
+   server-side so hydration causes no layout shift. */
+interface Props {
+  def?: any;                       // single diagram definition
+  modes?: { id: string; label: string; cls?: string; def: any }[];   // variant toggle
+  custom?: string;                 // custom renderer key (see src/scripts/custom.js)
+  data?: any;                      // optional payload for a custom renderer
+  routed?: boolean;                // this plate owns the URL → ?mode= is read/written
+  minHeight?: number;              // placeholder height for custom renderers
+  mini?: boolean;                  // card mini (static, hover-animated)
+}
+const { def, modes, custom, data, routed = false, minHeight, mini = false } = Astro.props;
+const first = def || (modes && modes[0]?.def);
+const payload = mini ? def : def ? def : modes ? modes : data;
+const json = payload ? JSON.stringify(payload).replace(/<\//g, '<\\/') : null;
+const attrs: Record<string, string> = mini ? { 'data-mini': '' }
+  : def ? { 'data-dg': '' }
+  : modes ? { 'data-plate-modes': '', 'data-routed': routed ? '1' : '0' }
+  : { 'data-custom': custom || '' };
+const style = custom && minHeight ? `min-height:${minHeight}px` : mini && first ? `width:100%;aspect-ratio:${first.w}/${first.h}` : undefined;
+---
+<div {...attrs} style={style}>
+  {!mini && !custom && first && (
+    <><div class="dg-panel"><div class="dg-ph" style={`max-width:${first.w}px;aspect-ratio:${first.w}/${first.h}`}></div></div><div class="dg-bar"></div></>
+  )}
+  {json && <script type="application/json" set:html={json} />}
+</div>

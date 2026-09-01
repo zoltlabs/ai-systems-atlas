@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import Plate from '../../components/Plate.astro';
+import Diagram from '../../components/Diagram.astro';
+import { SITE } from '../../site';
+import { collections, colOrder, collectionDescription, collectionJsonLd, breadcrumbJsonLd } from '../../lib/seo';
+import { legendHTML } from '../../lib/legend.js';
+
+export function getStaticPaths() {
+  return colOrder.map(collection => ({ params: { collection } }));
+}
+const { collection: colId } = Astro.params;
+const col = collections[colId!];
+const others = colOrder.filter(c => c !== colId);
+const jsonLd = [collectionJsonLd(colId!), breadcrumbJsonLd([{ name: SITE.name, path: '/' }, { name: col.title, path: `/${colId}` }])];
+---
+<Base title={`${col.title} — ${SITE.name}`} description={collectionDescription(col)} path={`/${colId}`} activeCol={colId} jsonLd={jsonLd}>
+  <main class="wrap">
+    <div class="page-head">
+      <h1>{col.title}</h1>
+      <p class="lede">{col.intro}</p>
+      <div class="plate-related" style="margin-top:18px"><span class="rlabel">Index</span>
+        {col.plates.map(p => <a class="chip" href={`#plate-${p.slug}`}>{p.code} {p.title}</a>)}
+      </div>
+    </div>
+    <div style="margin-top:22px"><Fragment set:html={legendHTML()} /></div>
+
+    {colId === 'harnesses' && (
+      <section class="section">
+        <div class="section-head"><h2>When to reach for what</h2></div>
+        <Diagram custom="map" minHeight={470} />
+      </section>
+    )}
+
+    {col.plates.map(p => <Plate colId={colId!} p={p} />)}
+
+    {col.defenses && (
+      <section class="section">
+        <div class="section-head"><h2>The defense toolbox</h2><span class="count">{col.defenses.length} PRINCIPLES</span></div>
+        <div class="mini-grid">{col.defenses.map(([t, d]) => <div class="mini"><h4>🔒&hairsp; {t}</h4><p>{d}</p></div>)}</div>
+      </section>
+    )}
+
+    <section class="section"><div class="section-head"><h2>Elsewhere in the atlas</h2></div>
+      <div class="plate-related" style="margin-bottom:40px">{others.map(c => <a class="chip" href={`/${c}`}>{collections[c].short} →</a>)}</div>
+    </section>
+  </main>
+</Base>

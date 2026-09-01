@@ -1,0 +1,54 @@
+---
+import Base from '../layouts/Base.astro';
+import Diagram from '../components/Diagram.astro';
+import { SITE } from '../site';
+import { DIAGRAMS } from '../data/diagrams.js';
+import { CARD_MINIS } from '../data/card-minis.js';
+import { COL_BLURB } from '../data/collections.js';
+import { collections, colOrder, siteJsonLd } from '../lib/seo';
+import { legendHTML } from '../lib/legend.js';
+
+const D = DIAGRAMS as Record<string, any>;
+const M = CARD_MINIS as Record<string, any>;
+const B = COL_BLURB as Record<string, string>;
+const total = colOrder.reduce((s, c) => s + collections[c].plates.length, 0);
+const cardMeta: Record<string, string> = {
+  harnesses: 'comparison map', security: 'attack ⇄ defense toggles', evals: 'failure taxonomy', context: 'budget builder', 'coding-agents': 'single vs multi',
+};
+const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding' };
+---
+<Base title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} path="/" jsonLd={siteJsonLd()}>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>Understand AI systems visually.</h1>
+        <p class="lede">An interactive atlas of agent architectures, safety patterns, evals, context systems, and coding agents — drawn as living diagrams instead of prose.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="/harnesses">Start with Harnesses</a>
+          <a class="btn" href="/security/indirect-prompt-injection">See an attack, defended</a>
+        </div>
+      </div>
+      <div class="hero-fig"><Diagram def={D.hero} /></div>
+    </section>
+    <section class="section" style="padding-top:8px">
+      <div class="section-head"><h2>Five collections</h2><span class="count">{total} PLATES</span></div>
+      <div class="cards">
+        {colOrder.map((id, i) => (
+          <a class="card" href={`/${id}`}>
+            <div class="card-fig"><Diagram mini def={M[miniKey[id]]} /></div>
+            <div class="card-body">
+              <h3>{collections[id].title.replace('Agent Harness Patterns', 'Agent Harnesses').replace('Agent Safety & Security', 'Safety & Security').replace('Context Engineering & Memory', 'Context & Memory').replace('Coding-Agent Architectures', 'Coding Agents')}</h3>
+              <p>{B[id]}</p>
+              <div class="card-meta">{collections[id].plates.length} plates · {cardMeta[id]}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>How to read the atlas</h2></div>
+      <Fragment set:html={legendHTML()} />
+      <p class="lede" style="font-size:14px;margin-top:14px">Every diagram uses the same visual grammar. Color is reserved for meaning: neutral by default, <span style="color:var(--accent-ink);font-weight:600">blue</span> when something is executing, <span style="color:var(--danger);font-weight:600">red</span> where trust ends, <span style="color:var(--ok);font-weight:600">green</span> when it’s verified. Press <span class="mono" style="font-size:12px">⌘K</span> to search any concept.</p>
+    </section>
+  </main>
+</Base>

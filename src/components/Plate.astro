@@ -1,0 +1,37 @@
+---
+/* Plate anatomy (DESIGN.md §4): title row → definition → diagram shell → meta grid → Related. */
+import Diagram from './Diagram.astro';
+import { DIAGRAMS } from '../data/diagrams.js';
+import type { Plate } from '../lib/seo';
+import { plateUrl } from '../lib/seo';
+
+interface Props { colId: string; p: Plate; routed?: boolean; heading?: 'h1' | 'h3'; }
+const { colId, p, routed = false, heading = 'h3' } = Astro.props;
+const route = plateUrl(colId, p.slug);
+const D = DIAGRAMS as Record<string, any>;
+const CUSTOM_HEIGHTS: Record<string, number> = { map: 470, regression: 340, taxonomy: 430, mismatch: 320, anatomy: 500, budget: 420 };
+const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
+const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
+const Heading = heading;
+---
+<article class="plate" id={`plate-${p.slug}`}>
+  <div class="plate-head">
+    <div>
+      <Heading class="plate-title"><span class="code-badge">{p.code}</span><span>{p.title}</span></Heading>
+    </div>
+    <a class="plate-link" href={route} title="Deep link to this plate">{route}</a>
+  </div>
+  <p class="plate-def" set:html={p.def} />
+  {p.custom
+    ? <Diagram custom={p.custom} data={customData} minHeight={CUSTOM_HEIGHTS[p.custom]} />
+    : modes
+      ? <Diagram modes={modes} routed={routed} />
+      : <Diagram def={D[p.dg!]} />}
+  <div class="plate-meta">
+    <div class="meta-cell insight"><div class="mlabel">Key insight</div><p set:html={p.insight} /></div>
+    <div class="meta-cell failure"><div class="mlabel">Failure mode</div><p set:html={p.failure} /></div>
+  </div>
+  {p.related && p.related.length > 0 && (
+    <div class="plate-related"><span class="rlabel">Related</span>{p.related.map(([t, r]) => <a class="chip" href={r}>{t}</a>)}</div>
+  )}
+</article>

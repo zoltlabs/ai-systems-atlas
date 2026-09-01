@@ -1,0 +1,22 @@
+---
+import OgFrame from '../../../layouts/OgFrame.astro';
+import OgBrand from '../../../components/OgBrand.astro';
+import Diagram from '../../../components/Diagram.astro';
+import { CARD_MINIS } from '../../../data/card-minis.js';
+import { collections, colOrder, collectionDescription } from '../../../lib/seo';
+
+export function getStaticPaths() { return colOrder.map(collection => ({ params: { collection } })); }
+const { collection: colId } = Astro.params;
+const col = collections[colId!];
+const M = CARD_MINIS as Record<string, any>;
+const mini = M[colId === 'coding-agents' ? 'coding' : colId!];
+---
+<OgFrame title={`OG · ${col.title}`}>
+  <div class="og-left">
+    <div class="og-head"><span class="code-badge">{col.prefix}-01 … {col.prefix}-{String(col.plates.length).padStart(2, '0')}</span> {col.plates.length} plates</div>
+    <h1>{col.title}</h1>
+    <p class="def">{collectionDescription(col)}</p>
+    <OgBrand />
+  </div>
+  <div class="og-right"><Diagram def={mini} /></div>
+</OgFrame>

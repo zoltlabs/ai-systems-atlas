@@ -1,0 +1,50 @@
+---
+/* 1200×630 render target for the build-time OG screenshots (scripts/og.mjs).
+   Not linked from the site, noindex, excluded from the sitemap. Uses the same
+   tokens, fonts and diagram chrome as the site. */
+import '../styles/atlas.css';
+interface Props { title: string; wide?: boolean; }
+const { title, wide = false } = Astro.props;
+---
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1200" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=block" />
+  <style is:global>
+    html,body{width:1200px;height:630px;overflow:hidden;margin:0}
+    .og{width:1200px;height:630px;padding:46px 52px 40px;display:grid;grid-template-columns:392px minmax(0,1fr);gap:44px;background:var(--bg);color:var(--ink)}
+    .og.wide{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:22px}
+    .og-left{display:flex;flex-direction:column;min-width:0}
+    .og-head{display:flex;align-items:center;gap:12px;font-size:16px;color:var(--ink2);font-weight:600}
+    .og-head .code-badge{font-size:15px;padding:5px 12px}
+    .og h1{font-size:44px;line-height:1.08;margin:22px 0 16px}
+    .wide h1{font-size:38px;margin:10px 0 8px;display:flex;align-items:center;gap:14px}
+    .og .def{font-size:19px;color:var(--ink2);line-height:1.5;margin:0}
+    .wide .def{font-size:17px}
+    .og-brand{margin-top:auto;display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-weight:700;font-size:18px}
+    .og-brand svg{display:block}
+    .og-brand .url{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:12.5px;color:var(--ink3);letter-spacing:.06em;margin-left:auto}
+    .og-right{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+    .og-right > div{width:100%}
+    .og-right .dg-panel{padding:18px 16px}
+    .og-right .dg-panel svg{width:100%;max-height:500px;height:auto}
+    .wide .og-right .dg-panel svg{max-height:400px}
+    .og-custom{zoom:.7}
+    .wide .og-right{overflow:hidden;align-items:flex-start}
+    .wide .og-brand{margin-top:0;position:absolute;left:52px;right:52px;bottom:26px}
+    .og.wide{position:relative;padding-bottom:64px}
+    .map-panel svg{min-width:0}
+  </style>
+</head>
+<body>
+  <div class={`og${wide ? ' wide' : ''}`}>
+    <slot />
+  </div>
+  <script>import '../scripts/og.js';</script>
+</body>
+</html>

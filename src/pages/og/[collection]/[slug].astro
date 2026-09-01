@@ -1,0 +1,33 @@
+---
+import OgFrame from '../../../layouts/OgFrame.astro';
+import OgBrand from '../../../components/OgBrand.astro';
+import Diagram from '../../../components/Diagram.astro';
+import { DIAGRAMS } from '../../../data/diagrams.js';
+import { collections, colOrder } from '../../../lib/seo';
+
+export function getStaticPaths() {
+  return colOrder.flatMap(collection => collections[collection].plates.map(p => ({ params: { collection, slug: p.slug } })));
+}
+const { collection: colId, slug } = Astro.params;
+const col = collections[colId!];
+const p = col.plates.find(x => x.slug === slug)!;
+const D = DIAGRAMS as Record<string, any>;
+const wide = !!p.custom;
+const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
+const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
+const zoomed = p.custom === 'budget' || p.custom === 'anatomy' || p.custom === 'taxonomy';
+---
+<OgFrame title={`OG · ${p.code} ${p.title}`} wide={wide}>
+  <div class="og-left">
+    <div class="og-head"><span class="code-badge">{p.code}</span> {col.title}</div>
+    <h1>{p.title}</h1>
+    <p class="def" set:html={p.def} />
+    {!wide && <OgBrand />}
+  </div>
+  <div class="og-right">
+    {p.custom
+      ? <div class={zoomed ? 'og-custom' : ''}><Diagram custom={p.custom} data={customData} /></div>
+      : modes ? <Diagram modes={modes} /> : <Diagram def={D[p.dg!]} />}
+  </div>
+  {wide && <OgBrand />}
+</OgFrame>

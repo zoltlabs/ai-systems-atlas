@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import Plate from '../../components/Plate.astro';
+import { SITE } from '../../site';
+import { collections, colOrder, plateDescription, plateJsonLd, breadcrumbJsonLd, prevNext, plateUrl } from '../../lib/seo';
+
+export function getStaticPaths() {
+  return colOrder.flatMap(collection =>
+    collections[collection].plates.map(p => ({ params: { collection, slug: p.slug } })));
+}
+const { collection: colId, slug } = Astro.params;
+const col = collections[colId!];
+const p = col.plates.find(x => x.slug === slug)!;
+const { prev, next, index, total } = prevNext(colId!, slug!);
+const others = colOrder.filter(c => c !== colId);
+const path = plateUrl(colId!, p.slug);
+const jsonLd = [
+  plateJsonLd(colId!, p),
+  breadcrumbJsonLd([{ name: SITE.name, path: '/' }, { name: col.title, path: `/${colId}` }, { name: `${p.code} ${p.title}`, path }]),
+];
+---
+<Base title={`${p.title} (${p.code}) — ${SITE.name}`} description={plateDescription(p)} path={path} activeCol={colId} ogType="article" jsonLd={jsonLd}>
+  <main class="wrap plate-page">
+    <div style="padding-top:36px">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <a href="/">Atlas</a><span class="sep">/</span>
+        <span>Part of <a href={`/${colId}`}>{col.title}</a></span>
+        <span class="sep">·</span><span>Plate {index + 1} of {total}</span>
+      </nav>
+    </div>
+    <Plate colId={colId!} p={p} routed heading="h1" />
+
+    <nav class="plate-nav" aria-label="Previous and next plate">
+      {prev
+        ? <a class="prev" href={plateUrl(colId!, prev.slug)}><span class="pn-dir">← Previous</span><span class="pn-title">{prev.title}</span><span class="pn-code">{prev.code}</span></a>
+        : <a class="prev" href={`/${colId}`}><span class="pn-dir">← Collection</span><span class="pn-title">{col.title}</span><span class="pn-code">{col.prefix}-01 … {col.prefix}-{String(total).padStart(2, '0')}</span></a>}
+      {next
+        ? <a class="next" href={plateUrl(colId!, next.slug)}><span class="pn-dir">Next →</span><span class="pn-title">{next.title}</span><span class="pn-code">{next.code}</span></a>
+        : <a class="next" href={`/${colId}`}><span class="pn-dir">Back to collection →</span><span class="pn-title">{col.title}</span><span class="pn-code">all {total} plates</span></a>}
+    </nav>
+
+    <section class="section"><div class="section-head"><h2>Elsewhere in the atlas</h2></div>
+      <div class="plate-related" style="margin-bottom:40px">{others.map(c => <a class="chip" href={`/${c}`}>{collections[c].short} →</a>)}</div>
+    </section>
+  </main>
+</Base>

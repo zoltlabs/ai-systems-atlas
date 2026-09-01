@@ -1,0 +1,27 @@
+{
+  "name": "ai-systems-atlas",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Systems Atlas — understand AI systems visually.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "og": "node scripts/og.mjs",
+    "shots": "node scripts/shots.mjs",
+    "verify": "node scripts/verify.mjs",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.0",
+    "astro": "^5.17.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "playwright": "^1.50.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": { "node": ">=20" }
+}

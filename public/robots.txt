@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /og/
+
+Sitemap: https://aisystemsatlas.com/sitemap-index.xml

@@ -1,0 +1,18 @@
+---
+import OgFrame from '../../layouts/OgFrame.astro';
+import OgBrand from '../../components/OgBrand.astro';
+import Diagram from '../../components/Diagram.astro';
+import { SITE } from '../../site';
+import { DIAGRAMS } from '../../data/diagrams.js';
+import { PLATE_COUNT } from '../../data/collections.js';
+const D = DIAGRAMS as Record<string, any>;
+---
+<OgFrame title="OG · home">
+  <div class="og-left">
+    <div class="og-head"><span class="code-badge">{PLATE_COUNT} PLATES</span> Five collections</div>
+    <h1>{SITE.tagline}</h1>
+    <p class="def">Agent architectures, safety patterns, evals, context systems and coding agents — drawn as living diagrams instead of prose.</p>
+    <OgBrand />
+  </div>
+  <div class="og-right"><Diagram def={D.hero} /></div>
+</OgFrame>

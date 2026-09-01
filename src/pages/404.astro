@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site';
+import { collections, colOrder } from '../lib/seo';
+---
+<Base title={`Not found — ${SITE.name}`} description="That plate doesn’t exist in the atlas." path="/404" noindex image="/og/home.png">
+  <main class="wrap">
+    <section class="nf">
+      <span class="nf-code">404 · NO SUCH PLATE</span>
+      <h1>This route leads nowhere.</h1>
+      <p class="lede">The page you asked for isn’t in the atlas. Old <span class="mono" style="font-size:13px">#/collection/slug</span> links are redirected automatically; anything else, try the collections below or search with <span class="mono" style="font-size:13px">⌘K</span>.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="/">Back to the atlas</a>
+        <button class="btn" type="button" data-search-btn>Search the atlas</button>
+      </div>
+      <div class="plate-related" style="margin-top:28px"><span class="rlabel">Collections</span>
+        {colOrder.map(c => <a class="chip" href={`/${c}`}>{collections[c].short}</a>)}
+      </div>
+    </section>
+  </main>
+</Base>
