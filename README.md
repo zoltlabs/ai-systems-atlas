@@ -4,8 +4,9 @@
 
 An interactive visual atlas of AI agent architecture: harness patterns, safety and
 security, evals, context engineering and memory, and coding-agent architectures.
-56 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
-⌘K search, and attack/defense or variant toggles where the concept calls for one.
+78 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
+cited sources, ⌘K search, and attack/defense or variant toggles where the concept calls for
+one. Light/dark/system theming; self-hosted fonts; no third-party requests at runtime.
 
 Built with Astro 5 (static output) and a framework-free diagram engine (vanilla JS + SVG).
 Deployed on Vercel.

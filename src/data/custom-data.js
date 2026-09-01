@@ -14,6 +14,10 @@ export const HARNESS_MAP = [
   { id: 'hierarchical', label: 'Hierarchical', x: 0.73, y: 0.64, r: 13 },
   { id: 'parallel-swarm', label: 'Parallel swarm', x: 0.80, y: 0.72, r: 14 },
   { id: 'long-running', label: 'Long-running', x: 0.92, y: 0.88, r: 12 },
+  { id: 'budgets-and-stopping', label: 'Budgets', x: 0.13, y: 0.09, r: 6 },
+  { id: 'model-router', label: 'Router', x: 0.30, y: 0.07, r: 7 },
+  { id: 'steering', label: 'Steering', x: 0.43, y: 0.60, r: 9 },
+  { id: 'guardrail-middleware', label: 'Guardrails', x: 0.64, y: 0.19, r: 8 },
 ];
 
 export const FAILURE_TAXONOMY = [

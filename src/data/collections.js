@@ -10,7 +10,7 @@ export const COLLECTIONS = {
     title: 'Agent Harness Patterns',
     short: 'Harnesses',
     prefix: 'H',
-    intro: 'The harness is everything around the model: the loop, the state, the retries, the stopping rule. These fourteen plates cover the architectures that recur in almost every production agent — from a single forward pass to systems that run for days.',
+    intro: 'The harness is everything around the model: the loop, the state, the retries, the stopping rule. These eighteen plates cover the architectures that recur in almost every production agent — from a single forward pass to systems that run for days, plus the budgets, routing and control surfaces that decide what any of them cost.',
     plates: [
       P({ slug: 'single-shot', code: 'H-01', title: 'Single-shot', dg: 'singleShot',
         def: 'One prompt in, one completion out. No loop, no tools, no feedback.',
@@ -89,7 +89,7 @@ export const COLLECTIONS = {
     title: 'Agent Safety & Security',
     short: 'Security',
     prefix: 'S',
-    intro: 'Agents are different from chatbots because they possess authority: credentials, tools, and the ability to cause side effects. Every attack below is a way for untrusted text to borrow that authority — and every defense is a way to make sure it can’t.',
+    intro: 'Agents are different from chatbots because they possess authority: credentials, tools, and the ability to cause side effects. Every attack below is a way for untrusted text to borrow that authority — and every defense is a way to make sure it can’t, including the ones that assume the model will be persuaded and arrange for that to be harmless.',
     plates: [
       P({ slug: 'chatbot-vs-agent', code: 'S-01', title: 'Why agents are different', dg: 'chatbotVsAgent',
         def: 'The same untrusted input, the same model — but one system emits text and the other emits actions.',
@@ -152,7 +152,7 @@ export const COLLECTIONS = {
     title: 'Agent Evals',
     short: 'Evals',
     prefix: 'E',
-    intro: 'You cannot improve what you cannot measure, and agents are miserable to measure: outcomes are sparse, trajectories are long, and “correct” is often a judgment call. This collection maps the evaluation stack from binary outcome checks to calibrated model judges.',
+    intro: 'You cannot improve what you cannot measure, and agents are miserable to measure: outcomes are sparse, trajectories are long, and “correct” is often a judgment call. This collection maps the evaluation stack from binary outcome checks to calibrated model judges — and the statistics and plumbing that decide whether any of those numbers mean anything.',
     plates: [
       P({ slug: 'outcome-eval', code: 'E-01', title: 'Outcome Eval', dg: 'outcomeEval',
         def: 'Run the task end to end; check only the final result.',
@@ -181,7 +181,7 @@ export const COLLECTIONS = {
     title: 'Context Engineering & Memory',
     short: 'Context',
     prefix: 'X',
-    intro: 'The model sees exactly one thing: the context window. Context engineering is deciding what earns a place in that finite budget — and memory is everything you keep outside it, plus the machinery for bringing the right pieces back.',
+    intro: 'The model sees exactly one thing: the context window. Context engineering is deciding what earns a place in that finite budget, in what order — and memory is everything you keep outside it, plus the machinery for bringing the right pieces back.',
     plates: [
       P({ slug: 'context-compaction', code: 'X-02', title: 'Context Compaction',
         modes: [
@@ -204,7 +204,7 @@ export const COLLECTIONS = {
     title: 'Coding-Agent Architectures',
     short: 'Coding Agents',
     prefix: 'G',
-    intro: 'Software is the best environment agents have: a verifier (tests) that is objective, fast and free. Every serious coding agent is built around that gift — the architectures differ mainly in how they explore, how they parallelize, and how they survive long tasks.',
+    intro: 'Software is the best environment agents have: a verifier (tests) that is objective, fast and free. Every serious coding agent is built around that gift — the architectures differ mainly in how they explore, how they parallelize, and how they survive long tasks, and the mechanics underneath decide whether any of it works.',
     plates: [
       P({ slug: 'test-loop', code: 'G-01', title: 'The Test / Diagnose Loop', dg: 'codingLoop',
         def: 'Understand, explore, plan, edit — then let the test suite verify, and diagnose real failures instead of guessing.',
@@ -285,6 +285,33 @@ const EXT_CONTEXT_PLATES = [
     related: [['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents/checkpointing']], refs: ['anthropicLongRunning', 'anthropicContext'], kw: 'state schema structured json prose representation' }),
 ];
 
+const EXT_HARNESS_PLATES = [
+  P({ slug: 'budgets-and-stopping', code: 'H-15', title: 'Budgets & Stopping Rules', dg: 'budgets',
+    def: 'Step, token and wall-clock ceilings bound the loop — and a stopping rule names why it ended.',
+    insight: 'The harness, not the model, decides whether there is another iteration. Every other plate in this collection assumes something eventually says stop; this is that something.',
+    failure: 'A silent halt. An agent that stops without reporting whether it solved the task, ran out of budget, or gave up is indistinguishable from one that crashed.',
+    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running']],
+    refs: ['anthropicAgents', 'mast'], kw: 'budget stopping rule step limit token limit timeout halt termination' }),
+  P({ slug: 'model-router', code: 'H-16', title: 'Router / Model Cascade', dg: 'router',
+    def: 'A cheap triage step picks the model; a quality check escalates only what needs escalating.',
+    insight: 'Most traffic is easy. Routing lets you price for the median request instead of the worst one, and a failed cheap attempt is still cheap.',
+    failure: 'A router that costs as much as what it routes to. If triage needs the big model to decide, the cascade has bought latency and nothing else.',
+    related: [['Best-of-N', '/harnesses/best-of-n'], ['Single-shot', '/harnesses/single-shot'], ['Cross-model evals', '/evals/cross-model-evals']],
+    refs: ['testTimeCompute', 'anthropicAgents'], kw: 'router cascade escalate cheap model cost latency triage tiered' }),
+  P({ slug: 'steering', code: 'H-17', title: 'Steering a Running Agent', dg: 'steering',
+    def: 'A correction arrives mid-task, queues to the next step boundary, and is applied without discarding accumulated state.',
+    insight: 'Steering is the difference between an agent you supervise and one you submit to. It needs a defined interruption point and state that survives the interruption — both are harness properties, not model ones.',
+    failure: 'Applying a correction mid-tool-call, or treating it as a new task: the first corrupts state, the second throws away every step already paid for.',
+    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['State machine', '/harnesses/state-machine'], ['State representation', '/context/state-representation']],
+    refs: ['anthropicLongRunning', 'anthropicAgents'], kw: 'steering interrupt redirect mid-task correction pause resume' }),
+  P({ slug: 'guardrail-middleware', code: 'H-18', title: 'Guardrail Middleware', dg: 'guardrail',
+    def: 'A policy layer wraps the loop and evaluates every proposed action before anything executes.',
+    insight: 'The model decides what it wants to do; the layer decides what it can do. Because the layer is outside the model, no amount of persuasion inside the context reaches it.',
+    failure: 'Denials that surface as opaque errors. If the agent cannot see why a call was refused, it retries the same call until the budget runs out.',
+    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Direct prompt injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security/privilege-escalation']],
+    refs: ['camel', 'willisonDesignPatterns', 'owaspLlm'], kw: 'guardrail policy middleware enforcement allowlist interception authorization' }),
+];
+
 const EXT_SECURITY_PLATES = [
   P({ slug: 'tool-poisoning', code: 'S-06', title: 'Tool Poisoning',
     modes: [
@@ -342,6 +369,105 @@ const EXT_SECURITY_PLATES = [
     related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Retry loop', '/harnesses/retry-loop']], refs: ['anthropicAgents', 'owaspLlm'], kw: 'side effects irreversible delete dry run undo approval' }),
 ];
 
+const EXT_EVALS_PLATES_2 = [
+  P({ slug: 'variance-and-sample-size', code: 'E-11', title: 'Variance & Sample Size', dg: 'variance',
+    def: 'Agents are stochastic, so a single run is one bit — and a one-task difference is usually noise.',
+    insight: 'Every other eval plate produces a number; this one tells you whether the number means anything. Decide how many runs per task before you look at the result, and report the interval rather than the point.',
+    failure: 'Shipping on a delta smaller than the run-to-run spread. You will chase phantom regressions for a week and, worse, ship real ones that happened to land inside the noise.',
+    related: [['Regression evals', '/evals/regression-evals'], ['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals']],
+    refs: ['swebench', 'taubench', 'llmJudge'], kw: 'variance sample size pass@k noise flaky stochastic confidence interval reruns' }),
+  P({ slug: 'cost-and-latency', code: 'E-12', title: 'Cost & Latency as Scores', dg: 'costLatency',
+    def: 'Pass rate is one axis; tokens and seconds per task are the other two, and they move in the opposite direction.',
+    insight: 'Almost every technique in this atlas buys quality with compute. If your eval only reports quality, every one of them looks free, and the bill arrives in production.',
+    failure: 'A leaderboard with one column. Four points of pass rate for three times the spend may be a great trade or a terrible one — but nobody can tell from a single number.',
+    related: [['Regression evals', '/evals/regression-evals'], ['Best-of-N', '/harnesses/best-of-n'], ['Router / cascade', '/harnesses/model-router']],
+    refs: ['testTimeCompute', 'taubench'], kw: 'cost latency tokens seconds efficiency tradeoff spend budget scoring' }),
+  P({ slug: 'eval-environment', code: 'E-13', title: 'The Eval Environment', dg: 'evalEnv',
+    def: 'Each task instance is built fresh from pinned dependencies, seeded data, a frozen clock and recorded network — then destroyed.',
+    insight: 'Reproducibility is a property of the environment, not the metric. If a March result cannot be rebuilt in November, you do not have a benchmark; you have an anecdote with a number attached.',
+    failure: 'Tasks that share state. One run leaves a file, a row or a cached token behind, and every later run is measuring something nobody designed.',
+    related: [['Outcome eval', '/evals/outcome-eval'], ['Variance & sample size', '/evals/variance-and-sample-size'], ['Environment bootstrap', '/coding-agents/environment-bootstrap']],
+    refs: ['swebench', 'sweagent', 'osworld'], kw: 'environment hermetic reproducible seed pinned deterministic instance harness fixture' }),
+  P({ slug: 'task-sets-and-contamination', code: 'E-14', title: 'Task Sets & Contamination', dg: 'taskSet',
+    def: 'Where benchmark tasks come from, and what happens to a benchmark once it is published.',
+    insight: 'Draw tasks from where the agent actually fails, and keep a held-out set that never ships. The gap between your public score and your private one is a direct measurement of how contaminated the public one has become.',
+    failure: 'Trusting a public benchmark years after publication. Once it is in the training data, you are measuring recall of the answer key, not capability.',
+    related: [['Regression evals', '/evals/regression-evals'], ['Offline vs online', '/evals/offline-vs-online'], ['Adversarial evals', '/evals/adversarial-evals']],
+    refs: ['swebench', 'taubench', 'llmJudge'], kw: 'benchmark construction contamination leakage held out curation task selection overfitting' }),
+];
+
+const EXT_CONTEXT_PLATES_2 = [
+  P({ slug: 'cache-aware-layout', code: 'X-11', title: 'Cache-aware Context Layout', dg: 'cacheLayout',
+    def: 'Order the window by how often each part changes, because a prompt cache is a prefix match and the first mutation invalidates everything after it.',
+    insight: 'This reframes half of this collection: compaction, sliding windows and memory loading are not only token decisions, they are cache decisions. A rewrite in the middle makes the whole tail after it expensive again.',
+    failure: 'A timestamp, a session id or an unsorted tool list in the system prompt. One volatile byte at the front and the cache never hits — for every request, forever.',
+    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context compaction', '/context/context-compaction'], ['Sliding window', '/context/sliding-window']],
+    refs: ['anthropicContext', 'anthropicLongRunning'], kw: 'prompt cache prefix caching kv reuse ordering stable latency cost invalidation' }),
+  P({ slug: 'observation-compression', code: 'X-12', title: 'Observation Compression', dg: 'obsCompression',
+    def: 'Shape tool output before it enters the window: the errors, the tail, the counts, and a pointer to the rest.',
+    insight: 'Previous actions and observations are the largest slice of a mature agent’s window — bigger than the system prompt, the tools and the retrievals combined. Shaping them is the highest-leverage context work available, and it is harness code, not prompting.',
+    failure: 'Blind truncation to a character limit. It cuts mid-traceback and keeps the passing tests, which is the exact inverse of what the agent needed.',
+    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context budget', '/context/context-budget'], ['Test loop', '/coding-agents/test-loop']],
+    refs: ['anthropicTools', 'anthropicContext'], kw: 'observation truncation tool output shaping logs elision compress head tail errors' }),
+  P({ slug: 'files-as-context', code: 'X-13', title: 'Files as External Context', dg: 'filesContext',
+    def: 'The agent writes findings to disk and reads back the section it needs, so the window holds pointers instead of everything learned.',
+    insight: 'The filesystem is memory the model can address, and unlike the window it is not lossy. A note written in step 3 is still exact in step 40, after every compaction in between.',
+    failure: 'Writing notes and never reading them. Without a habit of searching its own files first, the agent re-derives what it already wrote down and pays twice.',
+    related: [['State representation', '/context/state-representation'], ['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents/checkpointing']],
+    refs: ['anthropicLongRunning', 'memgpt', 'anthropicContext'], kw: 'files scratchpad notes disk external memory offload pointer notes.md plan.md' }),
+  P({ slug: 'subagent-isolation', code: 'X-14', title: 'Subagent Context Isolation', dg: 'subagentIsolation',
+    def: 'Delegation as a context move: the subagent spends a fresh window on the search and returns only the answer.',
+    insight: 'Read the org chart as a context diagram. The parent pays for the digest, not the exploration — which is why a subagent is worth it even when a single agent could have done the work.',
+    failure: 'A digest that omits what the parent didn’t know to ask for. Everything not written down dies with the subagent’s window, and the parent cannot tell the difference between “no traps” and “traps not mentioned”.',
+    related: [['Hierarchical', '/harnesses/hierarchical'], ['Researcher + Implementer', '/coding-agents/researcher-implementer'], ['Context budget', '/context/context-budget']],
+    refs: ['anthropicMultiAgent', 'anthropicContext', 'cognitionMultiAgent'], kw: 'subagent isolation delegation fresh window digest context offload exploration tax' }),
+];
+
+const EXT_SECURITY_PLATES_2 = [
+  P({ slug: 'dual-llm', code: 'S-12', title: 'Dual-LLM / Quarantined Reader', dg: 'dualLlm',
+    def: 'The model that holds the tools never reads untrusted text; a quarantined model with no tools reads it and returns only a symbolic handle.',
+    insight: 'Every other defense tries to stop the model from being persuaded. This one accepts that it will be, and arranges for the persuaded model to hold no authority — the deciding model plans over handles to text it never saw.',
+    failure: 'Letting the quarantined output back into the privileged context “just this once”. One inlined summary and the boundary is gone; the whole value was that the text never crossed.',
+    related: [['Indirect prompt injection', '/security/indirect-prompt-injection'], ['Guardrail middleware', '/harnesses/guardrail-middleware'], ['Confused deputy', '/security/confused-deputy']],
+    refs: ['willisonDualLlm', 'camel', 'willisonDesignPatterns'], kw: 'dual llm quarantine privileged planner camel symbolic handle defense injection' }),
+  P({ slug: 'agent-to-agent-trust', code: 'S-13', title: 'Agent-to-Agent Trust',
+    modes: [
+      { id: 'attack', label: 'Attack', cls: 'danger', dg: 'agentTrustAttack' },
+      { id: 'defense', label: 'Defended', cls: 'ok', dg: 'agentTrustDefense' },
+    ],
+    def: 'One agent’s output is another agent’s untrusted input — and internal provenance is not trust.',
+    insight: 'Multi-agent systems quietly launder taint. Text an attacker wrote arrives at the privileged agent in a teammate’s voice, and “it came from our own agent” is exactly the reasoning that makes it dangerous.',
+    failure: 'Drawing the trust boundary only at the system’s edge. Inside a four-agent pipeline every handoff is an injection point, and the agent holding the write scope is usually the last one.',
+    related: [['Hierarchical', '/harnesses/hierarchical'], ['Single vs Multi-Agent', '/coding-agents/single-vs-multi'], ['Confused deputy', '/security/confused-deputy']],
+    refs: ['mast', 'greshake', 'willisonDesignPatterns'], kw: 'agent to agent trust boundary handoff multi-agent taint laundering provenance' }),
+  P({ slug: 'sandboxing', code: 'S-14', title: 'Sandbox Anatomy', dg: 'sandbox',
+    def: 'Disk, process and network are three separate edges — and a sandbox is only as good as the weakest one.',
+    insight: 'Sandboxing is the defense that does not depend on the model being right about anything. The question is never whether the agent misbehaves, but what it can reach when it does.',
+    failure: 'A container with the host’s credentials mounted and unrestricted egress. That is a process boundary, not a security boundary, and it stops nothing that matters.',
+    related: [['Data exfiltration', '/security/data-exfiltration'], ['Unsafe side effects', '/security/unsafe-side-effects'], ['Computer-use coding', '/coding-agents/computer-use']],
+    refs: ['owaspLlm', 'anthropicAgents'], kw: 'sandbox container isolation egress allowlist filesystem blast radius network' }),
+  P({ slug: 'downstream-sink-injection', code: 'S-15', title: 'Downstream Sink Injection',
+    modes: [
+      { id: 'attack', label: 'Attack', cls: 'danger', dg: 'sinkAttack' },
+      { id: 'defense', label: 'Defended', cls: 'ok', dg: 'sinkDefense' },
+    ],
+    def: 'An agent writes attacker text into a ticket, PR or doc — and a second agent reads it later as an instruction.',
+    insight: 'Exfiltration asks how bytes leave. This asks where they land. Any store an agent writes to and another agent reads from is a delayed injection channel, and the delay is what makes it invisible.',
+    failure: 'Classifying trust by system rather than by provenance. The ticket tracker is internal; the sentence inside the ticket came from the open internet.',
+    related: [['Indirect prompt injection', '/security/indirect-prompt-injection'], ['Memory poisoning', '/security/memory-poisoning'], ['CI feedback loop', '/coding-agents/ci-loop']],
+    refs: ['greshake', 'agentPoison', 'willisonTrifecta'], kw: 'sink downstream second-order injection ticket pull request delayed provenance' }),
+  P({ slug: 'skill-supply-chain', code: 'S-16', title: 'Skill & Plugin Supply Chain',
+    modes: [
+      { id: 'attack', label: 'Attack', cls: 'danger', dg: 'supplyAttack' },
+      { id: 'defense', label: 'Defended', cls: 'ok', dg: 'supplyDefense' },
+    ],
+    def: 'Installing a skill, plugin or subagent definition is executing someone else’s prompt with your own credentials.',
+    insight: 'A tool manifest is one line of untrusted text; a skill is a whole document that loads above the user’s own instructions and re-runs every session. Review it like a dependency, because that is exactly what it is.',
+    failure: 'Reviewing the listing instead of the payload. A name, a description and a star rating tell you nothing about the instructions that will load into the most trusted position in the window.',
+    related: [['Tool poisoning', '/security/tool-poisoning'], ['Privilege escalation', '/security/privilege-escalation'], ['Guardrail middleware', '/harnesses/guardrail-middleware']],
+    refs: ['invariantToolPoisoning', 'anthropicSkills', 'mcpSpec'], kw: 'supply chain skill plugin marketplace install pinning hash review subagent definition' }),
+];
+
 const EXT_CODING_PLATES = [
   P({ slug: 'plan-first', code: 'G-04', title: 'Plan-first Coding', dg: 'planFirst',
     def: 'Produce a reviewable plan before any edit; humans veto cheaply at the plan stage.',
@@ -385,6 +511,43 @@ const EXT_CODING_PLATES = [
     related: [['Test loop', '/coding-agents/test-loop'], ['CI feedback loop', '/coding-agents/ci-loop']], refs: ['osworld'], kw: 'computer use browser screenshot visual ui verify' }),
 ];
 
+const EXT_CODING_PLATES_2 = [
+  P({ slug: 'diff-application', code: 'G-12', title: 'Diff Application Strategies',
+    modes: [
+      { id: 'whole', label: 'Whole file', cls: 'danger', dg: 'diffApplyWhole' },
+      { id: 'search', label: 'Search / replace', cls: 'ok', dg: 'diffApplySearch' },
+    ],
+    def: 'How an edit actually reaches the file — reprint the whole thing, or emit an anchored block the harness has to match.',
+    insight: 'This is the most consequential mechanism in coding agents and the least discussed. Whole-file rewrites can never fail to apply and can silently delete; anchored edits can fail to apply and never silently delete. Prefer the failure you can see.',
+    failure: 'Treating a failed match as a bug in the strategy. A no-match is the mechanism doing its job — the file moved, and the right response is to re-read and re-anchor, not to fall back to overwriting.',
+    related: [['Test loop', '/coding-agents/test-loop'], ['The verifier ladder', '/coding-agents/verifier-ladder'], ['Checkpointing', '/coding-agents/checkpointing']],
+    refs: ['sweagent', 'swebench'], kw: 'diff patch apply search replace whole file rewrite edit format anchor unified' }),
+  P({ slug: 'verifier-ladder', code: 'G-13', title: 'The Verifier Ladder', dg: 'verifierLadder',
+    def: 'Format, lint, typecheck, unit, integration, CI — ordered by seconds to signal, cheapest first.',
+    insight: 'The test loop draws one verifier; in practice it is a ladder, and the ordering is the design. Most iterations never leave the bottom three rungs, which is what makes an agent that edits fifty times an hour affordable.',
+    failure: 'One monolithic “run the tests” step. The agent waits four minutes to be told about a syntax error, and every retry costs the full suite again.',
+    related: [['The test / diagnose loop', '/coding-agents/test-loop'], ['CI feedback loop', '/coding-agents/ci-loop'], ['Actor–Verifier', '/harnesses/actor-verifier']],
+    refs: ['sweagent', 'swebench', 'verifiers'], kw: 'lint typecheck unit integration ci ladder fast feedback tiers seconds to signal' }),
+  P({ slug: 'repo-conventions', code: 'G-14', title: 'Repo Conventions as Context', dg: 'repoConventions',
+    def: 'A checked-in instructions file that loads every session — how a codebase tells an agent its rules.',
+    insight: 'Put in it what is expensive to discover and cheap to state: the build command, the generated directory, the pattern that looks fine and breaks production. Because it is in the tree, it changes through review, like the code it describes.',
+    failure: 'Restating what the code already says. Those lines go stale on the first refactor and then actively mislead every session, which is worse than never having written them.',
+    related: [['Researcher + Implementer', '/coding-agents/researcher-implementer'], ['Files as external context', '/context/files-as-context'], ['Repo indexing', '/coding-agents/repo-indexing']],
+    refs: ['anthropicContext', 'anthropicSkills'], kw: 'conventions instructions file agents.md claude.md house style project memory onboarding' }),
+  P({ slug: 'integrating-parallel-work', code: 'G-15', title: 'Integrating Parallel Work', dg: 'mergeIntegration',
+    def: 'Where two isolated agents’ branches meet — and who holds both intentions well enough to resolve them.',
+    insight: 'Worktrees make isolation cheap, which is the easy half. The merge is the hard half, and it needs a role: one integrator holding both changes, rather than a conflict bounced between authors who have each seen only their own.',
+    failure: 'Handing a conflict back to the agent that wrote one side. It resolves in favour of its own branch, because its context contains no reason not to.',
+    related: [['Worktree parallelism', '/coding-agents/worktrees'], ['Single vs Multi-Agent', '/coding-agents/single-vs-multi'], ['Parallel swarm', '/harnesses/parallel-swarm']],
+    refs: ['gitWorktree', 'cognitionMultiAgent', 'mast'], kw: 'merge conflict integration parallel branches worktree resolve coordination' }),
+  P({ slug: 'environment-bootstrap', code: 'G-16', title: 'Environment Bootstrap', dg: 'envBootstrap',
+    def: 'Clone, install, build, seed, green — everything that has to work before an agent can begin.',
+    insight: 'Autonomous coding runs fail here more than anywhere else, and never on the interesting part. A setup script in the repo, exercised by CI, turns the most common failure into one that breaks in a pull request instead of at 3am.',
+    failure: 'Setup that lives in someone’s shell history. It works on the machine it was written on and nowhere else, and the agent’s transcript is forty minutes of dependency errors.',
+    related: [['The eval environment', '/evals/eval-environment'], ['CI feedback loop', '/coding-agents/ci-loop'], ['Sandbox anatomy', '/security/sandboxing']],
+    refs: ['swebench', 'sweagent', 'osworld'], kw: 'bootstrap setup script install dependencies container devcontainer baseline green' }),
+];
+
 export const SEARCH_INDEX = [];
 /* ============ extra plates that use custom renderers ============ */
 COLLECTIONS.evals.plates.push(
@@ -420,10 +583,11 @@ COLLECTIONS.context.plates.push(
     related: [['Anatomy', '/context/context-window-anatomy'], ['Retrieval', '/context/retrieval'], ['Compaction', '/context/context-compaction']], refs: ['anthropicContext', 'anthropicTools'], kw: 'budget toggle tokens selection tradeoff interactive' }),
 );
 /* full plates for every previously-previewed pattern */
-COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES);
-COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES);
-COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES);
-COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES);
+COLLECTIONS.harnesses.plates.push(...EXT_HARNESS_PLATES);
+COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_2);
+COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2);
+COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
+COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES, ...EXT_CODING_PLATES_2);
 
 /* rebuild the search index now that every collection is final */
 for (const [colId, col] of Object.entries(COLLECTIONS)) {
@@ -438,11 +602,11 @@ for (const [colId, col] of Object.entries(COLLECTIONS)) for (const p of col.plat
 
 export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents'];
 export const COL_BLURB = {
-  harnesses: 'Fourteen recurring architectures, from a single forward pass to agents that run for days.',
-  security: 'Agents possess authority. Ten ways untrusted text borrows it — and the boundaries that stop it.',
-  evals: 'Outcome checks, trajectory review, and judges you can actually trust.',
-  context: 'What earns a place in the window, and how memory brings the right things back.',
-  'coding-agents': 'Test loops, parallel worktrees, and why more agents aren’t automatically better.',
+  harnesses: 'Eighteen recurring architectures, from a single forward pass to agents that run for days.',
+  security: 'Agents possess authority. The ways untrusted text borrows it — and the boundaries that stop it.',
+  evals: 'Outcome checks, trajectory review, judges you can trust — and whether the number is signal.',
+  context: 'What earns a place in the window, in what order, and how memory brings the right things back.',
+  'coding-agents': 'Test loops, verifier ladders, parallel worktrees, and how an edit actually reaches the file.',
 };
 export const DIAGRAM_COUNT = Object.keys(DIAGRAMS).length;
 export const PLATE_COUNT = Object.keys(PLATE_LOOKUP).length;

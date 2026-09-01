@@ -1681,3 +1681,865 @@ DIAGRAMS.computerUse = {
     { cap: '<span class="cap-ok">“Looks right” becomes a verifiable step, not a hope.</span>', ok: ['chk'], e: ['c-e'], d: 2600 },
   ],
 };
+
+/* ============ expansion: cost, control, tools and ops ============ */
+
+/* ---------- HARNESSES H-15..H-18 ---------- */
+
+DIAGRAMS.budgets = {
+  w: 700, h: 352, dur: 1700,
+  aria: 'Budget and stopping rules: after every loop iteration the harness checks three independent ceilings — steps, tokens and wall clock — and a stopping rule names why the run ended.',
+  nodes: [
+    { id: 'task', x: 84, y: 54, kind: 'user', label: 'TASK', w: 108 },
+    { id: 'loop', x: 300, y: 54, kind: 'model', label: 'LOOP ITERATION', sub: 'reason \u2192 act \u2192 observe', w: 186 },
+    { id: 'gate', x: 566, y: 54, kind: 'decision', label: 'BUDGET LEFT?', w: 168, h: 58 },
+    { id: 'b1', x: 214, y: 196, kind: 'chip', label: 'STEPS 7 / 12', w: 116 },
+    { id: 'b2', x: 340, y: 196, kind: 'chip', label: 'TOKENS 84K / 200K', w: 132 },
+    { id: 'b3', x: 466, y: 196, kind: 'chip', label: 'WALL 4m / 15m', w: 116 },
+    { id: 'stop', x: 566, y: 268, kind: 'evaluator', label: 'STOPPING RULE', sub: 'solved \u00b7 gave up \u00b7 asking', w: 196 },
+    { id: 'out', x: 220, y: 306, kind: 'data', label: 'RESULT + WHY IT ENDED', w: 216 },
+  ],
+  bounds: [{ id: 'bb', x: 146, y: 152, w: 380, h: 84, label: 'CEILINGS \u2014 ANY ONE ENDS THE RUN' }],
+  edges: [
+    { id: 't-l', from: 'task', to: 'loop' },
+    { id: 'l-g', from: 'loop', to: 'gate', label: 'every step', ly: -10 },
+    { id: 'g-l', from: 'gate', to: 'loop', d: 'M550 83 C550 124 316 122 316 79', label: 'continue', lx: 0, ly: 16 },
+    { id: 'b-g', from: 'b3', to: 'gate', kind: 'ctl', fromSide: 'r', toSide: 'b', label: 'counters', labelT: 0.15, lx: -4, ly: -9 },
+    { id: 'g-s', from: 'gate', to: 'stop', fromSide: 'b', toSide: 't', label: 'exhausted', labelT: 0.75, lx: 42, ly: 4 },
+    { id: 's-o', from: 'stop', to: 'out', label: 'stop reason', ly: 15 },
+  ],
+  steps: [
+    { cap: 'The task enters the loop.', n: ['task', 'loop'], e: ['t-l'] },
+    { cap: 'One iteration runs \u2014 but the harness, not the model, decides whether there is another.', n: ['loop', 'gate'], e: ['l-g'] },
+    { cap: 'Three independent ceilings: steps bound thrash, tokens bound cost, wall clock bounds the user\u2019s patience.', n: ['b1', 'b2', 'b3'], show: ['bb'] },
+    { cap: 'All three still have room, so the loop continues.', n: ['gate', 'loop'], e: ['g-l', 'b-g'], show: ['bb'] },
+    { cap: 'Iterations keep going and every counter climbs.', n: ['loop', 'gate', 'b1', 'b2'], e: ['l-g'], show: ['bb'] },
+    { cap: '<span class="cap-bad">One ceiling hits.</span> That ends the run, whatever state the model is in.', bad: ['b1', 'gate'], show: ['bb'], flash: ['b1'] },
+    { cap: 'A stopping rule classifies the ending: solved, out of budget, or blocked and asking for help.', n: ['stop'], e: ['g-s'] },
+    { cap: '<span class="cap-ok">The run returns its best state <b>and why it stopped</b></span> \u2014 a silent halt is unusable.', ok: ['out', 'stop'], okE: ['s-o'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.router = {
+  w: 720, h: 356, dur: 1700,
+  aria: 'Router and model cascade: a cheap triage step sends most requests to a small model, a quality check passes or escalates to a large model, and the caller sees one answer.',
+  nodes: [
+    { id: 'req', x: 80, y: 58, kind: 'user', label: 'REQUEST', w: 116 },
+    { id: 'tri', x: 250, y: 58, kind: 'decision', label: 'TRIAGE', w: 132, h: 56 },
+    { id: 'small', x: 456, y: 58, kind: 'model', label: 'SMALL MODEL', sub: 'cheap \u00b7 fast', w: 172 },
+    { id: 'judge', x: 456, y: 182, kind: 'evaluator', label: 'GOOD ENOUGH?', w: 172 },
+    { id: 'large', x: 456, y: 300, kind: 'model', label: 'LARGE MODEL', sub: '\u224820\u00d7 the cost', w: 172 },
+    { id: 'ans', x: 634, y: 182, kind: 'data', label: 'ANSWER', w: 122 },
+  ],
+  notes: [
+    { id: 'mix', x: 168, y: 176, ghost: true, text: ['most traffic is easy \u2014', 'price for the median request,', 'not the worst one'] },
+  ],
+  edges: [
+    { id: 'r-t', from: 'req', to: 'tri' },
+    { id: 't-s', from: 'tri', to: 'small', label: 'default path', labelT: 0.3, ly: -9 },
+    { id: 't-l', from: 'tri', to: 'large', fromSide: 'b', toSide: 'l', label: 'obviously hard', labelT: 0.6, ly: 15 },
+    { id: 's-j', from: 'small', to: 'judge', label: 'draft', lx: 22 },
+    { id: 'j-a', from: 'judge', to: 'ans', label: 'pass', ly: -8 },
+    { id: 'j-l', from: 'judge', to: 'large', label: 'escalate', lx: 30 },
+    { id: 'l-a', from: 'large', to: 'ans', toSide: 'b', label: 'answer', labelT: 0.55, ly: 15 },
+  ],
+  steps: [
+    { cap: 'A request arrives. Nothing about it says which model it needs.', n: ['req', 'tri'], e: ['r-t'] },
+    { cap: 'A cheap triage step routes it \u2014 a classifier or a very small model, never the expensive one.', n: ['tri'], show: ['mix'] },
+    { cap: 'Most requests go to the small model first.', n: ['tri', 'small'], e: ['t-s'], show: ['mix'] },
+    { cap: 'A check decides whether the draft is actually good enough to ship.', n: ['small', 'judge'], e: ['s-j'] },
+    { cap: '<span class="cap-ok">Good enough \u2192 done</span>, at a fraction of the cost and the latency.', ok: ['judge', 'ans'], okE: ['j-a'], d: 2200 },
+    { cap: 'Not good enough \u2192 escalate. The cheap attempt was still cheap.', bad: ['judge'], n: ['large'], badE: ['j-l'] },
+    { cap: 'Triage can also skip the ladder outright when a request is obviously hard.', n: ['tri', 'large'], e: ['t-l'] },
+    { cap: '<span class="cap-ok">One answer either way</span> \u2014 the caller never learns which model served it.', ok: ['ans', 'large'], okE: ['l-a'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.steering = {
+  w: 700, h: 344, dur: 1750,
+  aria: 'Steering a running agent: a user message queues until the next step boundary, the accumulated state is preserved, and the agent resumes with the new instruction.',
+  nodes: [
+    { id: 'user', x: 82, y: 56, kind: 'human', label: 'USER', w: 108 },
+    { id: 'agent', x: 300, y: 56, kind: 'model', label: 'AGENT', sub: 'step 6 of a long task', w: 190 },
+    { id: 'act', x: 548, y: 56, kind: 'tool', label: 'TOOL CALL', w: 146 },
+    { id: 'steer', x: 278, y: 178, kind: 'human', label: 'STEERING MESSAGE', sub: '\u201cuse the v2 API instead\u201d', w: 214 },
+    { id: 'bnd', x: 548, y: 178, kind: 'decision', label: 'STEP BOUNDARY', w: 170, h: 58 },
+    { id: 'state', x: 300, y: 296, kind: 'memory', label: 'STATE SO FAR', sub: 'plan \u00b7 edits \u00b7 findings', w: 210 },
+  ],
+  notes: [
+    { id: 'mid', x: 548, y: 118, anchor: 'middle', ghost: true, text: 'never mid-call' },
+  ],
+  edges: [
+    { id: 'u-a', from: 'user', to: 'agent', label: 'task', ly: -8 },
+    { id: 'a-t', from: 'agent', to: 'act', label: 'acts', labelT: 0.55, ly: -9 },
+    { id: 't-b', from: 'act', to: 'bnd', fromSide: 'b', toSide: 't', label: 'settles', lx: 30 },
+    { id: 's-b', from: 'steer', to: 'bnd', kind: 'ctl', off: 10, label: 'queues here', ly: 17 },
+    { id: 'b-st', from: 'bnd', to: 'state', fromSide: 'b', toSide: 'r', label: 'nothing discarded', labelT: 0.55, ly: 15 },
+    { id: 'b-a', from: 'bnd', to: 'agent', off: -10, label: 'resume with both', labelT: 0.5, ly: -8 },
+  ],
+  steps: [
+    { cap: 'The agent is six steps into a long task and holding a lot of context.', n: ['user', 'agent'], e: ['u-a'] },
+    { cap: 'It issues a tool call and waits on it.', n: ['agent', 'act'], e: ['a-t'] },
+    { cap: 'The user changes their mind <b>while it is still running</b>.', n: ['steer'] },
+    { cap: 'The message queues rather than landing immediately \u2014 a half-applied tool call is worse than a late correction.', n: ['steer', 'bnd'], e: ['s-b'], show: ['mid'] },
+    { cap: 'The call settles. That gap between steps is where an interrupt is safe.', n: ['act', 'bnd'], e: ['t-b'], show: ['mid'] },
+    { cap: 'Six steps of work are kept. Steering is a redirect, not a restart.', n: ['bnd', 'state'], e: ['b-st'] },
+    { cap: '<span class="cap-ok">The agent resumes carrying both the accumulated state and the new instruction.</span>', ok: ['bnd', 'agent'], okE: ['b-a'], n: ['state'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.guardrail = {
+  w: 740, h: 344, dur: 1750,
+  aria: 'Guardrail middleware: the agent proposes actions, a policy layer outside the model allows, denies or escalates each one, and denials return to the agent as context.',
+  nodes: [
+    { id: 'agent', x: 110, y: 152, kind: 'model', label: 'AGENT', sub: 'proposes an action', w: 168 },
+    { id: 'gate', x: 356, y: 152, kind: 'policy', label: 'POLICY LAYER', sub: 'allow \u00b7 deny \u00b7 escalate', w: 204 },
+    { id: 'tool', x: 612, y: 56, kind: 'tool', label: 'TOOL', sub: 'executes', w: 152 },
+    { id: 'deny', x: 612, y: 158, kind: 'chip', label: 'DENIED + REASON', w: 160 },
+    { id: 'human', x: 612, y: 256, kind: 'human', label: 'HUMAN', sub: 'approves', w: 152 },
+  ],
+  bounds: [{ id: 'cp', x: 244, y: 92, w: 224, h: 120, label: 'THE MODEL CANNOT EDIT THIS' }],
+  edges: [
+    { id: 'a-g', from: 'agent', to: 'gate', label: 'proposes', ly: -9 },
+    { id: 'g-t', from: 'gate', to: 'tool', label: 'allow', labelT: 0.5, ly: -7 },
+    { id: 'g-d', from: 'gate', to: 'deny', label: 'deny', ly: -7 },
+    { id: 'g-h', from: 'gate', to: 'human', label: 'escalate', labelT: 0.5, ly: 15 },
+    { id: 'd-a', from: 'deny', to: 'agent', fromSide: 'b', toSide: 'b', label: 'retry with the reason', ly: 16 },
+    { id: 'h-t', from: 'human', to: 'tool', d: 'M688 256 C726 256 726 56 692 56', label: 'approved', lanchor: 'end', lx: -8, ly: 3 },
+  ],
+  steps: [
+    { cap: 'The agent proposes an action. It never reaches a tool directly.', n: ['agent'] },
+    { cap: 'Every proposal crosses a layer the model has no way to rewrite or talk out of.', n: ['agent', 'gate'], e: ['a-g'], show: ['cp'] },
+    { cap: '<span class="cap-ok">Routine calls pass straight through</span> \u2014 the common case stays fast.', ok: ['gate', 'tool'], okE: ['g-t'], show: ['cp'] },
+    { cap: '<span class="cap-bad">A call outside policy is refused</span>, whatever the model was persuaded to attempt.', bad: ['deny'], badE: ['g-d'], n: ['gate'], show: ['cp'] },
+    { cap: 'The refusal returns as context, with its reason. A denial is information, not a crash.', n: ['deny', 'agent'], e: ['d-a'] },
+    { cap: 'Irreversible or high-blast-radius actions take the third exit and wait for a person.', n: ['gate', 'human'], e: ['g-h'], show: ['cp'] },
+    { cap: '<span class="cap-ok">The model decides what it wants to do; the layer decides what it can do.</span>', ok: ['human', 'tool'], okE: ['h-t'], d: 2600 },
+  ],
+};
+
+/* ---------- SECURITY S-12..S-16 ---------- */
+
+DIAGRAMS.dualLlm = {
+  w: 720, h: 348, dur: 1800,
+  aria: 'Dual-LLM pattern: a privileged model holds the tools but never reads untrusted text; a quarantined model with no tools reads it and returns only a symbolic handle.',
+  nodes: [
+    { id: 'user', x: 90, y: 54, kind: 'human', label: 'USER', w: 112 },
+    { id: 'priv', x: 320, y: 54, kind: 'model', label: 'PRIVILEGED LLM', sub: 'plans · holds the tools', w: 214 },
+    { id: 'tools', x: 596, y: 54, kind: 'tool', label: 'TOOLS', sub: 'real side effects', w: 152 },
+    { id: 'quar', x: 320, y: 232, kind: 'model', label: 'QUARANTINED LLM', sub: 'no tools · no memory', w: 214 },
+    { id: 'web', x: 596, y: 232, kind: 'untrusted', label: 'UNTRUSTED DOC', w: 152 },
+    { id: 'handle', x: 78, y: 232, kind: 'chip', label: '$summary', w: 112 },
+  ],
+  bounds: [{ id: 'tz', x: 500, y: 190, w: 196, h: 88, kind: 'trust', label: 'UNTRUSTED ZONE' }],
+  notes: [
+    { id: 'blind', x: 320, y: 148, anchor: 'middle', tone: 'ok', ghost: true, text: 'the privileged model never sees the text' },
+  ],
+  edges: [
+    { id: 'u-p', from: 'user', to: 'priv', label: 'task', ly: -9 },
+    { id: 'p-t', from: 'priv', to: 'tools', label: 'acts', labelT: 0.55, ly: -9 },
+    { id: 'p-q', from: 'priv', to: 'quar', kind: 'ctl', off: -14, label: 'read this, hand me a handle', labelT: 0.5, lx: -14, ly: -6 },
+    { id: 'q-w', from: 'quar', to: 'web', label: 'fetch', off: -10, ly: -9 },
+    { id: 'w-q', from: 'web', to: 'quar', label: 'content + payload', off: 10, ly: 16 },
+    { id: 'q-h', from: 'quar', to: 'handle', label: 'handle only', ly: -9 },
+    { id: 'h-p', from: 'handle', to: 'priv', label: 'opaque', labelT: 0.6, lx: -14, ly: -6 },
+  ],
+  steps: [
+    { cap: 'The user’s task goes to the model that actually holds the credentials.', n: ['user', 'priv'], e: ['u-p'] },
+    { cap: 'The task needs a document read — and that document is not trusted.', n: ['web'], show: ['tz'] },
+    { cap: 'The privileged model delegates instead of reading. The reader gets no tools and no memory.', n: ['priv', 'quar'], e: ['p-q'], show: ['blind'] },
+    { cap: 'The quarantined model fetches the document.', n: ['quar', 'web'], e: ['q-w'], show: ['tz'] },
+    { cap: '<span class="cap-bad">The document carries instructions</span> — and the quarantined model may well comply.', bad: ['web', 'quar'], badE: ['w-q'], show: ['tz'] },
+    { cap: 'It doesn’t matter. All it can return is a symbolic handle to text it read.', n: ['quar', 'handle'], e: ['q-h'] },
+    { cap: 'The privileged model plans over <b>$summary</b> without ever seeing what is inside it.', n: ['handle', 'priv'], e: ['h-p'], show: ['blind'] },
+    { cap: '<span class="cap-ok">A payload the deciding model never read cannot persuade it.</span> Compliance is made harmless.', ok: ['priv', 'tools'], okE: ['p-t'], show: ['blind'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.agentTrustAttack = {
+  w: 700, h: 356, dur: 1800,
+  aria: 'Agent-to-agent trust, attack: a payload in a webpage rides a research agent’s digest into an implementer agent that treats it as a trusted internal instruction.',
+  nodes: [
+    { id: 'web', x: 574, y: 56, kind: 'untrusted', label: 'WEBPAGE', sub: 'untrusted content', w: 164 },
+    { id: 'res', x: 306, y: 56, kind: 'model', label: 'RESEARCH AGENT', sub: 'read-only, low risk', w: 206 },
+    { id: 'dig', x: 306, y: 180, kind: 'data', label: 'DIGEST', sub: 'prose written by an agent', w: 206 },
+    { id: 'imp', x: 306, y: 300, kind: 'model', label: 'IMPLEMENTER', sub: 'write + deploy scope', w: 206 },
+    { id: 'prod', x: 574, y: 300, kind: 'env', label: 'PRODUCTION', w: 152 },
+  ],
+  notes: [
+    { id: 'ours', x: 92, y: 180, tone: 'danger', ghost: true, text: ['“it came from', 'our own agent,', 'so it is trusted”'] },
+  ],
+  edges: [
+    { id: 'r-w', from: 'res', to: 'web', label: 'fetch', off: -10, ly: -9 },
+    { id: 'w-r', from: 'web', to: 'res', label: 'page + payload', off: 10, lx: 16, ly: 16 },
+    { id: 'r-d', from: 'res', to: 'dig', label: 'summarizes', lx: 34 },
+    { id: 'd-i', from: 'dig', to: 'imp', label: 'handed downstream', lx: 52 },
+    { id: 'i-p', from: 'imp', to: 'prod', label: 'acts', ly: -9 },
+  ],
+  steps: [
+    { cap: 'A read-only research agent fetches a page. Low risk — it holds no dangerous scope.', n: ['res', 'web'], e: ['r-w'] },
+    { cap: '<span class="cap-bad">The page carries instructions</span> aimed at whatever reads it next.', bad: ['web'], badE: ['w-r'] },
+    { cap: 'The researcher summarizes. The payload survives the summary, now in the agent’s own voice.', bad: ['dig'], badE: ['r-d'], n: ['res'] },
+    { cap: 'The digest crosses to the implementer — which holds write and deploy scope.', bad: ['dig'], badE: ['d-i'], n: ['imp'] },
+    { cap: '<span class="cap-bad">Nothing marks the boundary.</span> Internal provenance reads as trust.', bad: ['imp'], show: ['ours'] },
+    { cap: '<span class="cap-bad">The privileged agent acts on text an attacker wrote.</span> The trust boundary was never drawn.', bad: ['imp', 'prod'], badE: ['i-p'], show: ['ours'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.agentTrustDefense = {
+  w: 700, h: 356, dur: 1800,
+  aria: 'Agent-to-agent trust, defended: the digest is structured and carries provenance, the implementer treats it as data, and a policy layer authorizes the action.',
+  nodes: [
+    { id: 'web', x: 574, y: 56, kind: 'untrusted', label: 'WEBPAGE', sub: 'untrusted content', w: 164 },
+    { id: 'res', x: 306, y: 56, kind: 'model', label: 'RESEARCH AGENT', sub: 'read-only, low risk', w: 206 },
+    { id: 'dig', x: 306, y: 180, kind: 'data', label: 'STRUCTURED DIGEST', sub: 'findings + source tags', w: 206 },
+    { id: 'imp', x: 306, y: 300, kind: 'model', label: 'IMPLEMENTER', sub: 'treats input as data', w: 206 },
+    { id: 'pol', x: 566, y: 300, kind: 'policy', label: 'POLICY LAYER', w: 152 },
+    { id: 'prod', x: 566, y: 180, kind: 'env', label: 'PRODUCTION', w: 152 },
+  ],
+  notes: [
+    { id: 'tag', x: 92, y: 180, tone: 'ok', ghost: true, text: ['every field carries', 'where it came from —', 'web ≠ user'] },
+  ],
+  edges: [
+    { id: 'r-w', from: 'res', to: 'web', label: 'fetch', off: -10, ly: -9 },
+    { id: 'w-r', from: 'web', to: 'res', label: 'page + payload', off: 10, lx: 16, ly: 16 },
+    { id: 'r-d', from: 'res', to: 'dig', label: 'extracts fields', lx: 40 },
+    { id: 'd-i', from: 'dig', to: 'imp', label: 'data, not instructions', lx: 58 },
+    { id: 'i-pol', from: 'imp', to: 'pol', label: 'proposed action', ly: -9 },
+    { id: 'pol-p', from: 'pol', to: 'prod', label: 'authorized on the user’s scope', lanchor: 'end', lx: -10, ly: 3 },
+  ],
+  steps: [
+    { cap: 'Same fetch, same payload. The attack has not changed.', n: ['res', 'web'], e: ['r-w'] },
+    { cap: '<span class="cap-bad">The page still carries instructions.</span> You cannot prevent this half.', bad: ['web'], badE: ['w-r'] },
+    { cap: 'The researcher emits <b>structured fields</b>, not prose — and every field records its source.', n: ['res', 'dig'], e: ['r-d'], show: ['tag'] },
+    { cap: 'The implementer’s prompt treats the digest as data to reason about, never as instructions to follow.', n: ['dig', 'imp'], e: ['d-i'], show: ['tag'] },
+    { cap: 'Even when persuaded, the implementer can only <b>propose</b>. It does not hold the deploy authority.', n: ['imp', 'pol'], e: ['i-pol'] },
+    { cap: '<span class="cap-ok">The action is authorized against the requesting user’s permissions</span> — not the agent’s.', ok: ['pol', 'prod'], okE: ['pol-p'], show: ['tag'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.sandbox = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'Sandbox anatomy: the agent runs against a scratch filesystem and a process boundary inside a container, with an egress allowlist, while host secrets and the open internet stay unreachable.',
+  nodes: [
+    { id: 'agent', x: 100, y: 176, kind: 'model', label: 'AGENT', sub: 'runs code', w: 148 },
+    { id: 'fs', x: 344, y: 100, kind: 'data', label: 'SCRATCH FS', sub: 'disposable copy', w: 176 },
+    { id: 'proc', x: 344, y: 190, kind: 'tool', label: 'PROCESS', sub: 'own pid + user', w: 176 },
+    { id: 'net', x: 344, y: 288, kind: 'policy', label: 'EGRESS ALLOWLIST', sub: 'named hosts only', w: 176 },
+    { id: 'pkg', x: 600, y: 288, kind: 'env', label: 'REGISTRY', w: 148 },
+    { id: 'secrets', x: 600, y: 100, kind: 'data', label: 'HOST SECRETS', w: 148 },
+    { id: 'inet', x: 600, y: 190, kind: 'env', label: 'OPEN INTERNET', w: 148 },
+  ],
+  bounds: [{ id: 'box', x: 232, y: 46, w: 226, h: 296, label: 'SANDBOX' }],
+  notes: [
+    { id: 'blast', x: 100, y: 268, ghost: true, text: ['blast radius', 'stops at the', 'box edge'] },
+  ],
+  edges: [
+    { id: 'a-p', from: 'agent', to: 'proc', label: 'exec', ly: -9 },
+    { id: 'p-f', from: 'proc', to: 'fs', label: 'reads + writes', lx: 44 },
+    { id: 'p-n', from: 'proc', to: 'net', label: 'any request', lx: 42 },
+    { id: 'n-pkg', from: 'net', to: 'pkg', label: 'allowed', ly: -9 },
+    { id: 'n-i', from: 'net', to: 'inet', label: 'blocked', labelT: 0.6, lx: 18, ly: -6 },
+    { id: 'f-s', from: 'fs', to: 'secrets', label: 'not mounted', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The agent runs code. The question is never “will it misbehave” but “what can it reach when it does”.', n: ['agent'] },
+    { cap: 'Everything it runs happens inside one box with three edges: disk, process, network.', n: ['agent', 'proc'], e: ['a-p'], show: ['box'] },
+    { cap: 'Disk is a disposable copy. Destroying it costs a rebuild, not a repository.', n: ['proc', 'fs'], e: ['p-f'], show: ['box'] },
+    { cap: '<span class="cap-ok">Host secrets are not mounted</span> — the exfiltration plate’s first ingredient simply is not present.', ok: ['fs'], bad: ['secrets'], badE: ['f-s'], show: ['box'] },
+    { cap: 'Every outbound request meets an allowlist, not a firewall rule written after the fact.', n: ['proc', 'net'], e: ['p-n'], show: ['box'] },
+    { cap: '<span class="cap-ok">Named hosts resolve.</span> The package registry the build genuinely needs still works.', ok: ['net', 'pkg'], okE: ['n-pkg'], show: ['box'] },
+    { cap: '<span class="cap-bad">Everything else is unreachable</span>, so an exfiltration channel has nowhere to send to.', bad: ['inet'], badE: ['n-i'], n: ['net'], show: ['box', 'blast'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.sinkAttack = {
+  w: 700, h: 348, dur: 1800,
+  aria: 'Downstream sink injection, attack: an agent writes attacker text into a ticket, and a second agent later reads that ticket as an instruction.',
+  nodes: [
+    { id: 'web', x: 92, y: 56, kind: 'untrusted', label: 'UNTRUSTED PAGE', w: 168 },
+    { id: 'a1', x: 336, y: 56, kind: 'model', label: 'AGENT A', sub: 'triages inbound', w: 186 },
+    { id: 'sink', x: 336, y: 186, kind: 'data', label: 'TICKET', sub: 'an internal system of record', w: 240 },
+    { id: 'a2', x: 336, y: 300, kind: 'model', label: 'AGENT B', sub: 'runs the backlog nightly', w: 186 },
+    { id: 'repo', x: 590, y: 300, kind: 'env', label: 'REPO', w: 140 },
+  ],
+  notes: [
+    { id: 'gap', x: 590, y: 180, ghost: true, tone: 'danger', text: ['hours later —', 'nobody is', 'watching'] },
+  ],
+  edges: [
+    { id: 'w-a', from: 'web', to: 'a1', label: 'reads', ly: -9 },
+    { id: 'a-s', from: 'a1', to: 'sink', label: 'files a ticket', lx: 46 },
+    { id: 's-b', from: 'sink', to: 'a2', label: 'picked up later', lx: 52 },
+    { id: 'b-r', from: 'a2', to: 'repo', label: 'acts', ly: -9 },
+  ],
+  steps: [
+    { cap: 'Agent A reads untrusted inbound content. So far this is the ordinary injection plate.', n: ['web', 'a1'], e: ['w-a'] },
+    { cap: '<span class="cap-bad">The content carries a payload</span> — aimed not at A, but at whatever reads A’s output.', bad: ['web', 'a1'] },
+    { cap: 'A does its job and files a ticket. The payload rides along inside the description.', bad: ['sink'], badE: ['a-s'], n: ['a1'] },
+    { cap: 'The attack goes quiet. It is now sitting in a trusted internal system, indistinguishable from real work.', bad: ['sink'], show: ['gap'] },
+    { cap: 'Hours later a different agent picks the ticket up — and internal tickets are not “untrusted content”.', bad: ['sink'], badE: ['s-b'], n: ['a2'], show: ['gap'] },
+    { cap: '<span class="cap-bad">Agent B executes it.</span> No human was in the loop, and the source is three hops away.', bad: ['a2', 'repo'], badE: ['b-r'], show: ['gap'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.sinkDefense = {
+  w: 700, h: 348, dur: 1800,
+  aria: 'Downstream sink injection, defended: agent-written fields are stored with provenance, rendered as quoted data, and the second agent needs approval to act on tainted input.',
+  nodes: [
+    { id: 'web', x: 92, y: 56, kind: 'untrusted', label: 'UNTRUSTED PAGE', w: 168 },
+    { id: 'a1', x: 336, y: 56, kind: 'model', label: 'AGENT A', sub: 'triages inbound', w: 186 },
+    { id: 'sink', x: 336, y: 186, kind: 'data', label: 'TICKET', sub: 'body tagged: agent-written', w: 240 },
+    { id: 'a2', x: 336, y: 300, kind: 'model', label: 'AGENT B', sub: 'reads the tag first', w: 186 },
+    { id: 'human', x: 590, y: 300, kind: 'human', label: 'HUMAN', sub: 'approves', w: 140 },
+    { id: 'repo', x: 590, y: 186, kind: 'env', label: 'REPO', w: 140 },
+  ],
+  notes: [
+    { id: 'taint', x: 92, y: 186, tone: 'ok', ghost: true, text: ['taint survives', 'the write —', 'and the hours'] },
+  ],
+  edges: [
+    { id: 'w-a', from: 'web', to: 'a1', label: 'reads', ly: -9 },
+    { id: 'a-s', from: 'a1', to: 'sink', label: 'writes, tagged at the source', lx: 74 },
+    { id: 's-b', from: 'sink', to: 'a2', label: 'quoted, never inlined', lx: 62 },
+    { id: 'b-h', from: 'a2', to: 'human', label: 'tainted → ask', ly: -9 },
+    { id: 'h-r', from: 'human', to: 'repo', label: 'approved action', lanchor: 'end', lx: -10, ly: 3 },
+  ],
+  steps: [
+    { cap: 'Same read, same payload. Agent A has no way to tell.', n: ['web', 'a1'], e: ['w-a'] },
+    { cap: '<span class="cap-bad">The payload is still there</span> when A writes its ticket.', bad: ['web', 'a1'] },
+    { cap: 'But the write records provenance: this body was produced by an agent from external content.', n: ['a1', 'sink'], e: ['a-s'], show: ['taint'] },
+    { cap: 'Agent B reads it wrapped and quoted — presented as a description, not as a line in its instructions.', n: ['sink', 'a2'], e: ['s-b'], show: ['taint'] },
+    { cap: 'Because the input is tainted, B cannot self-authorize. Untrusted provenance downgrades what it may do.', n: ['a2', 'human'], e: ['b-h'], show: ['taint'] },
+    { cap: '<span class="cap-ok">A person sees the request in full before anything is executed.</span>', ok: ['human', 'repo'], okE: ['h-r'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.supplyAttack = {
+  w: 700, h: 340, dur: 1800,
+  aria: 'Skill and plugin supply chain, attack: an agent definition installed from a registry brings instructions that run inside the agent’s own prompt.',
+  nodes: [
+    { id: 'reg', x: 92, y: 60, kind: 'env', label: 'REGISTRY', sub: 'anyone can publish', w: 160 },
+    { id: 'skill', x: 350, y: 60, kind: 'untrusted', label: 'SKILL / PLUGIN', sub: 'prompt + tools + hooks', w: 208 },
+    { id: 'inst', x: 610, y: 60, kind: 'chip', label: 'ONE-CLICK INSTALL', w: 156 },
+    { id: 'agent', x: 350, y: 190, kind: 'model', label: 'AGENT', sub: 'loads it into its own prompt', w: 208 },
+    { id: 'tool', x: 350, y: 296, kind: 'tool', label: 'THE USER’S REAL TOOLS', w: 240 },
+    { id: 'att', x: 610, y: 296, kind: 'untrusted', label: 'ATTACKER', w: 140 },
+  ],
+  notes: [
+    { id: 'trust', x: 92, y: 190, tone: 'danger', ghost: true, text: ['installed once,', 'trusted every', 'session after'] },
+  ],
+  edges: [
+    { id: 'r-s', from: 'reg', to: 'skill', label: 'publishes', ly: -9 },
+    { id: 's-i', from: 'skill', to: 'inst', label: 'name + rating', ly: -9 },
+    { id: 's-a', from: 'skill', to: 'agent', label: 'becomes system text', lx: 58 },
+    { id: 'a-t', from: 'agent', to: 'tool', label: 'acts with full scope', lx: 62 },
+    { id: 't-att', from: 'tool', to: 'att', label: 'exfil', ly: -9 },
+  ],
+  steps: [
+    { cap: 'Skills, plugins and subagent definitions install like packages — from registries anyone can publish to.', n: ['reg', 'skill'], e: ['r-s'] },
+    { cap: 'What the user reviews is a name, a description and a star rating.', n: ['skill', 'inst'], e: ['s-i'] },
+    { cap: '<span class="cap-bad">What actually installs is a prompt.</span> Installing an agent definition is executing someone else’s instructions.', bad: ['skill'] },
+    { cap: 'It loads above the user’s own text, in the most trusted position in the window.', bad: ['agent'], badE: ['s-a'], show: ['trust'] },
+    { cap: 'It inherits every tool the user has already granted. It never needed to ask.', bad: ['agent', 'tool'], badE: ['a-t'], show: ['trust'] },
+    { cap: '<span class="cap-bad">And it runs again every session</span>, long after anyone remembers installing it.', bad: ['tool', 'att'], badE: ['t-att'], show: ['trust'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.supplyDefense = {
+  w: 700, h: 340, dur: 1800,
+  aria: 'Skill and plugin supply chain, defended: definitions are pinned by hash, reviewed as code, loaded with reduced scope, and their tool calls still pass the policy layer.',
+  nodes: [
+    { id: 'reg', x: 92, y: 60, kind: 'env', label: 'REGISTRY', sub: 'anyone can publish', w: 160 },
+    { id: 'pin', x: 350, y: 60, kind: 'policy', label: 'PINNED + REVIEWED', sub: 'a hash, read like a diff', w: 208 },
+    { id: 'skill', x: 610, y: 60, kind: 'chip', label: 'v1.4.2 · sha256', w: 156 },
+    { id: 'agent', x: 350, y: 190, kind: 'model', label: 'AGENT', sub: 'loads it as data', w: 208 },
+    { id: 'gate', x: 610, y: 190, kind: 'policy', label: 'POLICY LAYER', w: 156 },
+    { id: 'tool', x: 350, y: 296, kind: 'tool', label: 'SCOPED TOOL SET', sub: 'only what this skill needs', w: 240 },
+  ],
+  notes: [
+    { id: 'diff', x: 92, y: 190, tone: 'ok', ghost: true, text: ['an update is a', 'diff to review,', 'not a silent swap'] },
+  ],
+  edges: [
+    { id: 'r-p', from: 'reg', to: 'pin', label: 'candidate', ly: -9 },
+    { id: 'p-s', from: 'pin', to: 'skill', label: 'exact version', ly: -9 },
+    { id: 'p-a', from: 'pin', to: 'agent', label: 'the reviewed text, verbatim', lx: 78 },
+    { id: 'a-g', from: 'agent', to: 'gate', label: 'every call', ly: -9 },
+    { id: 'g-t', from: 'gate', to: 'tool', label: 'allowed calls only', lanchor: 'end', lx: -10, ly: 3 },
+  ],
+  steps: [
+    { cap: 'Same registry, same unreviewed publishers. That half does not change.', n: ['reg', 'pin'], e: ['r-p'] },
+    { cap: 'A candidate is pinned to an exact version and hash. The thing you reviewed is the thing that loads.', n: ['pin', 'skill'], e: ['p-s'], show: ['diff'] },
+    { cap: 'It is read like a dependency: what it instructs, what it can call, what it does on load.', n: ['pin'], show: ['diff'] },
+    { cap: 'It loads as content the agent reasons about, not as a system instruction it must obey.', n: ['pin', 'agent'], e: ['p-a'] },
+    { cap: 'And it does not inherit the user’s whole toolbox — a skill gets the scope its job needs.', n: ['agent', 'tool'], e: ['a-g'] },
+    { cap: '<span class="cap-ok">Its calls still cross the policy layer</span>, so a compromised skill is contained, not catastrophic.', ok: ['gate', 'tool'], okE: ['g-t'], n: ['agent'], show: ['diff'], d: 2800 },
+  ],
+};
+
+/* ---------- EVALS E-11..E-14 ---------- */
+
+DIAGRAMS.variance = {
+  w: 720, h: 366, dur: 1750,
+  aria: 'Variance and sample size: the same task run five times gives a rate with a wide interval, so a one-point difference between two versions is not a result.',
+  nodes: [
+    { id: 'task', x: 86, y: 150, kind: 'user', label: 'ONE TASK', w: 124 },
+    { id: 'agent', x: 282, y: 150, kind: 'model', label: 'SAME AGENT', sub: 'same prompt, same model', w: 208 },
+    { id: 'r1', x: 540, y: 64, kind: 'chip', label: 'RUN 1 · pass', w: 132 },
+    { id: 'r2', x: 540, y: 102, kind: 'chip', label: 'RUN 2 · fail', w: 132 },
+    { id: 'r3', x: 540, y: 140, kind: 'chip', label: 'RUN 3 · pass', w: 132 },
+    { id: 'r4', x: 540, y: 178, kind: 'chip', label: 'RUN 4 · pass', w: 132 },
+    { id: 'r5', x: 540, y: 216, kind: 'chip', label: 'RUN 5 · fail', w: 132 },
+    { id: 'rate', x: 540, y: 292, kind: 'data', label: '3 / 5 ± a lot', sub: 'five runs is a hint', w: 176 },
+    { id: 'delta', x: 224, y: 292, kind: 'evaluator', label: 'v2 SCORED 4 / 5', sub: 'is that better?', w: 208 },
+  ],
+  bounds: [{ id: 'runs', x: 458, y: 24, w: 172, h: 212, label: 'IDENTICAL INPUTS' }],
+  notes: [
+    { id: 'noise', x: 86, y: 214, tone: 'danger', ghost: true, text: ['one run is one bit —', 'and agents are', 'not deterministic'] },
+  ],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-1', from: 'agent', to: 'r1', noArrow: true },
+    { id: 'a-3', from: 'agent', to: 'r3', label: '× n', ly: -9 },
+    { id: 'a-5', from: 'agent', to: 'r5', noArrow: true },
+    { id: 'r-rt', from: 'r5', to: 'rate', label: 'aggregate', lx: 34 },
+    { id: 'rt-d', from: 'rate', to: 'delta', label: 'they overlap', ly: -9 },
+  ],
+  steps: [
+    { cap: 'One task, one agent, nothing changed between attempts.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'Run it once and you learn one bit: it passed, or it didn’t.', n: ['agent', 'r1'], e: ['a-1'], show: ['noise'] },
+    { cap: 'Run the <b>identical</b> input again and the answer can flip. Sampling is not a bug you can prompt away.', n: ['r1', 'r2', 'r3'], bad: ['r2'], e: ['a-3'], show: ['runs'] },
+    { cap: 'Five runs, three passes. That is not 60% — it is 60% with an interval wide enough to drive through.', n: ['r4', 'r5', 'rate'], bad: ['r5'], e: ['r-rt'], show: ['runs'] },
+    { cap: 'Now version 2 scores 4 out of 5. One extra pass.', n: ['delta'], e: ['rt-d'] },
+    { cap: '<span class="cap-bad">That is not an improvement.</span> It is one coin flip inside the noise you already measured.', bad: ['delta'], badE: ['rt-d'], show: ['noise'] },
+    { cap: '<span class="cap-ok">Report the interval, not the point.</span> The number of runs is a design decision — pick it before you look.', ok: ['rate'], n: ['delta'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.costLatency = {
+  w: 700, h: 344, dur: 1750,
+  aria: 'Cost and latency as scored dimensions: a version that raises pass rate while tripling cost and doubling latency is a regression on two of three axes.',
+  nodes: [
+    { id: 'suite', x: 92, y: 168, kind: 'user', label: 'BENCHMARK', sub: 'v1 vs v2', w: 152 },
+    { id: 'run', x: 300, y: 168, kind: 'model', label: 'SAME TASKS', sub: 'both versions', w: 178 },
+    { id: 'pass', x: 540, y: 62, kind: 'data', label: 'PASS  71% → 75%', sub: 'better', w: 200 },
+    { id: 'cost', x: 540, y: 168, kind: 'data', label: 'TOKENS  41K → 128K', sub: '3.1× worse', w: 200 },
+    { id: 'lat', x: 540, y: 262, kind: 'data', label: 'LATENCY  22s → 51s', sub: '2.3× worse', w: 200 },
+    { id: 'verdict', x: 190, y: 292, kind: 'decision', label: 'SHIP IT?', w: 148, h: 56 },
+  ],
+  notes: [
+    { id: 'one', x: 92, y: 96, ghost: true, text: ['a dashboard with', 'one axis can only', 'go up'] },
+  ],
+  edges: [
+    { id: 's-r', from: 'suite', to: 'run' },
+    { id: 'r-p', from: 'run', to: 'pass', label: 'quality', labelT: 0.4, ly: -9 },
+    { id: 'r-c', from: 'run', to: 'cost', label: 'spend', ly: -9 },
+    { id: 'r-l', from: 'run', to: 'lat', label: 'wall clock', labelT: 0.4, ly: 15 },
+    { id: 'c-v', from: 'cost', to: 'verdict', fromSide: 'b', toSide: 'r', label: 'all three, together', labelT: 0.6, ly: 15 },
+  ],
+  steps: [
+    { cap: 'Two versions of an agent over the same benchmark.', n: ['suite', 'run'], e: ['s-r'] },
+    { cap: 'Pass rate is up four points. On most dashboards this is where the story ends.', ok: ['pass'], e: ['r-p'], n: ['run'], show: ['one'] },
+    { cap: '<span class="cap-bad">It burns three times the tokens</span> to get there.', bad: ['cost'], badE: ['r-c'], n: ['run'] },
+    { cap: '<span class="cap-bad">And it takes more than twice as long</span>, which users feel on every single request.', bad: ['lat'], badE: ['r-l'], n: ['run'] },
+    { cap: 'Four points for 3× the spend is a trade, and it is one a person has to make deliberately.', n: ['pass', 'cost', 'lat', 'verdict'], e: ['c-v'] },
+    { cap: '<span class="cap-ok">Score all three every run.</span> An eval that only measures quality cannot tell you the price of it.', ok: ['verdict'], n: ['pass', 'cost', 'lat'], show: ['one'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.evalEnv = {
+  w: 720, h: 356, dur: 1750,
+  aria: 'The eval environment: each task instance is built fresh from pinned dependencies, seeded data, a frozen clock and recorded network, then asserted and destroyed.',
+  nodes: [
+    { id: 'spec', x: 90, y: 60, kind: 'data', label: 'TASK SPEC', sub: 'setup + assertion', w: 152 },
+    { id: 'build', x: 330, y: 60, kind: 'tool', label: 'BUILD INSTANCE', sub: 'fresh, every run', w: 196 },
+    { id: 'deps', x: 240, y: 168, kind: 'chip', label: 'PINNED DEPS', w: 132 },
+    { id: 'seed', x: 384, y: 168, kind: 'chip', label: 'SEEDED DATA', w: 132 },
+    { id: 'clock', x: 240, y: 206, kind: 'chip', label: 'FROZEN CLOCK', w: 132 },
+    { id: 'net', x: 384, y: 206, kind: 'chip', label: 'RECORDED NETWORK', w: 132 },
+    { id: 'agent', x: 596, y: 168, kind: 'model', label: 'AGENT', sub: 'under test', w: 148 },
+    { id: 'assert', x: 596, y: 292, kind: 'evaluator', label: 'ASSERTION', sub: 'runs in the instance', w: 168 },
+    { id: 'reset', x: 150, y: 292, kind: 'chip', label: 'DESTROY + REBUILD', w: 176 },
+  ],
+  bounds: [{ id: 'inst', x: 158, y: 130, w: 300, h: 116, label: 'HERMETIC INSTANCE' }],
+  edges: [
+    { id: 's-b', from: 'spec', to: 'build' },
+    { id: 'b-i', from: 'build', to: 'seed', label: 'materializes', lx: 44 },
+    { id: 'i-a', from: 'net', to: 'agent', label: 'its world', labelT: 0.5, ly: -9 },
+    { id: 'a-as', from: 'agent', to: 'assert', label: 'final state', lx: 40 },
+    { id: 'as-r', from: 'assert', to: 'reset', label: 'then nothing survives', ly: 15 },
+  ],
+  steps: [
+    { cap: 'A task is a spec: how to set the world up, and what must be true at the end.', n: ['spec', 'build'], e: ['s-b'] },
+    { cap: 'Every run builds its own instance. Nothing is shared between runs or between tasks.', n: ['build', 'seed', 'deps'], e: ['b-i'], show: ['inst'] },
+    { cap: 'Dependencies pinned, data seeded — so a result from March still reproduces in November.', n: ['deps', 'seed'], show: ['inst'] },
+    { cap: 'Clock frozen and network recorded: the two things that silently make a benchmark irreproducible.', n: ['clock', 'net'], show: ['inst'] },
+    { cap: 'The agent gets exactly this world and no other.', n: ['net', 'agent'], e: ['i-a'], show: ['inst'] },
+    { cap: 'The assertion runs inside the instance, against real final state rather than the agent’s account of it.', n: ['agent', 'assert'], e: ['a-as'] },
+    { cap: '<span class="cap-ok">Then it is destroyed.</span> A benchmark you cannot rebuild is a number you cannot defend.', ok: ['assert', 'reset'], okE: ['as-r'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.taskSet = {
+  w: 700, h: 348, dur: 1750,
+  aria: 'Task-set construction and contamination: tasks drawn from production traces and real bugs are split into a public set and a held-out set, because a published benchmark leaks into training.',
+  nodes: [
+    { id: 'traces', x: 92, y: 56, kind: 'data', label: 'PRODUCTION TRACES', sub: 'where it really fails', w: 196 },
+    { id: 'bugs', x: 92, y: 150, kind: 'data', label: 'REAL BUG REPORTS', w: 196 },
+    { id: 'synth', x: 92, y: 232, kind: 'data', label: 'SYNTHETIC EDGE CASES', sub: 'coverage, not realism', w: 196 },
+    { id: 'cur', x: 340, y: 150, kind: 'evaluator', label: 'CURATION', sub: 'hard enough to move', w: 176 },
+    { id: 'pub', x: 574, y: 76, kind: 'chip', label: 'PUBLISHED SET', w: 160 },
+    { id: 'held', x: 574, y: 172, kind: 'chip', label: 'HELD-OUT SET', w: 160 },
+    { id: 'train', x: 574, y: 288, kind: 'untrusted', label: 'NEXT TRAINING RUN', w: 176 },
+  ],
+  notes: [
+    { id: 'rot', x: 340, y: 268, anchor: 'middle', tone: 'danger', ghost: true, text: 'a public benchmark has a shelf life' },
+  ],
+  edges: [
+    { id: 't-c', from: 'traces', to: 'cur', label: 'sample', labelT: 0.4, ly: -9 },
+    { id: 'b-c', from: 'bugs', to: 'cur' },
+    { id: 's-c', from: 'synth', to: 'cur', label: 'fill the gaps', labelT: 0.4, ly: 15 },
+    { id: 'c-p', from: 'cur', to: 'pub', label: 'shareable', ly: -9 },
+    { id: 'c-h', from: 'cur', to: 'held', label: 'never published', ly: -9 },
+    { id: 'p-t', from: 'pub', to: 'train', label: 'scraped', lx: 30 },
+  ],
+  steps: [
+    { cap: 'Tasks come from where the agent actually fails, not from what is convenient to write.', n: ['traces', 'bugs'], e: ['t-c', 'b-c'] },
+    { cap: 'Synthetic cases fill coverage gaps — they are the seasoning, never the meal.', n: ['synth', 'cur'], e: ['s-c'] },
+    { cap: 'Curation is the work: too easy and every change looks neutral, too hard and every change looks the same.', n: ['cur'] },
+    { cap: 'Part of the set can be published, so results are comparable.', n: ['cur', 'pub'], e: ['c-p'] },
+    { cap: '<span class="cap-bad">And a published set gets scraped.</span> Next year’s model has read your answers.', bad: ['pub', 'train'], badE: ['p-t'], show: ['rot'] },
+    { cap: '<span class="cap-ok">A held-out set never leaves the building</span> — the gap between the two scores tells you how contaminated the public one is.', ok: ['held'], okE: ['c-h'], n: ['cur'], d: 2800 },
+  ],
+};
+
+/* ---------- CONTEXT X-11..X-14 ---------- */
+
+DIAGRAMS.cacheLayout = {
+  w: 700, h: 350, dur: 1750,
+  aria: 'Cache-aware context layout: the window is ordered by stability so a long prefix stays byte-identical and cacheable, and the first mutation invalidates everything after it.',
+  nodes: [
+    { id: 's1', x: 130, y: 86, kind: 'chip', label: 'SYSTEM PROMPT', w: 152 },
+    { id: 's2', x: 292, y: 86, kind: 'chip', label: 'TOOL DEFS', w: 152 },
+    { id: 's3', x: 454, y: 86, kind: 'chip', label: 'PINNED FACTS', w: 152 },
+    { id: 's4', x: 604, y: 86, kind: 'chip', label: 'HISTORY', w: 128 },
+    { id: 'hit', x: 258, y: 168, kind: 'data', label: 'CACHE HIT', sub: 'prefix unchanged, byte for byte', w: 260 },
+    { id: 'edit', x: 130, y: 268, kind: 'untrusted', label: 'TIMESTAMP IN THE PROMPT', sub: 'or a re-sorted tool list', w: 232 },
+    { id: 'miss', x: 470, y: 268, kind: 'data', label: 'FULL RE-READ', sub: 'everything after it', w: 200 },
+  ],
+  bounds: [{ id: 'pfx', x: 48, y: 44, w: 494, h: 72, label: 'STABLE PREFIX — ORDERED BY HOW OFTEN IT CHANGES' }],
+  notes: [
+    { id: 'why', x: 604, y: 168, anchor: 'middle', ghost: true, text: ['only the tail', 'should move'] },
+  ],
+  edges: [
+    { id: 'p-h', from: 's2', to: 'hit', label: 'reused', lx: 28, ly: 4 },
+    { id: 'e-s', from: 'edit', to: 's1', kind: 'ctl', label: 'one byte', lx: -6, ly: 4 },
+    { id: 'e-m', from: 'edit', to: 'miss', label: 'invalidates', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The window is not a bag of content. It is an ordered sequence, and order is the whole lever.', n: ['s1', 's2', 's3', 's4'] },
+    { cap: 'Sort it by how often each part changes: never, rarely, every turn.', n: ['s1', 's2', 's3'], show: ['pfx'] },
+    { cap: 'Only the tail moves between turns.', n: ['s4'], show: ['pfx', 'why'] },
+    { cap: '<span class="cap-ok">So the long, expensive prefix is served from cache</span> — a large fraction of the tokens, at a fraction of the price and the latency.', ok: ['hit'], okE: ['p-h'], n: ['s1', 's2'], show: ['pfx'] },
+    { cap: 'Now put a timestamp in the system prompt, or let the tool list come back in a different order.', bad: ['edit'], badE: ['e-s'], n: ['s1'] },
+    { cap: '<span class="cap-bad">Everything after that byte is re-read.</span> The cache is a prefix match, not a similarity match.', bad: ['edit', 'miss'], badE: ['e-m'] },
+    { cap: 'This is why compaction is expensive twice: it rewrites the middle, so the whole tail after it pays again.', bad: ['miss'], n: ['s3', 's4'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.obsCompression = {
+  w: 720, h: 340, dur: 1750,
+  aria: 'Observation compression: a large raw tool output is shaped down to a head, a tail, the error lines and a pointer before it enters the context window.',
+  nodes: [
+    { id: 'tool', x: 96, y: 158, kind: 'tool', label: 'TOOL', sub: 'a test run', w: 148 },
+    { id: 'raw', x: 306, y: 158, kind: 'data', label: 'RAW OUTPUT', sub: '12,400 tokens', w: 186 },
+    { id: 'shape', x: 306, y: 268, kind: 'policy', label: 'SHAPER', sub: 'harness code, not the model', w: 214 },
+    { id: 'k1', x: 566, y: 72, kind: 'chip', label: 'THE 3 FAILURES', w: 152 },
+    { id: 'k2', x: 566, y: 110, kind: 'chip', label: 'LAST 40 LINES', w: 152 },
+    { id: 'k3', x: 566, y: 148, kind: 'chip', label: 'COUNTS + EXIT CODE', w: 152 },
+    { id: 'k4', x: 566, y: 186, kind: 'chip', label: 'PATH TO THE FULL LOG', w: 152 },
+    { id: 'win', x: 566, y: 268, kind: 'memory', label: 'CONTEXT', sub: '≈600 tokens', w: 168 },
+  ],
+  bounds: [{ id: 'keep', x: 480, y: 36, w: 174, h: 170, label: 'WHAT SURVIVES' }],
+  notes: [
+    { id: 'big', x: 40, y: 56, ghost: true, text: ['observations are the', 'largest slice of a', 'mature agent’s window'] },
+  ],
+  edges: [
+    { id: 't-r', from: 'tool', to: 'raw', label: 'returns', ly: -9 },
+    { id: 'r-s', from: 'raw', to: 'shape', label: 'never straight in', lx: 56 },
+    { id: 's-k', from: 'shape', to: 'k4', label: 'select', labelT: 0.5, ly: -9 },
+    { id: 's-w', from: 'shape', to: 'win', label: 'in-window', ly: -9 },
+  ],
+  steps: [
+    { cap: 'A single test run returns twelve thousand tokens. Most of it is “ok, ok, ok”.', n: ['tool', 'raw'], e: ['t-r'], show: ['big'] },
+    { cap: 'It does not go straight into the window. Something between the tool and the context decides what matters.', n: ['raw', 'shape'], e: ['r-s'] },
+    { cap: 'Keep the failures — the whole reason the agent ran this.', n: ['k1'], show: ['keep'] },
+    { cap: 'Keep the tail, where stack traces and summaries live, and the counts that say how bad it is.', n: ['k2', 'k3'], show: ['keep'] },
+    { cap: 'Keep a pointer to the full log. Elision the model can see through beats elision it cannot.', n: ['k4'], e: ['s-k'], show: ['keep'] },
+    { cap: '<span class="cap-ok">Six hundred tokens carry the signal of twelve thousand</span> — and the loop can afford another twenty steps.', ok: ['win'], okE: ['s-w'], n: ['shape'], show: ['keep'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.filesContext = {
+  w: 700, h: 344, dur: 1750,
+  aria: 'Files as external context: the agent writes findings to disk and reads back only the section it needs, so the window holds pointers instead of everything it has learned.',
+  nodes: [
+    { id: 'agent', x: 300, y: 66, kind: 'model', label: 'AGENT', sub: 'window stays small', w: 190 },
+    { id: 'win', x: 300, y: 178, kind: 'memory', label: 'WINDOW', sub: 'task + pointers + current file', w: 224 },
+    { id: 'notes', x: 578, y: 178, kind: 'data', label: 'notes.md', sub: 'on disk', w: 152 },
+    { id: 'plan', x: 578, y: 66, kind: 'data', label: 'plan.md', sub: 'the checklist', w: 152 },
+    { id: 'read', x: 578, y: 290, kind: 'chip', label: 'READ ONE SECTION', w: 176 },
+    { id: 'comp', x: 96, y: 290, kind: 'chip', label: 'SURVIVES COMPACTION', w: 188 },
+  ],
+  notes: [
+    { id: 'exo', x: 40, y: 96, ghost: true, text: ['the filesystem is', 'memory the model', 'can address'] },
+  ],
+  edges: [
+    { id: 'a-w', from: 'agent', to: 'win', label: 'holds', lx: 24 },
+    { id: 'a-p', from: 'agent', to: 'plan', label: 'appends', ly: -9 },
+    { id: 'w-n', from: 'win', to: 'notes', label: 'writes out', ly: -9 },
+    { id: 'n-r', from: 'notes', to: 'read', label: 'grep, not reload', lx: 42 },
+    { id: 'r-w', from: 'read', to: 'win', label: 'just this step’s facts', labelT: 0.5, ly: 15 },
+    { id: 'n-c', from: 'notes', to: 'comp', kind: 'ctl', label: 'outlives the session', labelT: 0.62, ly: 15 },
+  ],
+  steps: [
+    { cap: 'A long task learns far more than the window can hold.', n: ['agent', 'win'], e: ['a-w'], show: ['exo'] },
+    { cap: 'So the agent writes findings out as it goes, instead of carrying them.', n: ['win', 'notes'], e: ['w-n'] },
+    { cap: 'The plan lives on disk too — a checklist it can tick, not a paragraph it has to remember.', n: ['agent', 'plan'], e: ['a-p'] },
+    { cap: 'When a step needs a fact, it reads that section back. Search the file; don’t reload it.', n: ['notes', 'read'], e: ['n-r'] },
+    { cap: 'The window ends up holding pointers and the file currently in hand.', n: ['read', 'win'], e: ['r-w'], show: ['exo'] },
+    { cap: '<span class="cap-ok">And none of it is lost to compaction</span> — the summary can drop a detail the file still has, verbatim.', ok: ['notes', 'comp'], okE: ['n-c'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.subagentIsolation = {
+  w: 700, h: 356, dur: 1750,
+  aria: 'Subagent context isolation: a subagent spends a fresh window on exploration and returns a small digest, so the parent pays for the answer rather than the search.',
+  nodes: [
+    { id: 'parent', x: 190, y: 60, kind: 'model', label: 'PARENT', sub: 'holds the task and the plan', w: 224 },
+    { id: 'pwin', x: 190, y: 160, kind: 'memory', label: 'PARENT WINDOW', sub: 'still mostly empty', w: 224 },
+    { id: 'sub', x: 520, y: 60, kind: 'model', label: 'SUBAGENT', sub: 'fresh window', w: 176 },
+    { id: 'burn', x: 520, y: 160, kind: 'data', label: '40 FILES READ', sub: '90K tokens, spent', w: 176 },
+    { id: 'dig', x: 520, y: 274, kind: 'chip', label: 'DIGEST · 800 TOKENS', w: 200 },
+    { id: 'gone', x: 190, y: 274, kind: 'chip', label: 'THE REST IS DISCARDED', w: 200 },
+  ],
+  notes: [
+    { id: 'tax', x: 60, y: 226, ghost: true, text: ['the parent pays for', 'the answer, not', 'the search'] },
+  ],
+  edges: [
+    { id: 'p-s', from: 'parent', to: 'sub', label: 'one question', ly: -9 },
+    { id: 's-b', from: 'sub', to: 'burn', label: 'explores', lx: 34 },
+    { id: 'b-d', from: 'burn', to: 'dig', label: 'compresses', lx: 40 },
+    { id: 'd-p', from: 'dig', to: 'pwin', label: 'only this crosses back', ly: -9 },
+    { id: 'b-g', from: 'burn', to: 'gone', kind: 'ctl', label: 'window closes', labelT: 0.55, ly: 15 },
+  ],
+  steps: [
+    { cap: 'The parent has a plan and a nearly empty window. It intends to keep it that way.', n: ['parent', 'pwin'] },
+    { cap: 'It needs an answer that costs a lot of reading to find. It delegates the <b>question</b>, not the work.', n: ['parent', 'sub'], e: ['p-s'] },
+    { cap: 'The subagent opens forty files and burns ninety thousand tokens finding out.', n: ['sub', 'burn'], e: ['s-b'] },
+    { cap: 'It returns eight hundred tokens: the answer, the files that matter, the traps.', n: ['burn', 'dig'], e: ['b-d'] },
+    { cap: '<span class="cap-ok">Only the digest crosses back.</span> The parent’s window grew by a paragraph, not by a codebase.', ok: ['dig', 'pwin'], okE: ['d-p'], show: ['tax'] },
+    { cap: 'Everything else is discarded with the subagent’s window — which is exactly the point, and also the risk.', n: ['burn', 'gone'], e: ['b-g'] },
+    { cap: 'What the subagent didn’t write down, the parent can never ask about. Delegation is lossy by construction.', bad: ['gone'], n: ['pwin'], d: 2800 },
+  ],
+};
+
+/* ---------- CODING AGENTS G-12..G-16 ---------- */
+
+DIAGRAMS.diffApplyWhole = {
+  w: 700, h: 336, dur: 1750,
+  aria: 'Whole-file rewrite: the model reprints the entire file, which always applies but costs output tokens proportional to file size and silently drops untouched code.',
+  nodes: [
+    { id: 'model', x: 130, y: 62, kind: 'model', label: 'MODEL', sub: 'reprints the file', w: 168 },
+    { id: 'out', x: 380, y: 62, kind: 'data', label: 'ENTIRE FILE', sub: '900 lines out for a 3-line fix', w: 250 },
+    { id: 'apply', x: 380, y: 178, kind: 'tool', label: 'WRITE', sub: 'no matching needed', w: 200 },
+    { id: 'file', x: 380, y: 282, kind: 'data', label: 'FILE ON DISK', w: 200 },
+    { id: 'lost', x: 604, y: 178, kind: 'untrusted', label: 'DROPPED', sub: 'code it never reprinted', w: 168 },
+    { id: 'cost', x: 130, y: 178, kind: 'chip', label: 'SLOW + EXPENSIVE', w: 176 },
+  ],
+  edges: [
+    { id: 'm-o', from: 'model', to: 'out', label: 'emits', ly: -9 },
+    { id: 'o-a', from: 'out', to: 'apply', label: 'always applies', lx: 48 },
+    { id: 'a-f', from: 'apply', to: 'file', label: 'overwrite', lx: 38 },
+    { id: 'a-l', from: 'apply', to: 'lost', label: 'omitted', ly: -9 },
+    { id: 'm-c', from: 'model', to: 'cost', kind: 'ctl', label: 'output ∝ file size', lx: 46 },
+  ],
+  steps: [
+    { cap: 'The simplest strategy: ask for the whole file back.', n: ['model', 'out'], e: ['m-o'] },
+    { cap: '<span class="cap-ok">It always applies.</span> There is no matching step, so there is nothing to fail.', ok: ['out', 'apply'], okE: ['o-a'] },
+    { cap: 'The write is a plain overwrite.', ok: ['file'], okE: ['a-f'], n: ['apply'] },
+    { cap: 'But a three-line fix costs nine hundred lines of output — every time, on every retry.', bad: ['cost'], badE: ['m-c'], n: ['model'] },
+    { cap: '<span class="cap-bad">And whatever the model quietly failed to reprint is now gone</span> — no conflict, no error, just missing code.', bad: ['lost'], badE: ['a-l'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.diffApplySearch = {
+  w: 700, h: 344, dur: 1750,
+  aria: 'Search and replace edits: the model emits a small anchored block, the harness matches it against the file, and a stale anchor fails loudly instead of corrupting the file.',
+  nodes: [
+    { id: 'model', x: 130, y: 60, kind: 'model', label: 'MODEL', sub: 'emits an edit block', w: 168 },
+    { id: 'blk', x: 384, y: 60, kind: 'data', label: 'SEARCH / REPLACE', sub: 'a few lines of anchor', w: 210 },
+    { id: 'match', x: 384, y: 174, kind: 'evaluator', label: 'MATCH IN FILE?', w: 210 },
+    { id: 'file', x: 384, y: 288, kind: 'data', label: 'FILE ON DISK', w: 180 },
+    { id: 'fail', x: 626, y: 174, kind: 'chip', label: 'NO MATCH → RETRY', w: 148 },
+    { id: 'reread', x: 130, y: 174, kind: 'chip', label: 'RE-READ, RE-ANCHOR', w: 188 },
+  ],
+  notes: [
+    { id: 'stale', x: 626, y: 254, anchor: 'middle', ghost: true, text: ['whitespace and', 'stale context are', 'the usual culprits'] },
+  ],
+  edges: [
+    { id: 'm-b', from: 'model', to: 'blk', label: 'emits', ly: -9 },
+    { id: 'b-m', from: 'blk', to: 'match', label: 'exact match required', lx: 62 },
+    { id: 'm-f', from: 'match', to: 'file', label: 'apply in place', lx: 48 },
+    { id: 'm-fail', from: 'match', to: 'fail', label: 'anchor drifted', ly: -9 },
+    { id: 'f-r', from: 'fail', to: 'reread', d: 'M626 190 C626 236 130 236 130 190', label: 'loudly', ly: 16 },
+    { id: 'r-m', from: 'reread', to: 'model', label: 'try again', lx: -6, ly: 4 },
+  ],
+  steps: [
+    { cap: 'The model emits only what changes, wrapped in enough surrounding lines to locate it.', n: ['model', 'blk'], e: ['m-b'] },
+    { cap: 'Output is proportional to the edit, not to the file. A three-line fix costs three lines.', n: ['blk'] },
+    { cap: 'The harness has to find that anchor in the real file, byte for byte.', n: ['blk', 'match'], e: ['b-m'] },
+    { cap: '<span class="cap-ok">Matched → applied in place</span>, and everything the model never mentioned is untouched by construction.', ok: ['match', 'file'], okE: ['m-f'] },
+    { cap: '<span class="cap-bad">No match.</span> The file moved on, or the model reproduced the whitespace wrong.', bad: ['match', 'fail'], badE: ['m-fail'], show: ['stale'] },
+    { cap: 'This is the good failure: it stops, says so, and nothing was written.', n: ['fail', 'reread'], e: ['f-r'] },
+    { cap: '<span class="cap-ok">Re-read the file, re-anchor, retry.</span> A loud failure beats a silent overwrite every time.', ok: ['reread', 'model'], okE: ['r-m'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.verifierLadder = {
+  w: 700, h: 372, dur: 1600,
+  aria: 'The verifier ladder: format, lint, typecheck, unit tests, integration tests and CI, ordered by seconds to signal, so the cheapest check that can fail runs first.',
+  nodes: [
+    { id: 'edit', x: 96, y: 190, kind: 'model', label: 'EDIT', sub: 'agent changes code', w: 152 },
+    { id: 'v1', x: 336, y: 66, kind: 'chip', label: 'FORMAT · 0.1s', w: 172 },
+    { id: 'v2', x: 336, y: 114, kind: 'chip', label: 'LINT · 2s', w: 172 },
+    { id: 'v3', x: 336, y: 162, kind: 'chip', label: 'TYPECHECK · 8s', w: 172 },
+    { id: 'v4', x: 336, y: 210, kind: 'chip', label: 'UNIT (CHANGED) · 20s', w: 172 },
+    { id: 'v5', x: 336, y: 258, kind: 'chip', label: 'INTEGRATION · 4m', w: 172 },
+    { id: 'v6', x: 336, y: 306, kind: 'chip', label: 'FULL CI · 22m', w: 172 },
+    { id: 'back', x: 96, y: 306, kind: 'chip', label: 'BACK TO THE EDIT', w: 172 },
+    { id: 'green', x: 574, y: 306, kind: 'evaluator', label: 'MERGEABLE', w: 152 },
+  ],
+  bounds: [{ id: 'lad', x: 240, y: 26, w: 194, h: 306, label: 'CHEAPEST SIGNAL FIRST' }],
+  notes: [
+    { id: 'ratio', x: 574, y: 120, anchor: 'middle', ghost: true, text: ['a typo caught at 2s', 'costs 660× less', 'than at 22m'] },
+  ],
+  edges: [
+    { id: 'e-v', from: 'edit', to: 'v3', label: 'climb', labelT: 0.5, ly: -9 },
+    { id: 'v-b', from: 'v3', to: 'back', label: 'fail → stop here', labelT: 0.5, ly: 15 },
+    { id: 'b-e', from: 'back', to: 'edit', label: 'fix', lx: -6, ly: 4 },
+    { id: 'v-g', from: 'v6', to: 'green', label: 'all pass', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The agent makes an edit. Something has to tell it whether that edit was any good.', n: ['edit'] },
+    { cap: 'Not one check — a ladder, ordered by how fast each rung can answer.', n: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'], show: ['lad'] },
+    { cap: 'The cheap rungs run first and catch the most common mistakes in seconds.', n: ['edit', 'v1', 'v2'], e: ['e-v'], show: ['lad'] },
+    { cap: '<span class="cap-bad">A type error at rung three</span> — and the ladder stops. The four-minute suite is never started.', bad: ['v3'], n: ['v4', 'v5', 'v6'], show: ['lad', 'ratio'] },
+    { cap: 'Failure goes straight back to the edit, with the traceback, seconds after the mistake.', bad: ['back'], badE: ['v-b'], n: ['v3'] },
+    { cap: 'Fix and climb again. Most iterations never leave the first three rungs.', n: ['back', 'edit'], e: ['b-e'] },
+    { cap: '<span class="cap-ok">Only a change that has cleared every cheap rung is allowed to spend twenty-two minutes of CI.</span>', ok: ['v6', 'green'], okE: ['v-g'], n: ['v1', 'v2', 'v3', 'v4', 'v5'], show: ['lad'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.repoConventions = {
+  w: 700, h: 348, dur: 1700,
+  aria: 'Repo conventions as context: a checked-in instructions file loads into every session, so conventions are enforced by review and version control rather than repeated by hand.',
+  nodes: [
+    { id: 'repo', x: 118, y: 60, kind: 'env', label: 'REPOSITORY', w: 160 },
+    { id: 'file', x: 366, y: 60, kind: 'data', label: 'AGENTS.md', sub: 'checked in, reviewed, diffed', w: 236 },
+    { id: 'agent', x: 366, y: 180, kind: 'model', label: 'EVERY SESSION', sub: 'loads it as instructions', w: 236 },
+    { id: 'good', x: 590, y: 132, kind: 'chip', label: 'BUILD + TEST COMMANDS', w: 180 },
+    { id: 'good2', x: 590, y: 180, kind: 'chip', label: 'TRAPS + INVARIANTS', w: 180 },
+    { id: 'bad', x: 590, y: 246, kind: 'untrusted', label: 'RESTATED SOURCE', sub: 'rots on refactor', w: 180 },
+    { id: 'pr', x: 118, y: 180, kind: 'human', label: 'CODE REVIEW', sub: 'the file changes like code', w: 176 },
+    { id: 'out', x: 240, y: 300, kind: 'evaluator', label: 'THE HOUSE STYLE, WITHOUT ASKING', w: 292 },
+  ],
+  notes: [
+    { id: 'once', x: 118, y: 250, ghost: true, text: ['written once,', 'not re-explained', 'every session'] },
+  ],
+  edges: [
+    { id: 'r-f', from: 'repo', to: 'file', label: 'in-tree', ly: -9 },
+    { id: 'f-a', from: 'file', to: 'agent', label: 'loaded on start', lx: 48 },
+    { id: 'a-g', from: 'agent', to: 'good' },
+    { id: 'a-b', from: 'agent', to: 'bad' },
+    { id: 'p-f', from: 'pr', to: 'file', kind: 'ctl', label: 'reviewed like code', labelT: 0.55, lx: -8, ly: -6 },
+    { id: 'a-o', from: 'agent', to: 'out', label: 'conventions followed', labelT: 0.55, ly: 15 },
+  ],
+  steps: [
+    { cap: 'A repository knows things no model can infer: which script to run, which directory is generated, which pattern is banned.', n: ['repo'] },
+    { cap: 'So write them down in the tree, where they version with the code that made them true.', n: ['repo', 'file'], e: ['r-f'] },
+    { cap: 'Every session loads it. Nobody has to remember to paste the conventions in.', n: ['file', 'agent'], e: ['f-a'] },
+    { cap: '<span class="cap-ok">Commands and traps earn their place</span> — the things that are expensive to discover and cheap to state.', ok: ['good', 'good2'], okE: ['a-g'], n: ['agent'] },
+    { cap: '<span class="cap-bad">Restating what the code already says does not.</span> It goes stale on the first refactor and misleads every session after.', bad: ['bad'], badE: ['a-b'], n: ['agent'] },
+    { cap: 'Because it is a checked-in file, it changes through review — the same gate as the code it describes.', n: ['pr', 'file'], e: ['p-f'], show: ['once'] },
+    { cap: '<span class="cap-ok">The agent follows the house style without being told</span>, and the file is how the house says what its style is.', ok: ['out'], okE: ['a-o'], n: ['agent'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.envBootstrap = {
+  w: 700, h: 356, dur: 1700,
+  aria: 'Environment bootstrap: clone, install, build and seed must all succeed before an agent can do anything, and a setup script makes that step reviewable and reproducible.',
+  nodes: [
+    { id: 'start', x: 92, y: 60, kind: 'env', label: 'FRESH CONTAINER', sub: 'nothing installed', w: 190 },
+    { id: 's1', x: 346, y: 66, kind: 'chip', label: 'CLONE', w: 148 },
+    { id: 's2', x: 346, y: 110, kind: 'chip', label: 'INSTALL DEPS', w: 148 },
+    { id: 's3', x: 346, y: 154, kind: 'chip', label: 'BUILD', w: 148 },
+    { id: 's4', x: 346, y: 198, kind: 'chip', label: 'SEED FIXTURES', w: 148 },
+    { id: 's5', x: 346, y: 242, kind: 'chip', label: 'TESTS GO GREEN', w: 148 },
+    { id: 'agent', x: 578, y: 154, kind: 'model', label: 'AGENT', sub: 'can finally start', w: 152 },
+    { id: 'script', x: 110, y: 236, kind: 'policy', label: 'SETUP SCRIPT', sub: 'in the repo, run in CI', w: 186 },
+    { id: 'fail', x: 300, y: 306, kind: 'untrusted', label: 'HOURS SPENT ON STEP 2', sub: 'and the task never began', w: 244 },
+  ],
+  bounds: [{ id: 'boot', x: 258, y: 26, w: 176, h: 252, label: 'BEFORE ANY WORK' }],
+  edges: [
+    { id: 'st-s', from: 'start', to: 's1', label: 'from zero', ly: -9 },
+    { id: 's-a', from: 's5', to: 'agent', label: 'baseline', labelT: 0.55, ly: 15 },
+    { id: 'sc-s', from: 'script', to: 's4', kind: 'ctl', label: 'one command', labelT: 0.45, ly: -8 },
+    { id: 's-f', from: 's2', to: 'fail', d: 'M272 110 C186 110 206 306 178 306', label: 'no script', ly: -9 },
+  ],
+  steps: [
+    { cap: 'A background agent wakes up in a container with nothing in it.', n: ['start'] },
+    { cap: 'Before a single line can be read, five things have to work.', n: ['s1', 's2', 's3'], e: ['st-s'], show: ['boot'] },
+    { cap: 'Fixtures and a green baseline included — an agent that cannot run the tests has no verifier at all.', n: ['s4', 's5'], show: ['boot'] },
+    { cap: '<span class="cap-bad">This is where autonomous runs die.</span> Not on the task — on a native dependency that needed a system package.', bad: ['s2', 'fail'], badE: ['s-f'], show: ['boot'] },
+    { cap: 'The fix is to make setup a script in the repo, not lore in someone’s shell history.', n: ['script', 's4'], e: ['sc-s'] },
+    { cap: 'Run it in CI as well, so it breaks in a pull request instead of in an agent session at 3am.', n: ['script'] },
+    { cap: '<span class="cap-ok">Only then does the agent start</span> — on a baseline that is known-good rather than assumed.', ok: ['s5', 'agent'], okE: ['s-a'], show: ['boot'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.mergeIntegration = {
+  w: 700, h: 352, dur: 1750,
+  aria: 'Integrating parallel work: two isolated agents each commit to their own branch, both touch a shared file, and the merge conflict goes to a single integrator rather than back to either author.',
+  nodes: [
+    { id: 'a1', x: 100, y: 64, kind: 'model', label: 'AGENT 1', sub: 'feature A', w: 156 },
+    { id: 'a2', x: 100, y: 236, kind: 'model', label: 'AGENT 2', sub: 'feature B', w: 156 },
+    { id: 'b1', x: 328, y: 64, kind: 'data', label: 'branch-a', w: 168 },
+    { id: 'b2', x: 328, y: 236, kind: 'data', label: 'branch-b', w: 168 },
+    { id: 'sh', x: 328, y: 150, kind: 'chip', label: 'BOTH EDITED shared/config', w: 224 },
+    { id: 'merge', x: 552, y: 150, kind: 'decision', label: 'MERGE', w: 140, h: 56 },
+    { id: 'conf', x: 552, y: 288, kind: 'untrusted', label: 'CONFLICT', w: 150 },
+    { id: 'integ', x: 552, y: 46, kind: 'human', label: 'ONE INTEGRATOR', sub: 'holds both intents', w: 176 },
+  ],
+  notes: [
+    { id: 'iso', x: 40, y: 150, ghost: true, text: ['isolation is the', 'easy half'] },
+  ],
+  edges: [
+    { id: 'a1-b1', from: 'a1', to: 'b1', label: 'commits', ly: -9 },
+    { id: 'a2-b2', from: 'a2', to: 'b2', label: 'commits', ly: -9 },
+    { id: 'b1-s', from: 'b1', to: 'sh', kind: 'ctl', noArrow: true },
+    { id: 'b2-s', from: 'b2', to: 'sh', kind: 'ctl', noArrow: true },
+    { id: 'b1-m', from: 'b1', to: 'merge', label: 'first, clean', labelT: 0.5, ly: -9 },
+    { id: 'b2-m', from: 'b2', to: 'merge', label: 'second', labelT: 0.5, ly: 15 },
+    { id: 'm-c', from: 'merge', to: 'conf', label: 'overlapping edits', lx: 56 },
+    { id: 'c-i', from: 'conf', to: 'integ', d: 'M627 288 C674 288 674 46 630 46', label: 'escalate', lanchor: 'end', lx: -6, ly: 3 },
+  ],
+  steps: [
+    { cap: 'Two agents, two worktrees, no shared filesystem. That part works.', n: ['a1', 'a2'], show: ['iso'] },
+    { cap: 'Each commits to its own branch, unaware of the other.', n: ['b1', 'b2'], e: ['a1-b1', 'a2-b2'] },
+    { cap: 'Both happened to touch the same config file. Neither had any way to know.', n: ['sh'], e: ['b1-s', 'b2-s'] },
+    { cap: '<span class="cap-ok">The first branch merges cleanly.</span> Parallelism looks like it worked.', ok: ['b1', 'merge'], okE: ['b1-m'] },
+    { cap: 'The second lands on a file that no longer looks the way its author left it.', n: ['b2', 'merge'], e: ['b2-m'] },
+    { cap: '<span class="cap-bad">Git surfaces the conflict — which is the good outcome.</span> Silent overwriting was the alternative.', bad: ['merge', 'conf'], badE: ['m-c'] },
+    { cap: 'Resolving it needs both intentions at once, and neither agent has ever seen the other’s.', bad: ['conf'], n: ['a1', 'a2'] },
+    { cap: '<span class="cap-ok">So integration is its own role</span> — one place that holds both changes, not a ping-pong between authors.', ok: ['integ'], okE: ['c-i'], d: 2800 },
+  ],
+};
