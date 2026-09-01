@@ -6,3 +6,6 @@ shots/
 *.log
 .DS_Store
 .vercel
+
+.env
+.env.local

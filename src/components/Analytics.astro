@@ -1,0 +1,18 @@
+---
+/* Google Analytics 4 — property "AI Systems Atlas" in the Zolt Labs account.
+   The measurement ID is public (it ships in the page source), so it lives here
+   rather than in an env var. Only emitted on production builds, so `astro dev`
+   never reports into the property; PUBLIC_GA_ID overrides for one-off testing. */
+const gaId = import.meta.env.PUBLIC_GA_ID || (import.meta.env.PROD ? 'G-VDWTBRHR6K' : '');
+---
+{gaId && (
+  <>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script is:inline define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  </>
+)}

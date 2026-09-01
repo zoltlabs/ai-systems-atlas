@@ -3,6 +3,7 @@ import '../styles/atlas.css';
 import { SITE, LINKS } from '../site';
 import { collections, colOrder, absolute, ogImage } from '../lib/seo';
 import { SEARCH_INDEX, DIAGRAM_COUNT, PLATE_COUNT } from '../data/collections.js';
+import Analytics from '../components/Analytics.astro';
 
 interface Props {
   title: string;
@@ -55,6 +56,8 @@ const searchJson = JSON.stringify(SEARCH_INDEX).replace(/</g, '\\u003c');
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
 
   {ld.map(o => <script type="application/ld+json" set:html={JSON.stringify(o).replace(/</g, '\\u003c')} />)}
+
+  <Analytics />
 
   <script is:inline>
     /* legacy hash routes (#/harnesses/react) → real URLs, before first paint */
