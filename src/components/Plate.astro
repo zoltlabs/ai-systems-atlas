@@ -1,9 +1,11 @@
 ---
-/* Plate anatomy (DESIGN.md §4): title row → definition → diagram shell → meta grid → Related. */
+/* Plate anatomy (DESIGN.md §4): title row → definition → diagram shell → meta grid →
+   Further reading → Related. */
 import Diagram from './Diagram.astro';
 import { DIAGRAMS } from '../data/diagrams.js';
 import type { Plate } from '../lib/seo';
 import { plateUrl } from '../lib/seo';
+import { resolveRefs } from '../data/references.js';
 
 interface Props { colId: string; p: Plate; routed?: boolean; heading?: 'h1' | 'h3'; }
 const { colId, p, routed = false, heading = 'h3' } = Astro.props;
@@ -13,6 +15,7 @@ const CUSTOM_HEIGHTS: Record<string, number> = { map: 470, regression: 340, taxo
 const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
 const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
 const Heading = heading;
+const refs = resolveRefs(p.refs);
 ---
 <article class="plate" id={`plate-${p.slug}`}>
   <div class="plate-head">
@@ -31,6 +34,19 @@ const Heading = heading;
     <div class="meta-cell insight"><div class="mlabel">Key insight</div><p set:html={p.insight} /></div>
     <div class="meta-cell failure"><div class="mlabel">Failure mode</div><p set:html={p.failure} /></div>
   </div>
+  {refs.length > 0 && (
+    <div class="plate-refs">
+      <div class="mlabel">Further reading</div>
+      <ul>
+        {refs.map(r => (
+          <li>
+            <a href={r.url} target="_blank" rel="noopener noreferrer">{r.title}</a>
+            <span class="ref-where">{r.where}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
   {p.related && p.related.length > 0 && (
     <div class="plate-related"><span class="rlabel">Related</span>{p.related.map(([t, r]) => <a class="chip" href={r}>{t}</a>)}</div>
   )}

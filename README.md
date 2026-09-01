@@ -22,6 +22,7 @@ Deployed on Vercel.
 | `src/data/diagrams.js` | Every `DiagramDefinition` (nodes, edges, bounds, notes, steps), keyed by id. |
 | `src/data/collections.js` | Collections and plates: slug, code, definition, insight, failure mode, related chips, search keywords. Also builds `SEARCH_INDEX` and `PLATE_LOOKUP`. |
 | `src/data/custom-data.js` | Data for the custom renderers (harness map, failure taxonomy, window anatomy, budget builder). |
+| `src/data/references.js` | The further-reading library: every cited source, keyed. Plates cite by key; unknown keys throw at build. |
 | `src/data/card-minis.js` | Mini diagrams for the home-page collection cards. |
 | `src/scripts/atlas.js` | The one client bundle: mounts diagrams from inline JSON, custom renderers, ⌘K palette, theme toggle, legacy `#/` redirect. |
 | `src/scripts/theme.js` | The three-state theme control (system / light / dark). The pre-paint stamp lives inline in `Base.astro`. |
@@ -80,8 +81,10 @@ and every pull request.
 2. **Add the plate entry** to its collection in `src/data/collections.js`: `slug`, `code`
    (per-collection series `H-`/`S-`/`E-`/`X-`/`G-`, sequential, never reused), `title`,
    `dg` (or `modes` for a variant toggle, or `custom`), `def`, `insight`, `failure`,
-   `related` (real paths, e.g. `/harnesses/react`), and `kw` for search. The route,
-   sitemap entry, JSON-LD, prev/next links and search index are all derived from this.
+   `related` (real paths, e.g. `/harnesses/react`), `refs` (1–3 keys from
+   `src/data/references.js` — add the source there first, and only after opening it), and
+   `kw` for search. The route, sitemap entry, JSON-LD, prev/next links and search index are
+   all derived from this.
 3. **Build and screenshot**: `npm run build && npm run og -- <collection>/<slug>` generates
    the plate's share image into `public/og/` (commit it). Then `npm run shots` and check the
    plate in light, dark and 390px for label collisions, viewBox clipping, and both toggle

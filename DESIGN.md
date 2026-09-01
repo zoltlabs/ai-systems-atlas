@@ -130,7 +130,8 @@ one. A reader's explicit choice always beats the OS.
   drop-shadow stacking; the single `--shadow` token is for hover lift and the palette only.
 - Plate anatomy, in order, always: title row (code badge + h3 + deep-link route on the right)
   → one-line definition → diagram shell (panel + control bar → optional inspector) →
-  meta grid (Key insight | Failure mode) → Related chips.
+  meta grid (Key insight | Failure mode) → Further reading → Related chips. Further reading
+  is external and Related is internal, and internal navigation closes the plate.
 - Wide content (diagrams, tables, the map) scrolls inside its own `overflow-x: auto`
   container. The page body never scrolls horizontally, at any viewport.
 
@@ -197,7 +198,15 @@ resolution beat — land the risk, then the fix.
 ## 7. Content rules
 
 - Plate format is fixed: **Title · one-line definition · interactive diagram · Key insight ·
-  Failure mode · Related.** Definition ≤ 1 sentence; insight and failure ≤ 2 sentences each.
+  Failure mode · Further reading · Related.** Definition ≤ 1 sentence; insight and failure
+  ≤ 2 sentences each.
+- **Every plate cites its sources.** 1–3 entries, by key, from the library in
+  `src/data/references.js` — never an inline URL, so each source is defined once and stays
+  auditable in one place. Cite what actually speaks to the plate; a plate with no good
+  source gets none rather than filler. **Every entry in the library must have been opened
+  and checked before it was added** — an arXiv ID against the listing for that exact title,
+  a web source against the live page. Never add a citation from memory: a reference atlas
+  with a wrong citation is worse than one with no citations.
 - Write for a smart engineer with 2 minutes. Concrete beats vague; numbers beat adjectives.
 - Annotations live around the diagram, not in paragraphs below it.
 - Preview (stub) modules are honestly labeled ("Preview — full interactive plates in

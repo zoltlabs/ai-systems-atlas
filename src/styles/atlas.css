@@ -254,6 +254,16 @@ main{min-height:70vh}
 .meta-cell.failure{border-left-color:var(--danger)}
 .meta-cell .mlabel{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:4px}
 .meta-cell p{margin:0;font-size:14.5px;color:var(--ink2);line-height:1.6}
+/* Further reading — external sources, sitting between the meta grid and the Related chips
+   so internal navigation still closes the plate (DESIGN.md §4). */
+.plate-refs{margin-top:16px}
+.plate-refs .mlabel{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.plate-refs ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.plate-refs li{font-size:14.5px;line-height:1.5;display:flex;flex-wrap:wrap;gap:3px 8px;align-items:baseline}
+.plate-refs a{color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s,border-color .15s}
+.plate-refs a:hover{color:var(--accent-ink);border-bottom-color:currentColor}
+.plate-refs .ref-where{font-size:13px;color:var(--ink3);white-space:nowrap}
+
 .plate-related{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .plate-related .rlabel{font-size:13px;color:var(--ink3);font-weight:600}
 .chip{
