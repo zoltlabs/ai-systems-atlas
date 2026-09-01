@@ -6,7 +6,7 @@
           node scripts/og.mjs harnesses/react    # one plate (or "home", "harnesses") */
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser.mjs';
 import { serveDist } from './serve.mjs';
 import { COLLECTIONS, COL_ORDER } from '../src/data/collections.js';
 
@@ -21,7 +21,7 @@ for (const c of COL_ORDER) {
 const todo = only.length ? targets.filter(t => only.includes(t.key)) : targets;
 
 const { server, url } = await serveDist('dist');
-const browser = await chromium.launch();
+const browser = await launchBrowser();
 const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, colorScheme: 'light' });
 const page = await ctx.newPage();
 const errors = [];

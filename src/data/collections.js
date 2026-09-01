@@ -1,6 +1,6 @@
 /* AI Systems Atlas — collection + plate content. Ported from atlas/p4_pages.js, p45_expansion.js and the top of p5_app.js.
    Routes are real paths (/collection/slug). Plate order within a collection is the order of the arrays after the merges below. */
-import { DIAGRAMS, flowMini } from './diagrams.js';
+import { DIAGRAMS } from './diagrams.js';
 
 function P(o) { return o; } // plate
 
@@ -80,7 +80,7 @@ export const COLLECTIONS = {
         def: 'Work in bounded bursts, checkpoint durable state, sleep, and resume — for goals that outlive any single session.',
         insight: 'The context window is not the state. Anything that must survive lives in the checkpoint; the window is just a working set.',
         failure: 'Checkpoint drift: if the saved state and the real world diverge while the agent sleeps, it resumes confidently into a world that no longer exists.',
-        related: [['State machine', '/harnesses/state-machine'], ['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents']], kw: 'durable checkpoint sleep resume persistent' }),
+        related: [['State machine', '/harnesses/state-machine'], ['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents/checkpointing']], kw: 'durable checkpoint sleep resume persistent' }),
     ],
   },
 
@@ -121,7 +121,7 @@ export const COLLECTIONS = {
         def: 'Secrets that legitimately entered context leave through any outbound channel — URLs, headers, rendered images, commit messages.',
         insight: 'Exfiltration needs two things: a secret in context and an outbound channel. You rarely control the first; you fully control the second. Enumerate every way bytes leave.',
         failure: 'Blocking the obvious channel (email) while markdown image URLs, DNS lookups and log lines remain wide open.',
-        related: [['Indirect injection', '/security/indirect-prompt-injection'], ['Credential leakage', '/security']], kw: 'secrets leak exfil egress taint tokens' }),
+        related: [['Indirect injection', '/security/indirect-prompt-injection'], ['Credential leakage', '/security/credential-leakage']], kw: 'secrets leak exfil egress taint tokens' }),
       P({ slug: 'confused-deputy', code: 'S-05', title: 'Confused Deputy',
         modes: [
           { id: 'attack', label: 'Attack', cls: 'danger', dg: 'deputyAttack' },
@@ -130,15 +130,7 @@ export const COLLECTIONS = {
         def: 'A low-privilege requester tricks a high-privilege agent into doing something the requester could never do directly.',
         insight: 'The fix is decades old: don’t act on ambient authority. Every action should be evaluated against the requester’s permissions, not the agent’s.',
         failure: 'One service account with admin scope shared across every user of the agent — the classic deputy, now with natural-language persuasion attached.',
-        related: [['Direct injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security']], kw: 'privilege ambient authority scoped credentials impersonation' }),
-    ],
-    minis: [
-      { code: 'S-06', title: 'Tool poisoning', text: 'A tool’s own description or output carries instructions — the model trusts its tools more than the web.', mini: () => flowMini([{ label: 'POISONED TOOL DEF', risk: true }, 'MODEL', 'BAD CALL']), defline: 'defend: pin + review tool manifests' },
-      { code: 'S-07', title: 'Memory poisoning', text: 'An attacker plants content that gets written to long-term memory, then every future session inherits it.', mini: () => flowMini([{ label: 'PLANTED FACT', risk: true }, 'MEMORY WRITE', 'FUTURE SESSIONS']), defline: 'defend: gate writes · provenance tags' },
-      { code: 'S-08', title: 'Malicious retrieved content', text: 'RAG faithfully retrieves whatever ranks well — including documents crafted to rank well and mislead.', mini: () => flowMini([{ label: 'SEO’D DOC', risk: true }, 'RETRIEVER', 'CONTEXT']), defline: 'defend: source allowlists · taint marks' },
-      { code: 'S-09', title: 'Credential leakage', text: 'Keys pasted into context leak through logs, traces, error messages and model outputs.', mini: () => flowMini(['SECRET IN CTX', 'LOGS / OUTPUT', { label: 'EXPOSED', risk: true }]), defline: 'defend: short-lived creds · redaction' },
-      { code: 'S-10', title: 'Privilege escalation', text: 'Chains of individually-safe tools compose into an unsafe capability nobody granted explicitly.', mini: () => flowMini(['read cfg', 'write cron', { label: 'ROOT SHELL', risk: true }]), defline: 'defend: reason about tool *compositions*' },
-      { code: 'S-11', title: 'Unsafe side effects', text: 'No attacker needed: an agent with write access and a misunderstanding deletes the wrong thing at scale.', mini: () => flowMini(['AGENT', 'BULK DELETE', { label: 'IRREVERSIBLE', risk: true }]), defline: 'defend: dry-runs · approval gates · undo' },
+        related: [['Direct injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security/privilege-escalation']], kw: 'privilege ambient authority scoped credentials impersonation' }),
     ],
     defenses: [
       ['Least privilege', 'Grant the minimum capability set the task needs, per task, not per agent.'],
@@ -182,11 +174,6 @@ export const COLLECTIONS = {
         failure: 'Calibrating once and trusting forever — task drift silently decouples the judge from what humans would say now.',
         related: [['LLM-as-judge', '/evals/llm-as-judge'], ['Outcome vs process', '/evals/outcome-vs-process']], kw: 'calibration agreement gold labels human' }),
     ],
-    minis: [
-      { code: 'E-08', title: 'Adversarial evals', text: 'Mix attack tasks into the benchmark: injections, honeypot credentials, tempting shortcuts. Score refusals as wins.', mini: () => flowMini([{ label: 'ATTACK TASKS', risk: true }, 'AGENT', 'SAFE?']), defline: 'measures: resistance under pressure' },
-      { code: 'E-09', title: 'Cross-model evals', text: 'Same tasks, same harness, models swapped. Separates “the model got smarter” from “the harness got better”.', mini: () => flowMini(['TASK', 'MODEL A / B / C', 'COMPARE']), defline: 'measures: harness–model attribution' },
-      { code: 'E-10', title: 'Offline vs online', text: 'Static benchmarks are controlled but stale; production monitoring is live but noisy. You need both, and they will disagree.', mini: () => flowMini(['BENCHMARK', 'SHIP', 'PROD MONITORING']), defline: 'measures: does offline predict online?' },
-    ],
   },
 
   context: {
@@ -208,18 +195,7 @@ export const COLLECTIONS = {
         def: 'Cast a wide net with similarity search, then rerank hard, so only genuinely relevant content spends context budget.',
         insight: 'Recall is cheap; precision is what protects the window. The reranker — which actually reads the candidates — is where quality comes from.',
         failure: 'Stuffing top-20 raw chunks into context: similar-but-wrong documents don’t just waste tokens, they actively mislead the model.',
-        related: [['Context budget', '/context/context-budget'], ['Malicious retrieved content', '/security']], kw: 'rag retrieval embedding rerank vector search' }),
-    ],
-    minis: [
-      { code: 'X-05', title: 'Context overflow', text: 'The window fills mid-task. Without a plan, the harness truncates — usually the oldest, often the most important.', mini: () => flowMini(['200K BUDGET', { label: 'OVERFLOW', risk: true }]), defline: 'plan compaction before you need it' },
-      { code: 'X-06', title: 'Context rot', text: 'Long contexts degrade attention: stale errors, dead ends and duplicate files dilute what matters even before the limit.', mini: () => flowMini(['USEFUL', 'STALE', 'STALE', 'SIGNAL LOST']), defline: 'prune actively, not just at the limit' },
-      { code: 'X-07', title: 'Sliding window', text: 'Keep the last N turns verbatim, older turns summarized. Simple, predictable, and blind to importance.', mini: () => flowMini(['old → summary', 'RECENT VERBATIM']), defline: 'cheap default; pair with pinned facts' },
-      { code: 'X-08', title: 'Working memory', text: 'The scratch state of the current task: the plan, the open file, the last error. Lives in-window, dies with the task.', mini: () => flowMini(['PLAN', 'OPEN FILE', 'LAST ERROR']), defline: 'in-window · task-scoped' },
-      { code: 'X-09', title: 'Episodic memory', text: '“What happened”: past sessions, decisions and outcomes, retrievable by similarity to the current situation.', mini: () => flowMini(['SESSION LOG', 'STORE', 'RECALL']), defline: 'out-of-window · time-indexed' },
-      { code: 'X-10', title: 'Semantic memory', text: '“What is true”: distilled facts and preferences, deduplicated and updated as evidence changes.', mini: () => flowMini(['FACTS', 'UPDATE', 'STABLE KNOWLEDGE']), defline: 'out-of-window · fact-indexed' },
-      { code: 'X-11', title: 'Procedural memory', text: '“How to do it”: learned workflows and skills, loaded when the matching task appears.', mini: () => flowMini(['SKILL', 'MATCH TASK', 'LOAD']), defline: 'out-of-window · task-indexed' },
-      { code: 'X-12', title: 'Write policies & decay', text: 'What earns a memory write, and what fades? Write too much and retrieval drowns; never forget and errors become permanent.', mini: () => flowMini(['CANDIDATE', 'WORTH KEEPING?', 'DECAY']), defline: 'forgetting is a feature' },
-      { code: 'X-13', title: 'State representation', text: 'Structured state (JSON, checklists, diffs) survives compaction and model swaps far better than prose recollection.', mini: () => flowMini(['PROSE', 'vs', 'STRUCTURED STATE']), defline: 'schema beats vibes' },
+        related: [['Context budget', '/context/context-budget'], ['Malicious retrieved content', '/security/malicious-retrieved-content']], kw: 'rag retrieval embedding rerank vector search' }),
     ],
   },
 
@@ -242,22 +218,12 @@ export const COLLECTIONS = {
         def: 'One agent with full context and no coordination — or several specialists working in parallel, plus the overhead of keeping them coherent.',
         insight: 'Multi-agent buys wall-clock speed on cleanly-splittable work and nothing else. Coordination cost grows with coupling, and most features are more coupled than they look.',
         failure: 'Splitting a coupled task: four agents each holding a quarter of the picture will confidently build four incompatible quarters.',
-        related: [['Hierarchical', '/harnesses/hierarchical'], ['Parallel swarm', '/harnesses/parallel-swarm'], ['Worktrees', '/coding-agents']], kw: 'orchestrator subagents parallel coordination overhead integration' }),
+        related: [['Hierarchical', '/harnesses/hierarchical'], ['Parallel swarm', '/harnesses/parallel-swarm'], ['Worktrees', '/coding-agents/worktrees']], kw: 'orchestrator subagents parallel coordination overhead integration' }),
       P({ slug: 'ci-loop', code: 'G-03', title: 'CI Feedback Loop', dg: 'ciLoop',
         def: 'Push, let CI verify remotely, and let failure events — with logs — wake the agent to fix and push again.',
         insight: 'CI extends the verifier beyond the agent’s machine: same loop as test/diagnose, but event-driven and running against the team’s real gates.',
         failure: 'Poll-and-pray: agents that sleep-loop on CI status burn tokens and miss context that the failure event would have carried for free.',
         related: [['Event-driven agent', '/harnesses/event-driven'], ['Test loop', '/coding-agents/test-loop']], kw: 'ci push green pipeline event webhook' }),
-    ],
-    minis: [
-      { code: 'G-04', title: 'Plan-first coding', text: 'Produce a reviewable plan before any edit. Humans veto cheaply at the plan stage; reverts are expensive at the diff stage.', mini: () => flowMini(['PLAN', 'HUMAN OK', 'EDIT']), defline: 'best for: large or risky changes' },
-      { code: 'G-05', title: 'Test-driven agent', text: 'Write the failing test first; the test then defines “done” unambiguously for the implementation loop.', mini: () => flowMini(['WRITE TEST', 'RED', 'IMPLEMENT', 'GREEN']), defline: 'best for: well-specified behavior' },
-      { code: 'G-06', title: 'Reviewer agent', text: 'A separate agent reviews the diff with fresh context — catching what the author-agent’s context has normalized.', mini: () => flowMini(['DIFF', 'REVIEWER', 'FINDINGS']), defline: 'best for: catching author blindness' },
-      { code: 'G-07', title: 'Worktree parallelism', text: 'Each agent gets its own git worktree: true filesystem isolation, merge conflicts surfaced by git, not by luck.', mini: () => flowMini(['WT-1', 'WT-2', 'MERGE']), defline: 'best for: independent features' },
-      { code: 'G-08', title: 'Researcher / implementer', text: 'One agent reads and summarizes the codebase; a second implements against the digest. Halves context pressure.', mini: () => flowMini(['RESEARCH', 'DIGEST', 'IMPLEMENT']), defline: 'best for: huge unfamiliar repos' },
-      { code: 'G-09', title: 'Checkpointing', text: 'Commit early, commit often: git is the coding agent’s durable state. A bad direction is a reset, not a restart.', mini: () => flowMini(['EDIT', 'COMMIT', 'EDIT', 'RESET?']), defline: 'best for: long tasks · recovery' },
-      { code: 'G-10', title: 'Repo indexing & code search', text: 'Symbol maps and semantic search let the agent find the right file in one hop instead of ten greps.', mini: () => flowMini(['QUERY', 'INDEX', 'RIGHT FILE']), defline: 'best for: navigation at scale' },
-      { code: 'G-11', title: 'Computer-use coding', text: 'The agent drives a real browser to verify UI changes — closing the loop that unit tests can’t see.', mini: () => flowMini(['EDIT UI', 'DRIVE BROWSER', 'SCREENSHOT']), defline: 'best for: frontend verification' },
     ],
   },
 };
@@ -425,7 +391,7 @@ COLLECTIONS.evals.plates.push(
     def: 'Run version A and version B over the same benchmark set; look at per-task deltas, not just the mean.',
     insight: 'Averages hide regressions. A change that lifts the mean 9 points and silently breaks one capability is how agents get worse while dashboards get greener.',
     failure: 'A benchmark set too small or too easy to move: every change looks neutral, so every change ships.',
-    related: [['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals']], kw: 'regression version compare benchmark delta ab' }),
+    related: [['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals']], kw: 'regression version compare benchmark delta ab' }),
   P({ slug: 'failure-taxonomy', code: 'E-06', title: 'Failure Taxonomy', custom: 'taxonomy',
     def: 'Classify every failure by where in the loop it originated — perception, reasoning, planning, tool use, recovery, verification, or the final answer.',
     insight: 'The distribution tells you what to fix next. A recovery-heavy histogram wants a better retry loop, not a bigger model.',
@@ -457,10 +423,6 @@ COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES);
 COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES);
 COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES);
 COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES);
-COLLECTIONS.security.minis = [];
-COLLECTIONS.evals.minis = [];
-COLLECTIONS.context.minis = [];
-COLLECTIONS['coding-agents'].minis = [];
 
 /* rebuild the search index now that every collection is final */
 for (const [colId, col] of Object.entries(COLLECTIONS)) {

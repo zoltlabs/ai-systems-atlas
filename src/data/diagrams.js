@@ -1000,25 +1000,6 @@ DIAGRAMS.ciLoop = {
   ],
 };
 
-/* generic tiny linear mini for compact cards */
-export function flowMini(items, opts = {}) {
-  const gap = opts.gap || 26;
-  const vertical = !!opts.vertical;
-  const nodes = []; const edges = [];
-  let pos = 16;
-  items.forEach((it, i) => {
-    const label = typeof it === 'string' ? it : it.label;
-    const kindCls = typeof it === 'object' && it.risk ? 'untrusted' : 'chip';
-    const w = Math.max(58, label.length * 6.4 + 20);
-    const x = vertical ? 120 : pos + w / 2;
-    const y = vertical ? pos + 14 : 36;
-    nodes.push({ id: 'n' + i, x, y, kind: kindCls, label, w, h: 24, noicon: true });
-    if (i > 0) edges.push({ from: 'n' + (i - 1), to: 'n' + i, kind: opts.ctl ? 'ctl' : undefined });
-    pos += vertical ? 24 + gap : w + gap;
-  });
-  return { w: vertical ? 240 : pos - gap + 16, h: vertical ? pos - gap + 26 : 66, nodes, edges };
-}
-
 /* ============ expansion: full plates for every previewed pattern ============ */
 
 /* ---------- SECURITY S-06..S-11 (attack/defense pairs) ---------- */
@@ -1700,5 +1681,3 @@ DIAGRAMS.computerUse = {
     { cap: '<span class="cap-ok">“Looks right” becomes a verifiable step, not a hope.</span>', ok: ['chk'], e: ['c-e'], d: 2600 },
   ],
 };
-
-/* ---------- plate entries for collections mutated in p5 ---------- */

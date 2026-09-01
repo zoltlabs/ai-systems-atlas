@@ -31,6 +31,7 @@ Deployed on Vercel.
 | `scripts/og.mjs` | Screenshots every `/og/*` target at 1200×630 into `public/og/`. |
 | `scripts/shots.mjs` | Parity screenshots (home, collections, plates × light/dark/390px). |
 | `scripts/verify.mjs` | Acceptance checks: sitemap 200s, meta/JSON-LD, OG images, console errors, mobile overflow. |
+| `scripts/browser.mjs` | Shared Playwright launch for the three scripts above; honours `CHROME_PATH`. |
 
 ## Routes
 
@@ -55,6 +56,16 @@ npm run shots      # parity screenshots → shots/
 
 `npm run shots -- --ref /path/to/atlas.html` also screenshots the legacy single-page
 build for side-by-side comparison.
+
+All three Playwright scripts honour `CHROME_PATH`, which points them at an existing
+Chromium instead of the revision Playwright downloads for itself:
+
+```bash
+CHROME_PATH=/path/to/chromium npm run verify
+```
+
+CI (`.github/workflows/ci.yml`) runs `check`, `build` and `verify` on every push to `main`
+and every pull request.
 
 ## Adding a plate
 

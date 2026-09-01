@@ -212,15 +212,28 @@ resolution beat — land the risk, then the fix.
 
 ## 9. Adding a new plate (procedure)
 
-1. Define the diagram as data in `p3_data.js` (`DiagramDefinition`: nodes, edges, bounds,
-   notes, steps). No bespoke rendering unless the concept truly can't be expressed —
-   custom renderers go in `CUSTOM_MOUNTS` and still use the tokens and panel chrome.
-2. Add the plate entry (slug, code, def/insight/failure/related, `kw`) to its collection in
-   `p4_pages.js`, and a `SEARCH_INDEX` entry if added outside the collection arrays.
-3. Rebuild (`./build.sh`), load `test.html` headless, and screenshot the plate in light,
-   dark, and 390px — check label collisions, viewBox clipping, and both toggle modes.
-4. Verify the deep link (`#/collection/slug`, plus `?mode=` if it has modes) and search.
-5. Review against §1 principles: can a cold reader get it from the diagram alone?
+The canonical step-by-step, with commands, lives in [README.md](README.md#adding-a-plate).
+This section is the design half of it — the rules a new plate is reviewed against.
+
+1. **Define the diagram as data** in `src/data/diagrams.js`: a `DiagramDefinition` with
+   `w`/`h`, `aria`, `nodes`, `edges`, optional `bounds`/`notes`, and 3–9 `steps`. Use only
+   the node kinds and edge semantics from §5. No bespoke rendering unless the concept truly
+   can't be expressed — a custom renderer goes in `src/scripts/custom.js` with its data in
+   `src/data/custom-data.js`, and still uses the tokens and panel chrome.
+2. **Add the plate entry** to its collection in `src/data/collections.js`: `slug`, `code`
+   (per-collection series, sequential, never reused — see §7), `title`, `dg` (or `modes`
+   for a variant toggle, or `custom`), `def`, `insight`, `failure`, `related` (real plate
+   paths, e.g. `/harnesses/react` — never a bare collection path unless you mean the
+   collection index), and `kw`. The route, sitemap entry, JSON-LD, prev/next links and
+   search index all derive from this entry.
+3. **Build and screenshot**: `npm run build`, then `npm run og -- <collection>/<slug>` to
+   generate the share image into `public/og/` (commit it), then `npm run shots`. Check the
+   plate in light, dark and 390px for label collisions, viewBox clipping, and both toggle
+   modes.
+4. **Verify**: `npm run verify` must pass — every route 200, per-plate OG image at
+   1200×630, zero console errors, no horizontal overflow. Check the real deep link
+   (`/collection/slug`, plus `?mode=` if it has modes) and that search finds it.
+5. **Review against §1 principles**: can a cold reader get it from the diagram alone?
 
 ---
 

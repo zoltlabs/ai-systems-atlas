@@ -4,10 +4,11 @@
    - every OG image referenced by a page exists, is a PNG, and is 1200×630
    - every page loads in headless Chromium with zero console errors
    - no horizontal page overflow at 390px
-   usage: npm run build && npm run og && npm run verify */
+   usage: npm run build && npm run og && npm run verify
+   set CHROME_PATH to use an existing Chromium instead of Playwright's downloaded one. */
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from 'playwright';
+import { launchBrowser, stubWebfonts } from './browser.mjs';
 import { serveDist } from './serve.mjs';
 
 const SITE = 'https://aisystemsatlas.com';
@@ -30,9 +31,11 @@ function pngSize(buf) {
   return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
-const browser = await chromium.launch();
+const browser = await launchBrowser();
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+/* keep the run hermetic: these checks are about structure, not glyphs */
+await stubWebfonts(ctx); await stubWebfonts(mobile);
 const seenOg = new Set();
 let checked = 0;
 

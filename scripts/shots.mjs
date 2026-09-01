@@ -6,7 +6,7 @@
           node scripts/shots.mjs --ref /path/to/atlas.html   # also shoot the reference page */
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser.mjs';
 import { serveDist } from './serve.mjs';
 import { COL_ORDER } from '../src/data/collections.js';
 
@@ -34,7 +34,7 @@ const VARIANTS = [
 ];
 
 const { server, url } = await serveDist('dist');
-const browser = await chromium.launch();
+const browser = await launchBrowser();
 const overflow = [];
 const errors = [];
 
