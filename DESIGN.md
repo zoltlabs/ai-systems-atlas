@@ -34,7 +34,11 @@ The live artifact: https://claude.ai/code/artifact/8ad0a3c9-318f-41e0-933a-1dfcc
 | Body / UI | **Plus Jakarta Sans** (400–800) | system-ui, sans-serif | everything readable |
 | Technical | **IBM Plex Mono** (400–600) | ui-monospace | diagram layer ONLY (see below) |
 
-Load via Google Fonts with `display=swap`. Always declare the fallback stacks.
+Self-hosted, not fetched from a third party: `scripts/fonts.mjs` extracts the woff2 files
+from the `@fontsource` packages into `src/fonts/` and writes `src/styles/fonts.css`, which
+declares the real family names above (never @fontsource's "… Variable" aliases). Latin and
+latin-ext subsets only, `display: swap`, `unicode-range` per subset. Regenerate with
+`npm run fonts`. Always declare the fallback stacks.
 
 ### Where mono is allowed
 
@@ -80,6 +84,12 @@ All colors are CSS custom properties. **Never hardcode a hex in a component** �
 tokens, and every color must resolve in the un-stamped (system) theme state: full light palette
 on bare `:root`, dark overrides under `@media (prefers-color-scheme: dark)` guarded as
 `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]`.
+
+The nav carries a three-state theme control — system (un-stamped, the default), light, dark —
+so all three states are real and all three must be checked. The stamp is applied by an inline
+script in `Base.astro` before first paint; `src/scripts/theme.js` only drives the button, and
+which glyph shows is CSS-driven off `:root[data-theme-pref]` so it can never flash the wrong
+one. A reader's explicit choice always beats the OS.
 
 ### Core tokens
 
@@ -205,7 +215,8 @@ resolution beat — land the risk, then the fix.
 - [ ] Clickable SVG nodes: `tabindex="0"`, `role="button"`/`link`, Enter/Space handlers.
 - [ ] Step captions in an `aria-live="polite"` region.
 - [ ] Nothing meaningful is color-only (see §3).
-- [ ] Both themes checked — including the un-stamped system state — on every new surface.
+- [ ] All three theme states checked on every new surface: un-stamped (system), forced light
+      on a dark OS, and forced dark on a light OS.
 - [ ] Mobile (390px): zero horizontal page overflow; diagrams scale via viewBox.
 
 ---

@@ -23,7 +23,9 @@ Deployed on Vercel.
 | `src/data/collections.js` | Collections and plates: slug, code, definition, insight, failure mode, related chips, search keywords. Also builds `SEARCH_INDEX` and `PLATE_LOOKUP`. |
 | `src/data/custom-data.js` | Data for the custom renderers (harness map, failure taxonomy, window anatomy, budget builder). |
 | `src/data/card-minis.js` | Mini diagrams for the home-page collection cards. |
-| `src/scripts/atlas.js` | The one client bundle: mounts diagrams from inline JSON, custom renderers, ⌘K palette, legacy `#/` redirect. |
+| `src/scripts/atlas.js` | The one client bundle: mounts diagrams from inline JSON, custom renderers, ⌘K palette, theme toggle, legacy `#/` redirect. |
+| `src/scripts/theme.js` | The three-state theme control (system / light / dark). The pre-paint stamp lives inline in `Base.astro`. |
+| `src/styles/fonts.css` · `src/fonts/` | Self-hosted woff2 faces and their `@font-face` rules. Generated — run `npm run fonts`, don't edit. |
 | `src/scripts/custom.js` | Custom renderers: comparison map, regression chart, taxonomy, outcome/process mismatch, anatomy, budget builder. |
 | `src/components/Diagram.astro` | A diagram mount point. Inlines the definition as JSON next to the mount and renders a same-size placeholder (no layout shift). |
 | `src/components/Plate.astro` | Plate anatomy: title row → definition → diagram shell → Key insight / Failure mode → Related. |
@@ -52,6 +54,7 @@ npm run build      # static site → dist/
 npm run og         # regenerate OG images from the build (Playwright)
 npm run verify     # acceptance checks against dist/
 npm run shots      # parity screenshots → shots/
+npm run fonts      # re-extract self-hosted fonts from @fontsource
 ```
 
 `npm run shots -- --ref /path/to/atlas.html` also screenshots the legacy single-page

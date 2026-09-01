@@ -2,6 +2,7 @@
 /* 1200×630 render target for the build-time OG screenshots (scripts/og.mjs).
    Not linked from the site, noindex, excluded from the sitemap. Uses the same
    tokens, fonts and diagram chrome as the site. */
+import '../styles/fonts.css';
 import '../styles/atlas.css';
 interface Props { title: string; wide?: boolean; }
 const { title, wide = false } = Astro.props;
@@ -12,9 +13,6 @@ const { title, wide = false } = Astro.props;
   <meta name="viewport" content="width=1200" />
   <meta name="robots" content="noindex, nofollow" />
   <title>{title}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=block" />
   <style is:global>
     html,body{width:1200px;height:630px;overflow:hidden;margin:0}
     .og{width:1200px;height:630px;padding:46px 52px 40px;display:grid;grid-template-columns:392px minmax(0,1fr);gap:44px;background:var(--bg);color:var(--ink)}

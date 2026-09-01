@@ -94,6 +94,20 @@ svg text{user-select:none}
 .nav-search kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;background:var(--kbd-bg);border-radius:4px;padding:1px 5px;color:var(--ink2)}
 @media(max-width:720px){.nav-search .nslabel{display:none}}
 
+.nav-theme{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:29px;color:var(--ink3);
+  border:1px solid var(--line);border-radius:7px;
+  background:var(--panel);cursor:pointer;flex:none;margin-right:-12px;
+}
+.nav-theme:hover{border-color:var(--ink3);color:var(--ink2)}
+:root[data-theme-pref] .nav-theme{color:var(--ink2)}
+/* which glyph shows follows the stored preference, stamped on <html> before first paint */
+.nav-theme [data-icon]{display:none}
+:root:not([data-theme-pref]) .nav-theme [data-icon="system"],
+:root[data-theme-pref="light"] .nav-theme [data-icon="light"],
+:root[data-theme-pref="dark"] .nav-theme [data-icon="dark"]{display:block}
+
 /* ---------- typographic system ---------- */
 .eyebrow{
   font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;

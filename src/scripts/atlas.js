@@ -6,6 +6,7 @@
 import { mountDiagram, miniSVG, REDUCED } from '../engine/engine.js';
 import { CUSTOM_MOUNTS } from './custom.js';
 import { initPalette } from './palette.js';
+import { initTheme } from './theme.js';
 
 /* ---------- legacy hash routes: #/harnesses/react?mode=x → /harnesses/react?mode=x ---------- */
 (function redirectLegacyHash() {
@@ -67,4 +68,5 @@ function highlightAnchor() {
 window.addEventListener('hashchange', highlightAnchor);
 highlightAnchor();
 
+initTheme();
 initPalette();
