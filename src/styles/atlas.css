@@ -539,6 +539,23 @@ body{margin:0}
 /* footer links */
 footer a{color:var(--ink2);text-decoration:none;font-weight:600}
 footer a:hover{color:var(--accent-ink)}
+.foot-links{display:flex;gap:18px;flex-wrap:wrap}
+
+/* ---------- homepage outro CTAs ---------- */
+.outro{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:880px){.outro{grid-template-columns:1fr}}
+.outro-card{
+  display:flex;flex-direction:column;gap:8px;
+  border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  padding:20px 22px 18px;text-decoration:none;
+  transition:border-color .18s, box-shadow .18s, transform .18s;
+}
+.outro-card:hover{border-color:var(--ink3);box-shadow:var(--shadow);transform:translateY(-2px)}
+.outro-card h3{font-size:21px;margin:0}
+.outro-card p{margin:0;color:var(--ink2);font-size:14.5px;max-width:52ch}
+.outro-cta{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:13.5px;font-weight:700;color:var(--accent-ink)}
+.outro-card:hover .outro-cta svg{transform:translate(1.5px,-1.5px)}
+.outro-cta svg{transition:transform .18s}
 /* 404 */
 .nf{padding:72px 0 40px}
 .nf h1{font-size:clamp(36px,5vw,54px);margin:14px 0 14px}
