@@ -133,6 +133,83 @@ export const REFERENCES = {
     where: 'Git documentation',
     url: 'https://git-scm.com/docs/git-worktree',
   },
+
+  /* ---------- Anthropic research and product docs ---------- */
+  anthropicAgentEvals: {
+    title: 'Demystifying evals for AI agents',
+    where: 'Anthropic Engineering, 2026',
+    url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents',
+  },
+  anthropicErrorBars: {
+    title: 'A statistical approach to model evaluations',
+    where: 'Anthropic Research, 2024',
+    url: 'https://www.anthropic.com/research/statistical-approach-to-model-evals',
+  },
+  anthropicEvalChallenges: {
+    title: 'Challenges in evaluating AI systems',
+    where: 'Anthropic Research, 2023',
+    url: 'https://www.anthropic.com/research/evaluating-ai-systems',
+  },
+  anthropicSweBench: {
+    title: 'Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet',
+    where: 'Anthropic Research, 2025',
+    url: 'https://www.anthropic.com/research/swe-bench-sonnet',
+  },
+  anthropicSandboxing: {
+    title: 'Beyond permission prompts: making Claude Code more secure and autonomous',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/claude-code-sandboxing',
+  },
+  claudeAgentSdk: {
+    title: 'Building agents with the Claude Agent SDK',
+    where: 'Claude Blog, 2025',
+    url: 'https://claude.com/blog/building-agents-with-the-claude-agent-sdk',
+  },
+  claudeCostIntelligence: {
+    title: 'Optimizing for cost and intelligence',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence',
+  },
+  claudePromptCaching: {
+    title: 'Prompt caching',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching',
+  },
+  claudeCodeBestPractices: {
+    title: 'Best practices for Claude Code',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/best-practices',
+  },
+  claudeCodeCheckpointing: {
+    title: 'Checkpointing',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/checkpointing',
+  },
+  claudeCodeInteractive: {
+    title: 'Interactive mode — queue messages while Claude works',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/interactive-mode#queue-messages-while-claude-works',
+  },
+  claudeCodeGithubActions: {
+    title: 'Claude Code GitHub Actions',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/github-actions',
+  },
+  claudeCodeAutoFix: {
+    title: 'Use Claude Code in the cloud — auto-fix pull requests',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/claude-code-on-the-web#auto-fix-pull-requests',
+  },
+  claudeCodeChrome: {
+    title: 'Use Claude Code with Chrome',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/chrome',
+  },
+  claudeCodeSandbox: {
+    title: 'Configure the sandboxed Bash tool',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/sandboxing',
+  },
 };
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
