@@ -86,7 +86,7 @@ export const REFERENCES = {
   },
   claudeDocsPromptingTestsHardcoding: {
     title: 'Prompting best practices — avoid focusing on passing tests and hardcoding',
-    where: 'Claude Docs',
+    where: 'Claude API docs',
     url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices',
   },
   cognitionMultiAgent: {
@@ -123,6 +123,26 @@ export const REFERENCES = {
     title: 'Design patterns for securing LLM agents against prompt injections',
     where: 'Simon Willison, 2025',
     url: 'https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/',
+  },
+  claudeCodePermissions: {
+    title: 'Configure permissions',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/permissions',
+  },
+  claudeCodeSecurity: {
+    title: 'Security',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/security',
+  },
+  claudeCodeMonitoring: {
+    title: 'Monitoring (OpenTelemetry metrics and events)',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/monitoring-usage',
+  },
+  claudeApiRateLimits: {
+    title: 'Rate limits',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/rate-limits',
   },
   owaspLlm: {
     title: 'OWASP Top 10 for Large Language Model Applications',
