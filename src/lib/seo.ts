@@ -6,6 +6,7 @@ export type Plate = {
   dg?: string; custom?: string; kw?: string;
   modes?: { id: string; label: string; cls?: string; dg: string }[];
   related?: [string, string][];
+  refs?: string[];
 };
 export type Collection = {
   title: string; short: string; prefix: string; intro: string; plates: Plate[];
@@ -15,6 +16,10 @@ export type Collection = {
 export const collections = COLLECTIONS as unknown as Record<string, Collection>;
 export const colOrder = COL_ORDER as readonly string[];
 export const plateLookup = PLATE_LOOKUP as Record<string, Plate>;
+
+/** "Six collections" — the home heading, spelled out and derived from COL_ORDER. */
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+export const collectionsHeading = `${NUMBER_WORDS[colOrder.length] ?? colOrder.length} collection${colOrder.length === 1 ? '' : 's'}`;
 
 const stripTags = (s: string) => s.replace(/<[^>]+>/g, '');
 

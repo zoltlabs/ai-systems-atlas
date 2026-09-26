@@ -21,7 +21,7 @@ export const COLLECTIONS = {
         def: 'The model alternates reasoning with tool calls, folding each observation back into context until it can answer.',
         insight: 'The loop converts a static predictor into something that can gather its own evidence. Nearly every modern agent is a descendant of this cycle.',
         failure: 'Unbounded loops: without a step budget and a stopping rule, an agent that cannot solve the task will happily keep observing forever.',
-        related: [['Plan → Execute', '/harnesses/plan-execute'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Coding loop', '/coding-agents/test-loop']], refs: ['react', 'anthropicAgents'], kw: 'reason act observe tool loop reasoning' }),
+        related: [['Plan → Execute', '/harnesses/plan-execute'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Coding loop', '/coding-agents/test-loop'], ['Tool errors as observations', '/tools/tool-errors']], refs: ['react', 'anthropicAgents'], kw: 'reason act observe tool loop reasoning' }),
       P({ slug: 'plan-execute', code: 'H-03', title: 'Plan → Execute', dg: 'planExecute',
         def: 'Plan the whole task up front, then run the steps without further deliberation.',
         insight: 'Separating planning from execution makes runs cheap, auditable and parallelizable — you can review the plan before anything happens.',
@@ -51,7 +51,7 @@ export const COLLECTIONS = {
         def: 'On failure, classify what kind of failure it was — and only then decide how to retry.',
         insight: 'The classification step is the whole pattern. Transient errors want patience; systematic errors want a different strategy.',
         failure: 'Blind retries: re-running the identical attempt against a deterministic failure just multiplies cost by the retry budget.',
-        related: [['Replanner', '/harnesses/replanner'], ['Actor–Verifier', '/harnesses/actor-verifier']], refs: ['reflexion', 'mast'], kw: 'failure classify recovery backoff strategy' }),
+        related: [['Replanner', '/harnesses/replanner'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Tool errors as observations', '/tools/tool-errors']], refs: ['reflexion', 'mast'], kw: 'failure classify recovery backoff strategy' }),
       P({ slug: 'state-machine', code: 'H-09', title: 'State Machine Agent', dg: 'stateMachine',
         def: 'The agent’s lifecycle is an explicit state machine; the model acts within states, the harness owns the transitions.',
         insight: 'Explicit states make agents debuggable, resumable and observable — you can always answer “what is it doing right now?”',
@@ -66,7 +66,7 @@ export const COLLECTIONS = {
         def: 'Shard a partitionable task across independent agents and merge the results at one aggregation point.',
         insight: 'Wall-clock time collapses to the slowest shard — but only for tasks that genuinely decompose without shared state.',
         failure: 'Hidden coupling: if shards secretly depend on each other, the aggregation step inherits every inconsistency at once.',
-        related: [['Hierarchical', '/harnesses/hierarchical'], ['Best-of-N', '/harnesses/best-of-n']], refs: ['anthropicMultiAgent', 'mast'], kw: 'fanout mapreduce parallel independent aggregate' }),
+        related: [['Hierarchical', '/harnesses/hierarchical'], ['Best-of-N', '/harnesses/best-of-n'], ['Parallel tool calls', '/tools/parallel-tool-calls']], refs: ['anthropicMultiAgent', 'mast'], kw: 'fanout mapreduce parallel independent aggregate' }),
       P({ slug: 'human-in-the-loop', code: 'H-12', title: 'Human-in-the-loop', dg: 'humanLoop',
         def: 'The agent proposes; a gate routes risky actions to a human who approves or denies before execution.',
         insight: 'Put the human at the decision, not in the loop’s hot path: gate on irreversibility and blast radius, and let everything else flow.',
@@ -321,7 +321,7 @@ const EXT_SECURITY_PLATES = [
     def: 'A tool’s own manifest or output carries instructions — and models trust their tools more than the web.',
     insight: 'Tool descriptions are code you execute in the model’s head. Pin them, diff them, review them like dependencies — because that’s what they are.',
     failure: 'Auto-updating tool manifests: the version you reviewed is not the version in context.',
-    related: [['Indirect prompt injection', '/security/indirect-prompt-injection'], ['Malicious retrieved content', '/security/malicious-retrieved-content']], refs: ['invariantToolPoisoning', 'mcpSpec'], kw: 'tool poisoning mcp manifest description supply chain' }),
+    related: [['Indirect prompt injection', '/security/indirect-prompt-injection'], ['Malicious retrieved content', '/security/malicious-retrieved-content'], ['MCP architecture', '/tools/mcp']], refs: ['invariantToolPoisoning', 'mcpSpec'], kw: 'tool poisoning mcp manifest description supply chain' }),
   P({ slug: 'memory-poisoning', code: 'S-07', title: 'Memory Poisoning',
     modes: [
       { id: 'attack', label: 'Attack', cls: 'danger', dg: 'memPoisonAttack' },
@@ -407,7 +407,7 @@ const EXT_CONTEXT_PLATES_2 = [
     def: 'Shape tool output before it enters the window: the errors, the tail, the counts, and a pointer to the rest.',
     insight: 'Previous actions and observations are the largest slice of a mature agent’s window — bigger than the system prompt, the tools and the retrievals combined. Shaping them is the highest-leverage context work available, and it is harness code, not prompting.',
     failure: 'Blind truncation to a character limit. It cuts mid-traceback and keeps the passing tests, which is the exact inverse of what the agent needed.',
-    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context budget', '/context/context-budget'], ['Test loop', '/coding-agents/test-loop']],
+    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context budget', '/context/context-budget'], ['Test loop', '/coding-agents/test-loop'], ['Designing tools', '/tools/tool-design']],
     refs: ['anthropicTools', 'anthropicContext'], kw: 'observation truncation tool output shaping logs elision compress head tail errors' }),
   P({ slug: 'files-as-context', code: 'X-13', title: 'Files as External Context', dg: 'filesContext',
     def: 'The agent writes findings to disk and reads back the section it needs, so the window holds pointers instead of everything learned.',
@@ -548,6 +548,64 @@ const EXT_CODING_PLATES_2 = [
     refs: ['swebench', 'sweagent', 'osworld'], kw: 'bootstrap setup script install dependencies container devcontainer baseline green' }),
 ];
 
+/* ============ Tools & Protocols — its own collection, registered below ============ */
+const TOOLS_COLLECTION = {
+  title: 'Tools & Protocols',
+  short: 'Tools',
+  prefix: 'T',
+  intro: 'Tools are how an agent touches the world, and the seam between model and tool is where a surprising share of agent bugs live. These six plates cover how a tool should be shaped for a model rather than a programmer, how MCP connects any tool to any host, how large catalogues stay out of the window, and what happens to a call on the way out and its result on the way back.',
+  plates: [
+    P({ slug: 'tool-design', code: 'T-01', title: 'Designing Tools for Agents',
+      modes: [
+        { id: 'wrappers', label: 'API wrappers', cls: 'danger', dg: 'toolDesignWrappers' },
+        { id: 'agent', label: 'Agent-shaped', cls: 'ok', dg: 'toolDesignAgent' },
+      ],
+      def: 'A tool is an interface for a model, not a wrapper around an endpoint: its name, description, schema and return shape are everything the model knows about it.',
+      insight: 'Shape tools around the tasks an agent actually performs. One schedule_event that does the lookup, the availability check and the booking in code beats three endpoints the model has to stitch together in tokens.',
+      failure: 'Wrapping every endpoint one-to-one and returning raw JSON. The agent spends its window on plumbing, copies opaque ids between calls, and picks the wrong one of three near-identical tools.',
+      related: [['Tool errors as observations', '/tools/tool-errors'], ['Observation compression', '/context/observation-compression'], ['Tool poisoning', '/security/tool-poisoning']],
+      refs: ['anthropicTools', 'claudeDefineTools', 'sweagent'], kw: 'tool design agent-computer interface aci schema description naming namespacing consolidation return shape response format' }),
+    P({ slug: 'mcp', code: 'T-02', title: 'MCP: Hosts, Clients, Servers', dg: 'mcpArch',
+      def: 'One protocol between the app that runs the model and the services that offer tools: the host starts a client per server, asks what each offers, and routes calls through it.',
+      insight: 'MCP turns every-app-times-every-integration into one implementation on each side. The transport is a detail — stdio for a local process, HTTP for a remote service — and the model only ever sees tool definitions, never the server.',
+      failure: 'Treating a connected server as a trusted plugin. Every server writes text straight into the model’s context, and every tool it lists costs tokens on each request whether it is used or not.',
+      related: [['Tool poisoning', '/security/tool-poisoning'], ['Skill & plugin supply chain', '/security/skill-supply-chain'], ['Tool search', '/tools/tool-search']],
+      refs: ['mcpSpec', 'anthropicMcpLaunch', 'claudeCodeMcp'], kw: 'mcp model context protocol host client server stdio http transport json-rpc tools resources prompts capability discovery' }),
+    P({ slug: 'tool-search', code: 'T-03', title: 'Tool Search & Deferred Loading', dg: 'toolSearch',
+      def: 'Keep a large tool catalogue out of the window: the model starts with a search tool, and only the definitions it finds are loaded.',
+      insight: 'Tool definitions are context like anything else, and a five-server setup can spend ~55K tokens on them before the task begins. Deferring them keeps the window small and selection accurate — and because the prefix never changes, the prompt cache survives.',
+      failure: 'Tools the search cannot find. A terse name and a one-line description are invisible to a keyword search: the capability exists, and the agent concludes it doesn’t.',
+      related: [['Cache-aware layout', '/context/cache-aware-layout'], ['Context budget', '/context/context-budget'], ['MCP', '/tools/mcp']],
+      refs: ['claudeToolSearch', 'anthropicAdvancedToolUse', 'anthropicCodeExecMcp'], kw: 'tool search deferred loading defer_loading catalogue catalog many tools progressive disclosure just in time tool definitions tokens' }),
+    P({ slug: 'structured-output', code: 'T-04', title: 'Structured Output & Validation',
+      modes: [
+        { id: 'repair', label: 'Validate + repair', cls: '', dg: 'structRepair' },
+        { id: 'constrained', label: 'Constrained decoding', cls: '', dg: 'structConstrained' },
+      ],
+      def: 'Getting data a program can trust out of a model: validate and repair after generation, or constrain generation so an invalid shape cannot be produced.',
+      insight: 'A repair loop treats the schema as a test; constrained decoding treats it as a grammar. The grammar removes shape errors entirely — but not truncation, refusals, or rules it cannot express, so validation moves rather than disappears.',
+      failure: 'Trusting whatever parses. The string “1,200” in a number field sails through a lenient parser and fails three services later, in the billing code.',
+      related: [['Tool errors as observations', '/tools/tool-errors'], ['Designing tools', '/tools/tool-design'], ['Retry loop', '/harnesses/retry-loop']],
+      refs: ['claudeStructuredOutputs', 'claudeStrictToolUse'], kw: 'structured output json schema function calling constrained decoding grammar strict mode validation repair parse typed' }),
+    P({ slug: 'parallel-tool-calls', code: 'T-05', title: 'Parallel Tool Calls', dg: 'parallelCalls',
+      def: 'Several independent tool calls in one model turn, run concurrently, with every result returned together in the next message.',
+      insight: 'Latency drops from the sum of the calls to the slowest one, and the model reasons over all the results at once. The rule is independence: reads fan out freely; anything with side effects or an ordering dependency waits for the next turn.',
+      failure: 'Returning each result in its own message. The history now shows one call per turn, and the model learns from its own transcript to stop calling in parallel.',
+      related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['Tool errors as observations', '/tools/tool-errors'], ['ReAct loop', '/harnesses/react']],
+      refs: ['claudeParallelToolUse', 'claudeHandleToolCalls'], kw: 'parallel tool calls fan out concurrent batch tool_use tool_result join latency independent round trip' }),
+    P({ slug: 'tool-errors', code: 'T-06', title: 'Tool Errors as Observations',
+      modes: [
+        { id: 'exception', label: 'Error as exception', cls: 'danger', dg: 'toolErrCrash' },
+        { id: 'observation', label: 'Error as observation', cls: 'ok', dg: 'toolErrObserve' },
+      ],
+      def: 'A failed tool call becomes a result the model can read — what went wrong and what to try instead — rather than an exception that ends the run.',
+      insight: 'The model is the best error handler in the loop, but only for errors it can see. Bad arguments and refused actions go back as instructive results; transient failures are retried by the harness, with idempotency keys so a retried write lands once.',
+      failure: 'Opaque errors. “Error 400” tells the model that something failed but not what to change, so it re-sends the identical call until the budget runs out.',
+      related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Guardrail middleware', '/harnesses/guardrail-middleware']],
+      refs: ['claudeHandleToolCalls', 'anthropicTools'], kw: 'tool error is_error exception observation retry idempotency idempotent transient actionable error message recovery' }),
+  ],
+};
+
 export const SEARCH_INDEX = [];
 /* ============ extra plates that use custom renderers ============ */
 COLLECTIONS.evals.plates.push(
@@ -588,6 +646,7 @@ COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_
 COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2);
 COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
 COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES, ...EXT_CODING_PLATES_2);
+COLLECTIONS.tools = TOOLS_COLLECTION;
 
 /* rebuild the search index now that every collection is final */
 for (const [colId, col] of Object.entries(COLLECTIONS)) {
@@ -600,13 +659,14 @@ export const PLATE_LOOKUP = {};
 for (const [colId, col] of Object.entries(COLLECTIONS)) for (const p of col.plates) PLATE_LOOKUP[colId + '/' + p.slug] = p;
 
 
-export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents'];
+export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents', 'tools'];
 export const COL_BLURB = {
   harnesses: 'Eighteen recurring architectures, from a single forward pass to agents that run for days.',
   security: 'Agents possess authority. The ways untrusted text borrows it — and the boundaries that stop it.',
   evals: 'Outcome checks, trajectory review, judges you can trust — and whether the number is signal.',
   context: 'What earns a place in the window, in what order, and how memory brings the right things back.',
   'coding-agents': 'Test loops, verifier ladders, parallel worktrees, and how an edit actually reaches the file.',
+  tools: 'Tool design, MCP, tool search, schemas and parallel calls — and errors a model can recover from.',
 };
 export const DIAGRAM_COUNT = Object.keys(DIAGRAMS).length;
 export const PLATE_COUNT = Object.keys(PLATE_LOOKUP).length;

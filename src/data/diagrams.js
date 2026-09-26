@@ -2543,3 +2543,291 @@ DIAGRAMS.mergeIntegration = {
     { cap: '<span class="cap-ok">So integration is its own role</span> — one place that holds both changes, not a ping-pong between authors.', ok: ['integ'], okE: ['c-i'], d: 2800 },
   ],
 };
+
+/* ============ TOOLS & PROTOCOLS T-01..T-06 ============ */
+
+DIAGRAMS.toolDesignWrappers = {
+  w: 700, h: 330, dur: 1750,
+  aria: 'API-shaped tools: one tool per endpoint forces the agent to make three calls, read a dump of every user and every event, and copy an opaque id between calls, which it can get wrong.',
+  nodes: [
+    { id: 'task', x: 110, y: 60, kind: 'user', label: 'TASK', sub: '30 min with Ana, next week', w: 200 },
+    { id: 'model', x: 110, y: 186, kind: 'model', label: 'AGENT', sub: 'stitches the API together', w: 200 },
+    { id: 't1', x: 384, y: 96, kind: 'tool', label: 'list_users', w: 150 },
+    { id: 't2', x: 384, y: 186, kind: 'tool', label: 'list_events', w: 150 },
+    { id: 't3', x: 384, y: 276, kind: 'tool', label: 'create_event', w: 150 },
+    { id: 'raw', x: 598, y: 96, kind: 'data', label: 'ALL 4,000 USERS', sub: 'uuid, uuid, uuid…', w: 180 },
+    { id: 'cal', x: 598, y: 186, kind: 'data', label: 'EVERY EVENT', sub: 'raw calendar dump', w: 180 },
+    { id: 'wrong', x: 598, y: 276, kind: 'untrusted', label: 'WRONG UUID', sub: 'copied from row 2,317', w: 180 },
+  ],
+  notes: [
+    { id: 'join', x: 110, y: 262, anchor: 'middle', ghost: true, text: ['the model is doing', 'the join, in tokens'] },
+  ],
+  edges: [
+    { id: 't-m', from: 'task', to: 'model' },
+    { id: 'm-t1', from: 'model', to: 't1', label: 'call 1', labelT: 0.5, lanchor: 'end', lx: -8, ly: 2 },
+    { id: 'm-t2', from: 'model', to: 't2', label: 'call 2', ly: -8 },
+    { id: 'm-t3', from: 'model', to: 't3', label: 'call 3', labelT: 0.5, lanchor: 'end', lx: -8, ly: 8 },
+    { id: 't1-r', from: 't1', to: 'raw' },
+    { id: 't2-c', from: 't2', to: 'cal' },
+    { id: 't3-w', from: 't3', to: 'wrong' },
+  ],
+  steps: [
+    { cap: 'The task is one sentence: book thirty minutes with Ana next week.', n: ['task', 'model'], e: ['t-m'] },
+    { cap: 'But the tools mirror the API, one endpoint each. The agent has to orchestrate them itself.', n: ['t1', 't2', 't3'] },
+    { cap: 'Call 1 lists every user so it can find Ana — four thousand rows of ids, all of it now in context.', n: ['model', 't1'], e: ['m-t1'], bad: ['raw'], badE: ['t1-r'] },
+    { cap: 'Call 2 dumps the calendar, so the model can find a free slot by reading it.', n: ['model', 't2'], e: ['m-t2'], bad: ['cal'], badE: ['t2-c'] },
+    { cap: '<span class="cap-bad">Call 3 books with an id copied out of row 2,317.</span> One wrong character and it is someone else’s meeting.', n: ['model', 't3'], e: ['m-t3'], bad: ['wrong'], badE: ['t3-w'] },
+    { cap: 'Three round trips, and most of the window went on plumbing the tool should have done.', bad: ['raw', 'cal', 'wrong'], n: ['model'], show: ['join'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolDesignAgent = {
+  w: 700, h: 330, dur: 1750,
+  aria: 'Agent-shaped tool: one schedule_event tool with a clear description and a name-based schema does the lookup and booking in code and returns a short, readable result in a single call.',
+  nodes: [
+    { id: 'task', x: 110, y: 60, kind: 'user', label: 'TASK', sub: '30 min with Ana, next week', w: 200 },
+    { id: 'model', x: 110, y: 186, kind: 'model', label: 'AGENT', sub: 'one intent, one call', w: 200 },
+    { id: 'desc', x: 370, y: 66, kind: 'data', label: 'DESCRIPTION + SCHEMA', sub: 'when to use · names · enums', w: 230 },
+    { id: 'tool', x: 370, y: 186, kind: 'tool', label: 'schedule_event', sub: 'finds · checks · books', w: 190 },
+    { id: 'res', x: 610, y: 186, kind: 'data', label: 'SHORT RESULT', sub: 'Ana · Tue 10:00 · ok', w: 170 },
+  ],
+  notes: [
+    { id: 'tok', x: 610, y: 80, anchor: 'middle', ghost: true, text: ['one call,', '~60 tokens back'] },
+  ],
+  edges: [
+    { id: 't-m', from: 'task', to: 'model' },
+    { id: 'd-t', from: 'desc', to: 'tool', kind: 'ctl', label: 'tells the model when', lx: 60 },
+    { id: 'm-t', from: 'model', to: 'tool', label: 'one call', ly: -8 },
+    { id: 't-r', from: 'tool', to: 'res', label: 'returns', ly: -8 },
+    { id: 'r-m', from: 'res', to: 'model', d: 'M610 211 C610 300 110 300 110 211', label: 'names it can reason about', ly: 16 },
+  ],
+  steps: [
+    { cap: 'The same one-sentence task.', n: ['task', 'model'], e: ['t-m'] },
+    { cap: 'This time there is one tool shaped like the task, not like the API.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'Its description says when to use it and what comes back; the schema takes a name and a length, not a uuid.', n: ['desc', 'tool'], e: ['d-t'] },
+    { cap: 'The lookup, the free slot and the booking happen inside the tool — deterministic code, not tokens.', n: ['tool'] },
+    { cap: 'It returns only what the next step needs: a name, a time, a status.', n: ['tool', 'res'], e: ['t-r'], show: ['tok'] },
+    { cap: '<span class="cap-ok">One call, one short result</span> — and the agent never handled an identifier it could mistype.', ok: ['res', 'model'], okE: ['r-m'], show: ['tok'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.mcpArch = {
+  w: 720, h: 340, dur: 1750,
+  aria: 'MCP architecture: the host application runs the model and one client per server; a local server is reached over stdio and a remote one over HTTP, and each server advertises its tools, resources and prompts when it connects.',
+  bounds: [
+    { id: 'host', x: 18, y: 64, w: 380, h: 244, label: 'HOST · the app the user runs' },
+    { id: 'caps', x: 438, y: 12, w: 266, h: 56, ghost: true },
+  ],
+  nodes: [
+    { id: 'model', x: 112, y: 186, kind: 'model', label: 'MODEL', sub: 'sees tool defs only', w: 164 },
+    { id: 'ca', x: 316, y: 126, kind: 'chip', label: 'CLIENT A', w: 120, h: 30 },
+    { id: 'cb', x: 316, y: 246, kind: 'chip', label: 'CLIENT B', w: 120, h: 30 },
+    { id: 'sa', x: 580, y: 126, kind: 'tool', label: 'FILES SERVER', sub: 'local process', w: 200 },
+    { id: 'sb', x: 580, y: 246, kind: 'tool', label: 'ISSUES SERVER', sub: 'remote service', w: 200 },
+    { id: 'p1', x: 486, y: 40, kind: 'chip', label: 'TOOLS', w: 74 },
+    { id: 'p2', x: 572, y: 40, kind: 'chip', label: 'RESOURCES', w: 86 },
+    { id: 'p3', x: 658, y: 40, kind: 'chip', label: 'PROMPTS', w: 74 },
+  ],
+  notes: [
+    { id: 'rpc', x: 580, y: 300, anchor: 'middle', ghost: true, text: ['same JSON-RPC messages', 'over either transport'] },
+  ],
+  edges: [
+    { id: 'm-a', from: 'model', to: 'ca', fromSide: 'r', toSide: 'l', kind: 'ctl' },
+    { id: 'm-b', from: 'model', to: 'cb', fromSide: 'r', toSide: 'l', kind: 'ctl' },
+    { id: 'a-sa', from: 'ca', to: 'sa', label: 'stdio', ly: -8 },
+    { id: 'b-sb', from: 'cb', to: 'sb', label: 'HTTP', ly: -8 },
+    { id: 'sa-p', from: 'sa', to: 'p2', fromSide: 't', toSide: 'b', label: 'listed on connect', labelT: 0.4, lanchor: 'start', lx: 8, ly: 12 },
+  ],
+  steps: [
+    { cap: 'The host is the app the user runs. The model lives inside it and never talks to a server directly.', n: ['model'], show: ['host'] },
+    { cap: 'For every server, the host starts one client — one connection each, isolated from the others.', n: ['model', 'ca', 'cb'], e: ['m-a', 'm-b'], show: ['host'] },
+    { cap: 'A local server runs as a child process and talks over stdin and stdout.', n: ['ca', 'sa'], e: ['a-sa'] },
+    { cap: 'A remote one is reached over HTTP. Only the pipe differs; the messages are the same.', n: ['cb', 'sb'], e: ['b-sb'], show: ['rpc'] },
+    { cap: 'On connect, the client asks what the server offers — its tools, resources and prompts — instead of assuming.', n: ['sa', 'p1', 'p2', 'p3'], e: ['sa-p'], show: ['caps'] },
+    { cap: 'Tool definitions travel up into the model’s context; a call travels back down the same client to the same server.', n: ['model', 'ca', 'sa'], e: ['m-a', 'a-sa'], show: ['host'] },
+    { cap: '<span class="cap-bad">Every connected server also writes text into that context.</span> Connect one like a dependency, not a bookmark.', bad: ['sb'], badE: ['b-sb'], n: ['model', 'cb'], e: ['m-b'] },
+    { cap: '<span class="cap-ok">Add or swap a server and nothing else changes</span> — the protocol is the contract, not a bespoke integration per app.', ok: ['sa', 'sb'], okE: ['a-sa', 'b-sb'], n: ['ca', 'cb'], show: ['host'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolSearch = {
+  w: 700, h: 340, dur: 1750,
+  aria: 'Tool search with deferred loading: instead of loading every tool definition into the window, the model starts with a search tool, searches the catalogue, and only the matching definitions are expanded into context.',
+  bounds: [{ id: 'hits', x: 258, y: 252, w: 430, h: 70, ghost: true, label: 'LOADED ON DEMAND' }],
+  nodes: [
+    { id: 'model', x: 380, y: 64, kind: 'model', label: 'MODEL', sub: 'needs to open a PR', w: 190 },
+    { id: 'cat', x: 100, y: 176, kind: 'data', label: 'TOOL CATALOGUE', sub: '5 servers · ~55K tokens', w: 176 },
+    { id: 'win', x: 384, y: 176, kind: 'memory', label: 'WINDOW', sub: 'what the model sees', w: 176 },
+    { id: 'search', x: 606, y: 176, kind: 'tool', label: 'TOOL SEARCH', sub: 'names · descriptions', w: 164 },
+    { id: 'h1', x: 330, y: 298, kind: 'chip', label: 'github_create_pr', w: 128 },
+    { id: 'h2', x: 470, y: 298, kind: 'chip', label: 'github_get_pr', w: 128 },
+    { id: 'h3', x: 610, y: 298, kind: 'chip', label: 'github_list_prs', w: 128 },
+  ],
+  notes: [
+    { id: 'def', x: 100, y: 98, anchor: 'middle', ghost: true, text: ['sent with the request,', 'not placed in context'] },
+  ],
+  edges: [
+    { id: 'all', from: 'cat', to: 'win', ghost: true, label: 'all 400 schemas', ly: -8 },
+    { id: 'm-s', from: 'model', to: 'search', fromSide: 'r', toSide: 't', label: 'search "pull request"', labelT: 0.35, lx: 34, ly: -6 },
+    { id: 's-h', from: 'search', to: 'h3', label: 'top matches', lanchor: 'start', lx: 6, ly: 4 },
+    { id: 'c-h', from: 'cat', to: 'h1', label: 'full schema, hits only', labelT: 0.55, lanchor: 'end', lx: -10, ly: 4 },
+    { id: 'h-w', from: 'h2', to: 'win', fromSide: 't', toSide: 'b', label: 'expanded', labelT: 0.5, lx: 26 },
+  ],
+  steps: [
+    { cap: 'Five servers, four hundred tools. Every definition costs tokens whether or not it gets used.', n: ['cat'] },
+    { cap: '<span class="cap-bad">Load them all</span> and ~55K tokens are gone before the task starts — and past 30–50 tools, the model starts picking the wrong one.', bad: ['cat', 'win'], badE: ['all'], show: ['all'] },
+    { cap: 'Instead the window starts with a search tool and the few tools used on every task. The rest are deferred.', n: ['win', 'search'], show: ['def'] },
+    { cap: 'When the model needs a capability, it searches the catalogue for it by name and description.', n: ['model', 'search'], e: ['m-s'] },
+    { cap: 'The search returns a handful of references — not the catalogue.', n: ['search', 'h1', 'h2', 'h3'], e: ['s-h'], show: ['hits'] },
+    { cap: 'Only those definitions are expanded into context: full schemas, for three tools.', n: ['cat', 'h1', 'h2', 'win'], e: ['c-h', 'h-w'], show: ['hits', 'def'] },
+    { cap: '<span class="cap-ok">The window holds what this task needs</span>, and because the prefix never changed, the prompt cache still hits.', ok: ['win', 'h1'], okE: ['h-w'], show: ['hits'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.structRepair = {
+  w: 700, h: 330, dur: 1700,
+  aria: 'Validate and repair: the model generates freely, the output is parsed and checked against the schema, and a failure is sent back with the exact error for another attempt before anything reaches downstream code.',
+  nodes: [
+    { id: 'schema', x: 112, y: 64, kind: 'data', label: 'SCHEMA', sub: 'total: number, …', w: 170 },
+    { id: 'model', x: 380, y: 64, kind: 'model', label: 'MODEL', sub: 'generates freely', w: 190 },
+    { id: 'out', x: 380, y: 184, kind: 'data', label: 'OUTPUT', sub: '{"total": "1,200"}', w: 190 },
+    { id: 'val', x: 612, y: 184, kind: 'evaluator', label: 'VALIDATE', sub: 'parse + schema', w: 160 },
+    { id: 'app', x: 612, y: 64, kind: 'tool', label: 'YOUR CODE', sub: 'gets typed data', w: 160 },
+    { id: 'err', x: 380, y: 292, kind: 'chip', label: 'total: expected number', w: 196 },
+  ],
+  edges: [
+    { id: 's-m', from: 'schema', to: 'model', label: 'in the prompt', ly: -8 },
+    { id: 'm-o', from: 'model', to: 'out', label: 'emits', lx: 22, ly: 4 },
+    { id: 'o-v', from: 'out', to: 'val', label: 'parse', ly: -8 },
+    { id: 'v-e', from: 'val', to: 'err', fromSide: 'b', toSide: 'r', label: 'fail', labelT: 0.35, lx: 16, ly: 4 },
+    { id: 'e-m', from: 'err', to: 'model', d: 'M282 292 C226 292 226 176 258 140 S306 104 310 89', label: 'repair: error + output', labelT: 0.35, lanchor: 'end', lx: -10, ly: 4 },
+    { id: 'v-a', from: 'val', to: 'app', label: 'pass', lx: 18, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Downstream code needs typed data, so the schema goes into the prompt.', n: ['schema', 'model'], e: ['s-m'] },
+    { cap: 'The model generates freely — and usually gets it right.', n: ['model', 'out'], e: ['m-o'] },
+    { cap: 'Every output is parsed and checked against the schema before anything uses it.', n: ['out', 'val'], e: ['o-v'] },
+    { cap: '<span class="cap-bad">Invalid:</span> a string where a number belongs.', bad: ['val', 'err'], badE: ['v-e'], n: ['out'] },
+    { cap: 'The exact error goes back with the bad output — fix this field, not “try again”.', n: ['err', 'model'], e: ['e-m'] },
+    { cap: '<span class="cap-ok">The retry validates, and only then reaches your code</span> — at the cost of a loop, latency, and a failure path you own.', ok: ['val', 'app'], okE: ['v-a'], n: ['model', 'out'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.structConstrained = {
+  w: 700, h: 330, dur: 1700,
+  aria: 'Constrained decoding: the schema is compiled into a grammar that masks invalid tokens during generation, so the output always parses, though truncation, refusals and rules the grammar cannot express still need checking.',
+  nodes: [
+    { id: 'schema', x: 112, y: 64, kind: 'data', label: 'SCHEMA', sub: 'total: number, …', w: 170 },
+    { id: 'gram', x: 380, y: 64, kind: 'policy', label: 'GRAMMAR', sub: 'masks invalid tokens', w: 190 },
+    { id: 'model', x: 380, y: 184, kind: 'model', label: 'MODEL', sub: 'samples under the mask', w: 190 },
+    { id: 'out', x: 380, y: 292, kind: 'data', label: 'OUTPUT', sub: '{"total": 1200}', w: 170 },
+    { id: 'app', x: 620, y: 292, kind: 'tool', label: 'YOUR CODE', sub: 'checks ranges', w: 150 },
+    { id: 'cut', x: 130, y: 292, kind: 'untrusted', label: 'CUT OFF', sub: 'max_tokens, refusal', w: 180 },
+  ],
+  edges: [
+    { id: 's-g', from: 'schema', to: 'gram', label: 'compile once', ly: -8 },
+    { id: 'g-m', from: 'gram', to: 'model', kind: 'ctl', label: 'every token', lx: 38, ly: 4 },
+    { id: 'm-o', from: 'model', to: 'out', label: 'emits', lx: 22, ly: 4 },
+    { id: 'o-a', from: 'out', to: 'app', label: 'parses', ly: -8 },
+    { id: 'o-c', from: 'out', to: 'cut', label: 'stops early', ly: -8 },
+  ],
+  steps: [
+    { cap: 'Same schema — but this time it is compiled into a grammar before generation starts.', n: ['schema', 'gram'], e: ['s-g'] },
+    { cap: 'At every token, anything that would break the schema is masked out.', n: ['gram', 'model'], e: ['g-m'] },
+    { cap: 'So the output cannot be malformed: the right keys, the right types, every required field.', n: ['model', 'out'], e: ['m-o'] },
+    { cap: '<span class="cap-bad">Not a proof, though.</span> A response cut off at max_tokens, or a refusal, still won’t match the schema.', bad: ['cut'], badE: ['o-c'], n: ['out'] },
+    { cap: 'And some rules — ranges, lengths — can’t be expressed in the grammar, so your code still checks them.', n: ['app'] },
+    { cap: '<span class="cap-ok">Check the stop reason, keep the range checks, and shape errors are gone by construction.</span>', ok: ['out', 'app'], okE: ['o-a'], n: ['gram'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.parallelCalls = {
+  w: 700, h: 370, dur: 1700,
+  aria: 'Parallel tool calls: the model emits three independent tool calls in one turn, the harness runs them concurrently, and every result — including a failed one marked as an error — returns together in one message.',
+  nodes: [
+    { id: 'model', x: 106, y: 180, kind: 'model', label: 'MODEL', sub: 'one turn, three calls', w: 184 },
+    { id: 'r1', x: 366, y: 80, kind: 'tool', label: 'read_file(a.ts)', w: 176 },
+    { id: 'r2', x: 366, y: 180, kind: 'tool', label: 'read_file(b.ts)', w: 176 },
+    { id: 'r3', x: 366, y: 280, kind: 'tool', label: 'grep("TODO")', w: 176 },
+    { id: 'join', x: 598, y: 180, kind: 'data', label: 'ONE MESSAGE', sub: '3 results, by call id', w: 184 },
+  ],
+  notes: [
+    { id: 'wall', x: 366, y: 32, anchor: 'middle', ghost: true, text: ['wall-clock = the slowest call, not the sum'] },
+  ],
+  edges: [
+    { id: 'm-1', from: 'model', to: 'r1' },
+    { id: 'm-2', from: 'model', to: 'r2' },
+    { id: 'm-3', from: 'model', to: 'r3' },
+    { id: '1-j', from: 'r1', to: 'join', d: 'M454 80 C530 80 560 100 560 155' },
+    { id: '2-j', from: 'r2', to: 'join' },
+    { id: '3-j', from: 'r3', to: 'join', d: 'M454 280 C530 280 560 260 560 205', label: 'is_error: true', labelT: 0.1, lanchor: 'start', lx: 2, ly: 16 },
+    { id: 'j-m', from: 'join', to: 'model', d: 'M650 205 C650 372 106 372 106 205', label: 'all together, next turn', ly: 16 },
+  ],
+  steps: [
+    { cap: 'The model needs three things, and none of them depends on the others.', n: ['model'] },
+    { cap: 'So it asks for all three in one response: three tool calls, one turn.', n: ['model', 'r1', 'r2', 'r3'], e: ['m-1', 'm-2', 'm-3'] },
+    { cap: 'The harness runs them concurrently.', n: ['r1', 'r2', 'r3'], show: ['wall'] },
+    { cap: '<span class="cap-bad">One of them fails.</span> It still gets a result — flagged as an error — rather than silently going missing.', bad: ['r3'], badE: ['3-j'], n: ['r1', 'r2', 'join'], e: ['1-j', '2-j'] },
+    { cap: 'Every result goes back in one message, each matched to its call by id.', n: ['join', 'r1', 'r2', 'r3'], e: ['1-j', '2-j', '3-j'] },
+    { cap: '<span class="cap-ok">One round trip instead of three</span>, and the model sees the whole picture at once.', ok: ['join', 'model'], okE: ['j-m'], show: ['wall'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolErrCrash = {
+  w: 700, h: 290, dur: 1750,
+  aria: 'Errors as exceptions: a tool rejects an argument and raises; uncaught, the exception ends the whole run, and caught as an opaque code, it leaves the model retrying the identical call.',
+  nodes: [
+    { id: 'model', x: 112, y: 64, kind: 'model', label: 'MODEL', sub: 'step 20 of the task', w: 190 },
+    { id: 'tool', x: 372, y: 64, kind: 'tool', label: 'create_ticket', sub: 'priority: "urgent"', w: 190 },
+    { id: 'exc', x: 372, y: 184, kind: 'untrusted', label: 'ValidationError', sub: '40-line traceback', w: 190 },
+    { id: 'dead', x: 614, y: 184, kind: 'chip', label: 'RUN ENDS · WORK LOST', w: 150, h: 30 },
+    { id: 'opq', x: 112, y: 184, kind: 'chip', label: '"Error 400"', w: 130, h: 30 },
+  ],
+  notes: [
+    { id: 'loop', x: 112, y: 250, anchor: 'middle', ghost: true, text: ['same call, same args,', 'until the budget runs out'] },
+  ],
+  edges: [
+    { id: 'm-t', from: 'model', to: 'tool', label: 'call', ly: -8 },
+    { id: 't-x', from: 'tool', to: 'exc', label: 'raises', lx: 26 },
+    { id: 'x-d', from: 'exc', to: 'dead', label: 'uncaught', ly: -8 },
+    { id: 'x-o', from: 'exc', to: 'opq', label: 'flattened', ly: -8 },
+    { id: 'o-m', from: 'opq', to: 'model', label: 'retry', lx: 20, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Twenty steps in, the model calls a tool with a value the API rejects.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'The tool raises. Nothing between it and the loop was written to catch that.', bad: ['exc'], badE: ['t-x'], n: ['tool'] },
+    { cap: '<span class="cap-bad">The exception unwinds the harness</span> — twenty steps of work gone, over a value the model could have fixed in one.', bad: ['exc', 'dead'], badE: ['x-d'] },
+    { cap: 'The usual patch: catch it and hand back a status code. Better, but opaque.', n: ['exc', 'opq'], e: ['x-o'] },
+    { cap: '<span class="cap-bad">The model can’t tell what to change</span>, so it sends the identical call again, and again.', bad: ['opq', 'model'], badE: ['o-m', 'm-t'], show: ['loop'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolErrObserve = {
+  w: 700, h: 290, dur: 1750,
+  aria: 'Errors as observations: a wrapper turns the tool failure into an error result that says what was wrong and what is allowed, the model fixes the argument on its next call, and transient failures are retried by the harness with an idempotency key.',
+  nodes: [
+    { id: 'model', x: 112, y: 64, kind: 'model', label: 'MODEL', sub: 'step 20 of the task', w: 190 },
+    { id: 'tool', x: 372, y: 64, kind: 'tool', label: 'create_ticket', sub: 'priority: "urgent"', w: 190 },
+    { id: 'wrap', x: 604, y: 64, kind: 'policy', label: 'WRAPPER', sub: 'never throws', w: 164 },
+    { id: 'msg', x: 372, y: 184, kind: 'data', label: 'is_error: true', sub: 'use low | med | high', w: 190 },
+    { id: 'trans', x: 604, y: 184, kind: 'chip', label: 'TIMEOUT → RETRY, SAME KEY', w: 172, h: 30 },
+  ],
+  notes: [
+    { id: 'idem', x: 604, y: 236, anchor: 'middle', ghost: true, text: ['an idempotency key makes', 'a retried write land once'] },
+  ],
+  edges: [
+    { id: 'm-t', from: 'model', to: 'tool', label: 'call', ly: -8 },
+    { id: 't-w', from: 'tool', to: 'wrap', label: 'raises', ly: -8 },
+    { id: 'w-m', from: 'wrap', to: 'msg', d: 'M570 89 C570 150 520 184 467 184', label: 'rewrites as', labelT: 0.45, lanchor: 'end', lx: -6, ly: 2 },
+    { id: 'm-o', from: 'msg', to: 'model', fromSide: 'l', toSide: 'b', label: 'observation', labelT: 0.55, lx: -18, ly: 16 },
+    { id: 'w-tr', from: 'wrap', to: 'trans', d: 'M644 89 L644 169', kind: 'ctl', label: 'transient', lanchor: 'start', lx: 6, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Twenty steps in, the model calls a tool with a value the API rejects.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'The tool raises — inside a wrapper that never lets an exception reach the loop.', bad: ['tool'], n: ['wrap'], e: ['t-w'] },
+    { cap: 'The failure becomes a tool result, flagged as an error, that says what was wrong and what is allowed.', n: ['wrap', 'msg'], e: ['w-m'] },
+    { cap: 'The model reads it like any other observation.', n: ['msg', 'model'], e: ['m-o'] },
+    { cap: 'Transient failures are different: the harness retries those itself, with an idempotency key so a retried write lands once.', n: ['wrap', 'trans'], e: ['w-tr'], show: ['idem'] },
+    { cap: '<span class="cap-ok">The model fixes the argument on its next call.</span> One step lost, not the run.', ok: ['model', 'tool'], okE: ['m-t'], d: 2800 },
+  ],
+};
