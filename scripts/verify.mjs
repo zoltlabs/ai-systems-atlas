@@ -10,6 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { launchBrowser, stubWebfonts } from './browser.mjs';
 import { serveDist } from './serve.mjs';
+import { PLATE_LOOKUP } from '../src/data/collections.js';
+import { DIAGRAMS } from '../src/data/diagrams.js';
 
 const SITE = 'https://aisystemsatlas.com';
 const fail = [];
@@ -64,6 +66,16 @@ for (const u of urls) {
       }
     }
     if (pathName.split('/').length === 3) ok(imgPath === `/og${pathName}.png`, `${u}: plate OG image is not per-plate (${imgPath})`);
+  }
+
+  // server-rendered walkthrough: every non-empty step caption is in the HTML as a list item
+  const plate = pathName.split('/').length === 3 ? PLATE_LOOKUP[pathName.slice(1)] : null;
+  if (plate && !plate.custom) {
+    const defs = plate.modes ? plate.modes.map(m => DIAGRAMS[m.dg]) : [DIAGRAMS[plate.dg]];
+    const want = defs.reduce((n, d) => n + (d?.steps || []).filter(st => st.cap && st.cap.trim()).length, 0);
+    const walk = /<details class="plate-steps">([\s\S]*?)<\/details>/.exec(html);
+    const got = walk ? (walk[1].match(/<li>/g) || []).length : 0;
+    ok(want > 0 && got === want, `${u}: walkthrough has ${got} steps, expected ${want}`);
   }
 
   // runtime: console errors + mobile overflow

@@ -3,7 +3,7 @@ import { COLLECTIONS, PLATE_LOOKUP, COL_ORDER } from '../data/collections.js';
 
 export type Plate = {
   slug: string; code: string; title: string; def: string; insight: string; failure: string;
-  dg?: string; custom?: string; kw?: string;
+  dg?: string; custom?: string; kw?: string; refs?: string[];
   modes?: { id: string; label: string; cls?: string; dg: string }[];
   related?: [string, string][];
 };
