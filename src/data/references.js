@@ -78,6 +78,32 @@ export const REFERENCES = {
     where: 'Anthropic Engineering, 2025',
     url: 'https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills',
   },
+  /* evals E-15..E-18 */
+  anthropicEvalsDemystified: {
+    title: 'Demystifying evals for AI agents',
+    where: 'Anthropic Engineering, 2026',
+    url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents',
+  },
+  anthropicRewardHackingMisalignment: {
+    title: 'From shortcuts to sabotage: natural emergent misalignment from reward hacking',
+    where: 'Anthropic Research, 2025',
+    url: 'https://www.anthropic.com/research/emergent-misalignment-reward-hacking',
+  },
+  claudeDocsPromptingTestsHardcoding: {
+    title: 'Prompting best practices — avoid focusing on passing tests and hardcoding',
+    where: 'Claude Docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices',
+  },
+  anthropicStatisticalEvals: {
+    title: 'A statistical approach to model evaluations',
+    where: 'Anthropic Research, 2024',
+    url: 'https://www.anthropic.com/research/statistical-approach-to-model-evals',
+  },
+  anthropicEvalChallenges: {
+    title: 'Challenges in evaluating AI systems',
+    where: 'Anthropic Research, 2023',
+    url: 'https://www.anthropic.com/research/evaluating-ai-systems',
+  },
   cognitionMultiAgent: {
     title: 'Don’t build multi-agents',
     where: 'Cognition, 2025',
@@ -137,6 +163,7 @@ export const REFERENCES = {
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
    drop would mean a plate quietly loses its sources. */
+/** @param {string[] | undefined} keys @returns {{ title: string, where: string, url: string }[]} */
 export function resolveRefs(keys) {
   if (!keys || !keys.length) return [];
   return keys.map(k => {
