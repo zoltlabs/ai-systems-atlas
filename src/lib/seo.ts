@@ -5,7 +5,7 @@ export type Plate = {
   slug: string; code: string; title: string; def: string; insight: string; failure: string;
   dg?: string; custom?: string; kw?: string;
   modes?: { id: string; label: string; cls?: string; dg: string }[];
-  related?: [string, string][];
+  related?: [string, string][]; refs?: string[];
 };
 export type Collection = {
   title: string; short: string; prefix: string; intro: string; plates: Plate[];

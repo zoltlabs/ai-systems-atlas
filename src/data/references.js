@@ -133,6 +133,31 @@ export const REFERENCES = {
     where: 'Git documentation',
     url: 'https://git-scm.com/docs/git-worktree',
   },
+  claudeCodeCloudSessions: {
+    title: 'Use Claude Code in the cloud',
+    where: 'Claude Code documentation',
+    url: 'https://code.claude.com/docs/en/claude-code-on-the-web',
+  },
+  claudeCodeHooksGuide: {
+    title: 'Automate actions with hooks',
+    where: 'Claude Code documentation',
+    url: 'https://code.claude.com/docs/en/hooks-guide',
+  },
+  claudeCodeBestPractices: {
+    title: 'Best practices for Claude Code',
+    where: 'Claude Code documentation',
+    url: 'https://code.claude.com/docs/en/best-practices',
+  },
+  claudeCodeCodeIntelligence: {
+    title: 'Code intelligence plugins',
+    where: 'Claude Code documentation',
+    url: 'https://code.claude.com/docs/en/plugins/code-intelligence',
+  },
+  claudeCodeCodeReview: {
+    title: 'Code Review',
+    where: 'Claude Code documentation',
+    url: 'https://code.claude.com/docs/en/code-review',
+  },
 };
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
