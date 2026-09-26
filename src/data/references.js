@@ -89,6 +89,31 @@ export const REFERENCES = {
     where: 'Claude API docs',
     url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices',
   },
+  anthropicThinkTool: {
+    title: 'The “think” tool: enabling Claude to stop and think in complex tool use situations',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/claude-think-tool',
+  },
+  anthropicVisibleThinking: {
+    title: 'Claude’s extended thinking',
+    where: 'Anthropic, 2025',
+    url: 'https://www.anthropic.com/news/visible-extended-thinking',
+  },
+  claudeDocsThinking: {
+    title: 'Thinking — including interleaved thinking between tool calls',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/thinking',
+  },
+  claudeDocsExtendedThinking: {
+    title: 'Extended thinking — setting and tuning a thinking budget',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking',
+  },
+  claudeDocsEffort: {
+    title: 'Effort — trading thoroughness for token efficiency',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/effort',
+  },
   cognitionMultiAgent: {
     title: 'Don’t build multi-agents',
     where: 'Cognition, 2025',
