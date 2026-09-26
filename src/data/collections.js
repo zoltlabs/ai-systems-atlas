@@ -71,7 +71,7 @@ export const COLLECTIONS = {
         def: 'The agent proposes; a gate routes risky actions to a human who approves or denies before execution.',
         insight: 'Put the human at the decision, not in the loop’s hot path: gate on irreversibility and blast radius, and let everything else flow.',
         failure: 'Approval fatigue: gate too much and humans rubber-stamp; the checkpoint remains, the checking stops.',
-        related: [['Agent security', '/security'], ['Event-driven agent', '/harnesses/event-driven']], refs: ['anthropicAgents', 'owaspLlm'], kw: 'approval gate oversight review permission' }),
+        related: [['Agent security', '/security'], ['Event-driven agent', '/harnesses/event-driven'], ['Permission policies', '/security/permissions']], refs: ['anthropicAgents', 'owaspLlm'], kw: 'approval gate oversight review permission' }),
       P({ slug: 'event-driven', code: 'H-13', title: 'Event-driven Agent', dg: 'eventDriven',
         def: 'The agent sleeps until an external event wakes it; its first decision is whether the event matters at all.',
         insight: 'Inverting control — the world calls the agent — is what makes always-on agents affordable and non-annoying.',
@@ -140,6 +140,10 @@ export const COLLECTIONS = {
       ['Sandboxing', 'Execution in a container with its own filesystem and no lateral network reach.'],
       ['Human approval', 'Irreversible or high-blast-radius actions pause for a person with full context.'],
       ['Policy enforcement', 'A layer outside the model evaluates every proposed action against explicit rules.'],
+      ['Permission rules', 'Allow, ask or deny per tool and per argument — deny checked first, in every permission mode.'],
+      ['Credential brokering', 'The agent requests actions; a broker at the egress boundary attaches the key, so no secret enters context.'],
+      ['Audit logging', 'Append-only records of every call, argument, approval and actor — with secrets redacted before the write.'],
+      ['Spend ceilings', 'Per-run budgets, per-user rate limits, fan-out caps and loop detection turn runaway cost into a stopped run.'],
       ['Output filtering', 'Scan and redact what leaves: secrets, PII, injection payloads echoed onward.'],
       ['Taint tracking', 'Values from untrusted sources carry their provenance through the whole flow.'],
       ['Read/write separation', 'Reading agents cannot write; writing agents consume vetted, structured input.'],
@@ -290,7 +294,7 @@ const EXT_HARNESS_PLATES = [
     def: 'Step, token and wall-clock ceilings bound the loop — and a stopping rule names why it ended.',
     insight: 'The harness, not the model, decides whether there is another iteration. Every other plate in this collection assumes something eventually says stop; this is that something.',
     failure: 'A silent halt. An agent that stops without reporting whether it solved the task, ran out of budget, or gave up is indistinguishable from one that crashed.',
-    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running']],
+    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running'], ['Denial of wallet', '/security/denial-of-wallet']],
     refs: ['anthropicAgents', 'mast'], kw: 'budget stopping rule step limit token limit timeout halt termination' }),
   P({ slug: 'model-router', code: 'H-16', title: 'Router / Model Cascade', dg: 'router',
     def: 'A cheap triage step picks the model; a quality check escalates only what needs escalating.',
@@ -308,7 +312,7 @@ const EXT_HARNESS_PLATES = [
     def: 'A policy layer wraps the loop and evaluates every proposed action before anything executes.',
     insight: 'The model decides what it wants to do; the layer decides what it can do. Because the layer is outside the model, no amount of persuasion inside the context reaches it.',
     failure: 'Denials that surface as opaque errors. If the agent cannot see why a call was refused, it retries the same call until the budget runs out.',
-    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Direct prompt injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security/privilege-escalation']],
+    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Direct prompt injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security/privilege-escalation'], ['Permission policies', '/security/permissions']],
     refs: ['camel', 'willisonDesignPatterns', 'owaspLlm'], kw: 'guardrail policy middleware enforcement allowlist interception authorization' }),
 ];
 
@@ -348,7 +352,7 @@ const EXT_SECURITY_PLATES = [
     def: 'Secrets that legitimately entered context escape through logs, outputs, traces and error messages.',
     insight: 'Enumerate the sinks, not just the sources: every place model-touched text lands is a place a key can land. Redact at the boundary and make keys short-lived so misses expire.',
     failure: 'Long-lived keys plus verbose logging: one debug trace shipped to a vendor is a permanent credential.',
-    related: [['Data exfiltration', '/security/data-exfiltration'], ['Defense toolbox', '/security']], refs: ['owaspLlm', 'willisonWorst'], kw: 'credential secret leak logs redaction short-lived' }),
+    related: [['Data exfiltration', '/security/data-exfiltration'], ['Secrets broker', '/security/secrets-broker'], ['Defense toolbox', '/security']], refs: ['owaspLlm', 'willisonWorst'], kw: 'credential secret leak logs redaction short-lived' }),
   P({ slug: 'privilege-escalation', code: 'S-10', title: 'Privilege Escalation',
     modes: [
       { id: 'attack', label: 'Attack', cls: 'danger', dg: 'privEscAttack' },
@@ -357,7 +361,7 @@ const EXT_SECURITY_PLATES = [
     def: 'Individually-safe tools compose into a capability nobody granted.',
     insight: 'Review tool sets, not tools: the question is never “is this call safe?” but “what can the union of these calls build?”',
     failure: 'Allowlists that reason per-call: read-config, write-cron and run-script each pass review; together they are root.',
-    related: [['Confused deputy', '/security/confused-deputy'], ['Direct prompt injection', '/security/direct-prompt-injection']], refs: ['willisonTrifecta', 'willisonDesignPatterns'], kw: 'privilege escalation chain composition tools root' }),
+    related: [['Confused deputy', '/security/confused-deputy'], ['Direct prompt injection', '/security/direct-prompt-injection'], ['Permission policies', '/security/permissions']], refs: ['willisonTrifecta', 'willisonDesignPatterns'], kw: 'privilege escalation chain composition tools root' }),
   P({ slug: 'unsafe-side-effects', code: 'S-11', title: 'Unsafe Side Effects',
     modes: [
       { id: 'attack', label: 'Failure', cls: 'danger', dg: 'sideFxAttack' },
@@ -444,7 +448,7 @@ const EXT_SECURITY_PLATES_2 = [
     def: 'Disk, process and network are three separate edges — and a sandbox is only as good as the weakest one.',
     insight: 'Sandboxing is the defense that does not depend on the model being right about anything. The question is never whether the agent misbehaves, but what it can reach when it does.',
     failure: 'A container with the host’s credentials mounted and unrestricted egress. That is a process boundary, not a security boundary, and it stops nothing that matters.',
-    related: [['Data exfiltration', '/security/data-exfiltration'], ['Unsafe side effects', '/security/unsafe-side-effects'], ['Computer-use coding', '/coding-agents/computer-use']],
+    related: [['Data exfiltration', '/security/data-exfiltration'], ['Unsafe side effects', '/security/unsafe-side-effects'], ['Secrets broker', '/security/secrets-broker'], ['Computer-use coding', '/coding-agents/computer-use']],
     refs: ['owaspLlm', 'anthropicAgents'], kw: 'sandbox container isolation egress allowlist filesystem blast radius network' }),
   P({ slug: 'downstream-sink-injection', code: 'S-15', title: 'Downstream Sink Injection',
     modes: [
@@ -466,6 +470,41 @@ const EXT_SECURITY_PLATES_2 = [
     failure: 'Reviewing the listing instead of the payload. A name, a description and a star rating tell you nothing about the instructions that will load into the most trusted position in the window.',
     related: [['Tool poisoning', '/security/tool-poisoning'], ['Privilege escalation', '/security/privilege-escalation'], ['Guardrail middleware', '/harnesses/guardrail-middleware']],
     refs: ['invariantToolPoisoning', 'anthropicSkills', 'mcpSpec'], kw: 'supply chain skill plugin marketplace install pinning hash review subagent definition' }),
+];
+
+const EXT_SECURITY_PLATES_3 = [
+  P({ slug: 'permissions', code: 'S-17', title: 'Allow, Ask, Deny: Permission Policies', dg: 'permissionPolicy',
+    def: 'Per-tool allow, ask and deny rules, scoped by argument, decide each proposed call before it runs; a permission mode sets the default for everything the rules don’t mention.',
+    insight: 'Scope rules by argument, not by tool: the same shell that runs the tests can push to main or read a private key. Evaluate deny before allow so a broad block can never be undone by a narrow exception.',
+    failure: 'Rules so coarse that every call asks. People approve on reflex, then widen the mode to make the prompts stop, and the only rule left standing is “allow everything”.',
+    related: [['Guardrail middleware', '/harnesses/guardrail-middleware'], ['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Privilege escalation', '/security/privilege-escalation']],
+    refs: ['ccPermissionsDocs', 'anthropicSandboxingEng'], kw: 'permission rules allow ask deny mode read-only autonomous approval policy scoped argument path domain command allowlist' }),
+  P({ slug: 'secrets-broker', code: 'S-18', title: 'Secrets Broker',
+    modes: [
+      { id: 'leaky', label: 'Key in context', cls: 'danger', dg: 'secretsLeaky' },
+      { id: 'brokered', label: 'Brokered', cls: 'ok', dg: 'secretsBrokered' },
+    ],
+    def: 'The agent never holds a raw credential: it requests an action, and a broker at the egress boundary attaches a scoped, short-lived one.',
+    insight: 'Redaction tries to stop a secret from leaving; brokering means it was never there to leave. The model can be persuaded to print anything in its context, so the only safe credential is one outside it.',
+    failure: 'A broker that hands the token back to the agent “so it can make the call itself”. The key is in context again, and the broker has become a very elaborate environment variable.',
+    related: [['Credential leakage', '/security/credential-leakage'], ['Sandbox anatomy', '/security/sandboxing'], ['Confused deputy', '/security/confused-deputy']],
+    refs: ['anthropicSandboxingEng', 'ccSecurityDocs'], kw: 'secrets broker credential proxy vault injection egress short-lived scoped token api key env' }),
+  P({ slug: 'audit-logs', code: 'S-19', title: 'Audit Logs', dg: 'auditLog',
+    def: 'An append-only record of every tool call, its arguments, the approval decision and the actor — which agent, on whose behalf.',
+    insight: 'Most security plates prevent; this one makes the rest accountable. You cannot investigate an incident, replay a bad run or spot a drifting agent from logs that name no actor and drop the denied calls.',
+    failure: 'Logging the secrets along with everything else. A complete, well-retained log with bearer tokens in it is the most valuable file in the building.',
+    related: [['Permission policies', '/security/permissions'], ['Credential leakage', '/security/credential-leakage'], ['Trajectory eval', '/evals/trajectory-eval']],
+    refs: ['ccMonitoringDocs', 'ccSecurityDocs'], kw: 'audit log trail append-only tamper forensics replay anomaly detection actor provenance compliance telemetry redaction' }),
+  P({ slug: 'denial-of-wallet', code: 'S-20', title: 'Denial of Wallet',
+    modes: [
+      { id: 'attack', label: 'Attack', cls: 'danger', dg: 'walletAttack' },
+      { id: 'defense', label: 'Defended', cls: 'ok', dg: 'walletDefense' },
+    ],
+    def: 'An attacker — or a bug — drives an agent into endless loops, giant contexts or wide fan-out until the money or the shared quota runs out.',
+    insight: 'An agent’s cost is tokens × turns × agents, and an adversary can push all three from one request. Enforce ceilings per run and per user in the harness, because the model has no idea what anything costs.',
+    failure: 'An organization-wide spend cap as the only limit. It fires once the month’s budget is gone, and then it takes every other user down with the one runaway run.',
+    related: [['Budgets & stopping rules', '/harnesses/budgets-and-stopping'], ['Cost & latency as scores', '/evals/cost-and-latency'], ['Audit logs', '/security/audit-logs']],
+    refs: ['claudeApiRateLimits', 'anthropicMultiAgent', 'owaspLlm'], kw: 'denial of wallet cost runaway loop unbounded consumption fan-out quota rate limit budget spend cap' }),
 ];
 
 const EXT_CODING_PLATES = [
@@ -584,7 +623,7 @@ COLLECTIONS.context.plates.push(
 );
 /* full plates for every previously-previewed pattern */
 COLLECTIONS.harnesses.plates.push(...EXT_HARNESS_PLATES);
-COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_2);
+COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_2, ...EXT_SECURITY_PLATES_3);
 COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2);
 COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
 COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES, ...EXT_CODING_PLATES_2);

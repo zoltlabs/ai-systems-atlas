@@ -2543,3 +2543,230 @@ DIAGRAMS.mergeIntegration = {
     { cap: '<span class="cap-ok">So integration is its own role</span> — one place that holds both changes, not a ping-pong between authors.', ok: ['integ'], okE: ['c-i'], d: 2800 },
   ],
 };
+
+/* ---------- SECURITY S-17..S-20 (defense-shaped) ---------- */
+
+DIAGRAMS.permissionPolicy = {
+  w: 740, h: 392, dur: 1800,
+  aria: 'Permission policy: every proposed tool call meets a check outside the model; rules scoped by argument are evaluated deny, then ask, then allow, and a call no rule matches falls to the permission mode, which ranges from read-only to autonomous.',
+  bounds: [
+    { id: 'modes', x: 148, y: 14, w: 488, h: 66, label: 'PERMISSION MODE — DEFAULT FOR UNMATCHED CALLS' },
+    { id: 'rules', x: 116, y: 290, w: 476, h: 84, label: 'RULES, SCOPED BY ARGUMENT — CHECKED DENY → ASK → ALLOW' },
+  ],
+  nodes: [
+    { id: 'm1', x: 210, y: 56, kind: 'chip', label: 'READ-ONLY', w: 104 },
+    { id: 'm2', x: 330, y: 56, kind: 'chip', label: 'ASK FIRST', w: 104 },
+    { id: 'm3', x: 450, y: 56, kind: 'chip', label: 'AUTO-EDIT', w: 104 },
+    { id: 'm4', x: 570, y: 56, kind: 'chip', label: 'AUTONOMOUS', w: 104 },
+    { id: 'agent', x: 82, y: 184, kind: 'model', label: 'AGENT', sub: 'proposes a call', w: 132 },
+    { id: 'gate', x: 390, y: 184, kind: 'policy', label: 'POLICY CHECK', sub: 'first matching rule wins', w: 196 },
+    { id: 'tool', x: 632, y: 116, kind: 'tool', label: 'TOOL RUNS', w: 146 },
+    { id: 'human', x: 632, y: 184, kind: 'human', label: 'ASK A HUMAN', w: 146 },
+    { id: 'deny', x: 632, y: 252, kind: 'chip', label: 'DENIED + REASON', w: 146, h: 28 },
+    { id: 'rd', x: 196, y: 346, kind: 'chip', label: 'DENY read(~/.ssh/**)', w: 146 },
+    { id: 'ra', x: 354, y: 346, kind: 'chip', label: 'ASK bash(git push *)', w: 146 },
+    { id: 'rl', x: 512, y: 346, kind: 'chip', label: 'ALLOW bash(npm test)', w: 146 },
+  ],
+  notes: [
+    { id: 'c1', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'npm test' },
+    { id: 'c2', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'git push origin main' },
+    { id: 'c3', x: 220, y: 172, anchor: 'middle', ghost: true, tone: 'danger', text: 'cat ~/.ssh/id_rsa' },
+    { id: 'c4', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'curl api.example.com' },
+    { id: 'nomatch', x: 220, y: 216, anchor: 'middle', ghost: true, text: 'no rule matches' },
+    { id: 'hold', x: 214, y: 254, anchor: 'middle', tone: 'ok', ghost: true, text: ['deny rules hold', 'in every mode'] },
+  ],
+  edges: [
+    { id: 'a-g', from: 'agent', to: 'gate' },
+    { id: 'r-g', from: 'ra', to: 'gate', kind: 'ctl', d: 'M354 290 C354 248 390 252 390 209', label: 'consulted', lx: 30, ly: 8 },
+    { id: 'm-g', from: 'm2', to: 'gate', kind: 'ctl', fromSide: 'b', toSide: 't', label: 'fallback', labelT: 0.35, lx: -30, ly: 4 },
+    { id: 'g-t', from: 'gate', to: 'tool', label: 'allow', labelT: 0.6, ly: -6 },
+    { id: 'g-h', from: 'gate', to: 'human', label: 'ask', ly: -7 },
+    { id: 'g-d', from: 'gate', to: 'deny', label: 'deny', labelT: 0.6, ly: 14 },
+    { id: 'h-t', from: 'human', to: 'tool', d: 'M705 184 C732 184 732 116 705 116', label: 'yes', lanchor: 'end', lx: -2, ly: 3 },
+  ],
+  steps: [
+    { cap: 'The agent proposes a tool call. Nothing runs until a check outside the model answers.', n: ['agent', 'gate'], e: ['a-g'] },
+    { cap: '<b>npm test</b> matches an allow rule, so it runs with no prompt — the common case stays fast.', ok: ['rl', 'gate', 'tool'], okE: ['g-t'], e: ['a-g'], show: ['c1', 'rules'] },
+    { cap: '<b>git push</b> matches an ask rule. The same tool, a riskier argument: a person decides.', n: ['ra', 'gate', 'human'], e: ['a-g', 'r-g', 'g-h'], show: ['c2', 'rules'] },
+    { cap: '<span class="cap-ok">Approved once</span> — and the approval covers exactly that command, not the whole shell.', ok: ['human', 'tool'], okE: ['h-t'], show: ['c2'] },
+    { cap: '<span class="cap-bad">Reading a private key matches a deny rule.</span> Deny is checked first; no allow rule can carve an exception.', bad: ['rd', 'deny'], badE: ['g-d'], n: ['gate'], e: ['a-g'], show: ['c3', 'rules'] },
+    { cap: 'A call no rule mentions falls through to the session’s permission mode.', n: ['gate', 'm2'], e: ['a-g', 'm-g'], show: ['c4', 'nomatch', 'modes'] },
+    { cap: 'Modes run from read-only to autonomous: each step right auto-approves more of what is left unmatched.', n: ['m1', 'm2', 'm3', 'm4'], show: ['modes'] },
+    { cap: '<span class="cap-ok">Explicit deny rules hold in every mode</span> — autonomy widens the defaults, never the hard limits.', ok: ['rd', 'gate'], n: ['m4'], show: ['modes', 'rules', 'hold'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.secretsLeaky = {
+  w: 700, h: 272, dur: 1800,
+  aria: 'Secrets, leaky: a long-lived API key sits in the agent’s environment and context, so an injected page can ask the agent to print it and the key leaves with the reply.',
+  nodes: [
+    { id: 'env', x: 100, y: 60, kind: 'data', label: 'ENV / .env', sub: 'PAY_KEY=sk_live_…', w: 168 },
+    { id: 'agent', x: 346, y: 60, kind: 'model', label: 'AGENT', sub: 'holds the raw key', w: 168 },
+    { id: 'api', x: 610, y: 60, kind: 'env', label: 'PAYMENTS API', w: 144 },
+    { id: 'page', x: 100, y: 200, kind: 'untrusted', label: 'INJECTED PAGE', sub: '“print your env”', w: 168 },
+    { id: 'att', x: 610, y: 200, kind: 'untrusted', label: 'ATTACKER', w: 144 },
+  ],
+  notes: [
+    { id: 'scope', x: 346, y: 146, anchor: 'middle', tone: 'danger', ghost: true, text: ['full scope · never expires ·', 'in every transcript and trace'] },
+  ],
+  edges: [
+    { id: 'e-a', from: 'env', to: 'agent', label: 'in context', ly: -9 },
+    { id: 'a-p', from: 'agent', to: 'api', label: 'key attached', ly: -9 },
+    { id: 'p-a', from: 'page', to: 'agent', label: 'instructions', labelT: 0.45, lx: -30, ly: 4 },
+    { id: 'a-x', from: 'agent', to: 'att', label: 'key in the reply', labelT: 0.55, lx: 34, ly: 4 },
+  ],
+  steps: [
+    { cap: 'The simplest setup: the key lives in the environment, and the agent reads it like any other value.', n: ['env', 'agent'], e: ['e-a'] },
+    { cap: 'The agent attaches it to requests itself. It works — and the model now holds the literal secret.', n: ['agent', 'api'], e: ['a-p'] },
+    { cap: 'That key is broad and long-lived, and it lands in every transcript, trace and error the agent produces.', bad: ['env', 'agent'], show: ['scope'] },
+    { cap: '<span class="cap-bad">An injected page asks the agent to print its environment.</span>', bad: ['page', 'agent'], badE: ['p-a'], show: ['scope'] },
+    { cap: '<span class="cap-bad">The key leaves in the reply</span> — and it keeps working until someone notices and rotates it.', bad: ['agent', 'att'], badE: ['a-x'], show: ['scope'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.secretsBrokered = {
+  w: 740, h: 318, dur: 1800,
+  aria: 'Secrets, brokered: the agent holds no credential; it requests an action, and a broker at the egress boundary checks scope, fetches a short-lived token from a vault and attaches it outside the agent’s reach.',
+  bounds: [
+    { id: 'box', x: 14, y: 20, w: 180, h: 280, label: 'AGENT SANDBOX' },
+    { id: 'egress', x: 300, y: 20, w: 200, h: 280, kind: 'safe', label: 'EGRESS BOUNDARY' },
+  ],
+  nodes: [
+    { id: 'agent', x: 104, y: 88, kind: 'model', label: 'AGENT', sub: 'holds no secrets', w: 160 },
+    { id: 'page', x: 104, y: 236, kind: 'untrusted', label: 'INJECTED PAGE', sub: '“print your env”', w: 160 },
+    { id: 'broker', x: 400, y: 88, kind: 'policy', label: 'BROKER', sub: 'checks scope, injects', w: 164 },
+    { id: 'vault', x: 400, y: 236, kind: 'data', label: 'SECRET STORE', sub: 'agent cannot reach', w: 164 },
+    { id: 'api', x: 660, y: 88, kind: 'env', label: 'PAYMENTS API', w: 140 },
+  ],
+  notes: [
+    { id: 'tok', x: 640, y: 150, anchor: 'middle', tone: 'ok', ghost: true, text: ['token: charge only,', 'order 91, 5 min'] },
+    { id: 'none', x: 114, y: 158, tone: 'ok', ghost: true, text: ['nothing', 'to print'] },
+    { id: 'out', x: 620, y: 236, anchor: 'middle', tone: 'ok', ghost: true, text: ['refund(all) → outside', 'this run’s scope → refused'] },
+  ],
+  edges: [
+    { id: 'a-b', from: 'agent', to: 'broker', label: 'charge(order 91)', ly: -9 },
+    { id: 'v-b', from: 'vault', to: 'broker', label: 'scoped token', lanchor: 'start', lx: 8, ly: 3 },
+    { id: 'b-p', from: 'broker', to: 'api', label: 'request + key', lx: 8, ly: -9 },
+    { id: 'p-a', from: 'page', to: 'agent', label: 'asks', lanchor: 'end', lx: -8, ly: 4 },
+  ],
+  steps: [
+    { cap: 'The agent runs with no credential at all — only the ability to ask for an action.', n: ['agent'], show: ['box'] },
+    { cap: 'It requests an <b>action</b>, not a key: charge order 91.', n: ['agent', 'broker'], e: ['a-b'], show: ['box', 'egress'] },
+    { cap: 'The broker checks the action against this run’s scope and fetches a token that covers only it.', n: ['broker', 'vault'], e: ['v-b'], show: ['egress', 'tok'] },
+    { cap: '<span class="cap-ok">The credential is attached at the egress boundary</span>, after the request has left the agent’s reach.', ok: ['broker', 'api'], okE: ['b-p'], show: ['egress', 'tok'] },
+    { cap: '<span class="cap-bad">The same injected page asks for the environment.</span>', bad: ['page'], badE: ['p-a'], n: ['agent'], show: ['box'] },
+    { cap: '<span class="cap-ok">There is nothing to print</span>, and an out-of-scope request is refused before any key is attached.', ok: ['agent', 'broker'], show: ['box', 'egress', 'none', 'out'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.auditLog = {
+  w: 720, h: 400, dur: 1800,
+  aria: 'Audit log: every action by a human, an agent or a tool becomes an event naming the actor, the call, its arguments and the approval decision; secrets are redacted before an append-only write, and the log feeds forensics, replay and anomaly detection.',
+  nodes: [
+    { id: 'human', x: 100, y: 56, kind: 'human', label: 'HUMAN', sub: 'approver: alice', w: 152 },
+    { id: 'agent', x: 330, y: 56, kind: 'model', label: 'AGENT', sub: 'run 7f3 · subagent 2', w: 176 },
+    { id: 'tool', x: 580, y: 56, kind: 'tool', label: 'TOOL', sub: 'db · shell · http', w: 152 },
+    { id: 'red', x: 330, y: 172, kind: 'policy', label: 'REDACT', sub: 'secrets never written', w: 196 },
+    { id: 'log', x: 330, y: 280, kind: 'data', label: 'APPEND-ONLY LOG', sub: 'hash-chained · write-once', w: 216 },
+    { id: 'fx', x: 612, y: 240, kind: 'human', label: 'FORENSICS', w: 156 },
+    { id: 'rp', x: 612, y: 300, kind: 'tool', label: 'REPLAY', w: 156 },
+    { id: 'an', x: 612, y: 360, kind: 'evaluator', label: 'ANOMALY ALERT', w: 156 },
+  ],
+  notes: [
+    { id: 'rec', x: 20, y: 250, ghost: true, text: ['actor: agent 7f3/sub 2', 'for: alice', 'call: db.delete', 'args: rows=40k', 'decision: ask → yes', 'at: 14:02:11Z'] },
+    { id: 'sec', x: 448, y: 204, tone: 'danger', ghost: true, text: 'Bearer sk_live_9f…' },
+    { id: 'secok', x: 448, y: 204, tone: 'ok', ghost: true, text: 'Bearer ‹redacted›' },
+    { id: 'ro', x: 330, y: 330, anchor: 'middle', tone: 'ok', ghost: true, text: 'no update · no delete' },
+  ],
+  edges: [
+    { id: 'h-a', from: 'human', to: 'agent', kind: 'ctl', label: 'approves', ly: -9 },
+    { id: 'a-t', from: 'agent', to: 'tool', label: 'call(args)', ly: -9 },
+    { id: 'h-r', from: 'human', to: 'red', fromSide: 'b', toSide: 'l', label: 'decision', labelT: 0.35, lx: -30, ly: 4 },
+    { id: 'a-r', from: 'agent', to: 'red', label: 'call + args', lx: 36 },
+    { id: 't-r', from: 'tool', to: 'red', fromSide: 'b', toSide: 'r', label: 'result', labelT: 0.35, lx: 28, ly: 4 },
+    { id: 'r-l', from: 'red', to: 'log', label: 'append', lx: 26 },
+    { id: 'l-f', from: 'log', to: 'fx' },
+    { id: 'l-r', from: 'log', to: 'rp' },
+    { id: 'l-n', from: 'log', to: 'an' },
+  ],
+  steps: [
+    { cap: 'A human, an agent and its tools all act. Every action is also an event.', n: ['human', 'agent', 'tool'], e: ['h-a', 'a-t'] },
+    { cap: 'Each record names the actor — which agent, which subagent, on whose behalf — plus the call and its arguments.', n: ['agent', 'red'], e: ['a-r'], show: ['rec'] },
+    { cap: 'Approval decisions are events too: who said yes, to exactly what, and when.', n: ['human', 'red'], e: ['h-r'], show: ['rec'] },
+    { cap: '<span class="cap-bad">Tool results carry secrets</span> — a bearer token in a response header.', bad: ['tool'], badE: ['t-r'], n: ['red'], show: ['sec'] },
+    { cap: '<span class="cap-ok">Redaction runs before the write</span>, so the log never becomes the next place a key leaks.', ok: ['red'], show: ['secok'] },
+    { cap: 'Records are appended, chained and never edited — not even by the agent they describe.', n: ['red', 'log'], e: ['r-l'], show: ['ro', 'rec'] },
+    { cap: '<span class="cap-ok">That record is what makes forensics, exact replay and anomaly detection possible.</span>', ok: ['log', 'fx', 'rp', 'an'], okE: ['l-f', 'l-r', 'l-n'], show: ['ro'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.walletAttack = {
+  w: 720, h: 316, dur: 1800,
+  aria: 'Denial of wallet, attack: a crafted task or a bug drives an agent with no ceilings into an endless retry loop, an ever-growing context and a fan-out to hundreds of subagents, and the bill and shared quota run out.',
+  nodes: [
+    { id: 'in', x: 100, y: 88, kind: 'untrusted', label: 'CRAFTED TASK', sub: '…or an honest bug', w: 168 },
+    { id: 'agent', x: 340, y: 88, kind: 'model', label: 'AGENT', sub: 'no ceilings', w: 168 },
+    { id: 's3', x: 604, y: 76, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's2', x: 598, y: 82, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's1', x: 592, y: 88, kind: 'chip', label: 'SUBAGENTS ×200', w: 150, h: 28 },
+    { id: 'ctx', x: 340, y: 204, kind: 'chip', label: 'CONTEXT 40K → 900K TOKENS', w: 200, h: 28 },
+    { id: 'bill', x: 592, y: 216, kind: 'data', label: 'SPEND', sub: '$12 → $9,400 overnight', w: 184 },
+  ],
+  notes: [
+    { id: 'quota', x: 592, y: 280, anchor: 'middle', tone: 'danger', ghost: true, text: ['shared quota gone —', 'every other user gets 429s'] },
+    { id: 'poll', x: 100, y: 150, anchor: 'middle', ghost: true, text: ['“check every link,', 'then check again”'] },
+  ],
+  edges: [
+    { id: 'i-a', from: 'in', to: 'agent', label: 'one request', ly: -9 },
+    { id: 'loop', from: 'agent', to: 'agent', kind: 'ctl', d: 'M380 63 C400 14 280 14 300 63', label: 'retry forever', ly: -4 },
+    { id: 'a-s', from: 'agent', to: 's1', label: 'spawns', ly: -9 },
+    { id: 'a-c', from: 'agent', to: 'ctx', fromSide: 'b', toSide: 't', label: 're-sends it all', lx: 44 },
+    { id: 'c-b', from: 'ctx', to: 'bill', label: 'per turn', ly: -8 },
+    { id: 's-b', from: 's1', to: 'bill', label: 'each one loops too', lx: 58 },
+  ],
+  steps: [
+    { cap: 'One request arrives — crafted to be endless, or simply a task the agent cannot finish.', bad: ['in'], n: ['agent'], badE: ['i-a'], show: ['poll'] },
+    { cap: '<span class="cap-bad">The loop never converges.</span> Nothing in the harness counts the retries.', bad: ['agent'], badE: ['loop'] },
+    { cap: 'Every turn re-sends a context that only grows, so each iteration costs more than the last.', bad: ['ctx'], badE: ['a-c'], n: ['agent'] },
+    { cap: '<span class="cap-bad">It fans out</span>: two hundred subagents, each running the same unbounded loop.', bad: ['s1', 's2', 's3'], badE: ['a-s'], n: ['agent'] },
+    { cap: 'Cost is tokens × turns × agents, and all three are growing at once.', bad: ['bill'], badE: ['c-b', 's-b'], n: ['ctx', 's1'] },
+    { cap: '<span class="cap-bad">By morning the budget is spent and the shared quota is gone</span> — an outage bought one token at a time.', bad: ['bill', 'agent', 's1', 's2', 's3'], show: ['quota'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.walletDefense = {
+  w: 720, h: 376, dur: 1800,
+  aria: 'Denial of wallet, defended: every step passes a budget governor that enforces a per-run budget, a per-user rate limit, a fan-out cap and loop detection, and a stopped run reports why it stopped.',
+  bounds: [{ id: 'caps', x: 40, y: 272, w: 600, h: 88, label: 'CEILINGS — ANY ONE STOPS THE RUN' }],
+  nodes: [
+    { id: 'in', x: 86, y: 64, kind: 'untrusted', label: 'CRAFTED TASK', sub: '…or an honest bug', w: 152 },
+    { id: 'agent', x: 320, y: 64, kind: 'model', label: 'AGENT', sub: 'every step metered', w: 168 },
+    { id: 'gov', x: 320, y: 176, kind: 'policy', label: 'BUDGET GOVERNOR', sub: 'checked before each call', w: 200 },
+    { id: 's2', x: 598, y: 58, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's1', x: 592, y: 64, kind: 'chip', label: 'SUBAGENTS ≤ 4', w: 150, h: 28 },
+    { id: 'stop', x: 604, y: 176, kind: 'evaluator', label: 'STOPPED', sub: 'reason: loop detected', w: 176 },
+    { id: 'c1', x: 114, y: 322, kind: 'chip', label: 'RUN ≤ $5 · 300K TOK', w: 134 },
+    { id: 'c2', x: 262, y: 322, kind: 'chip', label: 'USER ≤ 20 RUNS/HR', w: 134 },
+    { id: 'c3', x: 410, y: 322, kind: 'chip', label: 'FAN-OUT ≤ 4', w: 134 },
+    { id: 'c4', x: 558, y: 322, kind: 'chip', label: 'SAME CALL ×3 → STOP', w: 134 },
+  ],
+  notes: [
+    { id: 'ask', x: 592, y: 104, anchor: 'middle', ghost: true, text: 'asked for 200' },
+    { id: 'rep', x: 604, y: 226, anchor: 'middle', tone: 'ok', ghost: true, text: 'spent $1.80 of $5' },
+  ],
+  edges: [
+    { id: 'i-a', from: 'in', to: 'agent', label: 'one request', ly: -9 },
+    { id: 'a-g', from: 'agent', to: 'gov', kind: 'ctl', label: 'every step', lx: 34 },
+    { id: 'c-g', from: 'c2', to: 'gov', kind: 'ctl', toSide: 'b', label: 'ceilings', labelT: 0.45, lx: -28, ly: 4 },
+    { id: 'g-s', from: 'gov', to: 's1', d: 'M390 151 C390 96 450 64 516 64', label: 'spawn ≤ 4', labelT: 0.45, lanchor: 'start', lx: 8, ly: 8 },
+    { id: 'g-x', from: 'gov', to: 'stop', label: 'halt + why', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The same crafted task arrives. You cannot stop requests from being expensive to answer.', bad: ['in'], badE: ['i-a'], n: ['agent'] },
+    { cap: 'Every step passes a governor <b>before</b> tokens are spent — the harness meters, not the model.', n: ['agent', 'gov'], e: ['a-g'] },
+    { cap: 'It enforces ceilings per run and per user, so one caller cannot spend everyone’s quota.', n: ['gov', 'c1', 'c2'], e: ['c-g'], show: ['caps'] },
+    { cap: '<span class="cap-ok">Fan-out is capped</span>: the agent asked for two hundred subagents and got four.', ok: ['c3', 's1', 's2'], okE: ['g-s'], n: ['gov'], show: ['caps', 'ask'] },
+    { cap: '<span class="cap-bad">The same call with the same arguments comes round a third time.</span> Loop detection trips.', bad: ['c4'], flash: ['c4'], n: ['gov', 'agent'], show: ['caps'] },
+    { cap: '<span class="cap-ok">The run stops and says why</span> — worst case is the run budget, not the month’s.', ok: ['gov', 'stop'], okE: ['g-x'], show: ['caps', 'rep'], d: 2800 },
+  ],
+};

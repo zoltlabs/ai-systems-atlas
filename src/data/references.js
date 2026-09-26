@@ -113,6 +113,31 @@ export const REFERENCES = {
     where: 'Simon Willison, 2025',
     url: 'https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/',
   },
+  anthropicSandboxingEng: {
+    title: 'Beyond permission prompts: making Claude Code more secure and autonomous',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/claude-code-sandboxing',
+  },
+  ccPermissionsDocs: {
+    title: 'Configure permissions',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/permissions',
+  },
+  ccSecurityDocs: {
+    title: 'Security',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/security',
+  },
+  ccMonitoringDocs: {
+    title: 'Monitoring (OpenTelemetry metrics and events)',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/monitoring-usage',
+  },
+  claudeApiRateLimits: {
+    title: 'Rate limits',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/rate-limits',
+  },
   owaspLlm: {
     title: 'OWASP Top 10 for Large Language Model Applications',
     where: 'OWASP GenAI Security Project',

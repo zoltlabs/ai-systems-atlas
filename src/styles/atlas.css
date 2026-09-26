@@ -204,7 +204,7 @@ main{min-height:70vh}
 .dg-panel svg{display:block;max-width:100%;height:auto;margin:0 auto}
 .dg-shell{position:relative}
 
-.code-badge{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--ink2);border:1px solid var(--line);border-radius:7px;padding:3px 9px;background:var(--panel);letter-spacing:.04em}
+.code-badge{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--ink2);border:1px solid var(--line);border-radius:7px;padding:3px 9px;background:var(--panel);letter-spacing:.04em;white-space:nowrap}
 
 /* controls */
 .dg-bar{
