@@ -133,6 +133,53 @@ export const REFERENCES = {
     where: 'Git documentation',
     url: 'https://git-scm.com/docs/git-worktree',
   },
+
+  /* ---------- production & operations ---------- */
+  anthropicEvalsDemystified: {
+    title: 'Demystifying evals for AI agents',
+    where: 'Anthropic Engineering, 2026',
+    url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents',
+  },
+  anthropicPostmortemSept2025: {
+    title: 'A postmortem of three recent issues',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues',
+  },
+  claudeCodeMonitoring: {
+    title: 'Monitoring (OpenTelemetry metrics, events and traces)',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/monitoring-usage',
+  },
+  claudeDocsRateLimits: {
+    title: 'Rate limits',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/rate-limits',
+  },
+  claudeDocsApiErrors: {
+    title: 'Claude API errors',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/errors',
+  },
+  claudeDocsStreaming: {
+    title: 'Streaming messages',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/streaming',
+  },
+  claudeDocsPromptCaching: {
+    title: 'Prompt caching',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching',
+  },
+  claudeDocsUsageCostApi: {
+    title: 'Usage and Cost API',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/manage-claude/usage-cost-api',
+  },
+  claudeDocsModelIds: {
+    title: 'Model IDs and versioning',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions',
+  },
 };
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent

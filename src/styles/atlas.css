@@ -156,6 +156,11 @@ main{min-height:70vh}
 .card:nth-child(1),.card:nth-child(2){grid-column:span 3}
 @media(max-width:880px){.cards{grid-template-columns:1fr 1fr}.card,.card:nth-child(1),.card:nth-child(2){grid-column:span 2}}
 @media(min-width:881px) and (max-width:1024px){.card{grid-column:span 3}}
+/* the 2-then-3 rhythm leaves an orphan past five cards: six → two rows of three; seven → 2 · 3 · 2 */
+@media(min-width:1025px){
+  .cards:has(> .card:nth-child(6):last-child) > .card{grid-column:span 2}
+  .card:nth-child(6):nth-last-child(2),.card:nth-child(7):last-child{grid-column:span 3}
+}
 .card:hover{border-color:var(--ink3);box-shadow:var(--shadow);transform:translateY(-2px)}
 .card-fig{
   border-bottom:1px solid var(--line2);

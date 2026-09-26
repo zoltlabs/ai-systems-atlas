@@ -5,7 +5,7 @@ import { SITE, LINKS } from '../site';
 import { DIAGRAMS } from '../data/diagrams.js';
 import { CARD_MINIS } from '../data/card-minis.js';
 import { COL_BLURB } from '../data/collections.js';
-import { collections, colOrder, siteJsonLd } from '../lib/seo';
+import { collections, colOrder, collectionsHeading, siteJsonLd } from '../lib/seo';
 import { legendHTML } from '../lib/legend.js';
 
 const D = DIAGRAMS as Record<string, any>;
@@ -14,8 +14,11 @@ const B = COL_BLURB as Record<string, string>;
 const total = colOrder.reduce((s, c) => s + collections[c].plates.length, 0);
 const cardMeta: Record<string, string> = {
   harnesses: 'comparison map', security: 'attack ⇄ defense toggles', evals: 'failure taxonomy', context: 'budget builder', 'coding-agents': 'single vs multi',
+  ops: 'span waterfall',
 };
-const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding' };
+const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding',
+  ops: 'ops',
+};
 ---
 <Base title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} path="/" jsonLd={siteJsonLd()}>
   <main class="wrap">
@@ -31,7 +34,7 @@ const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'sec
       <div class="hero-fig"><Diagram def={D.hero} /></div>
     </section>
     <section class="section" style="padding-top:8px">
-      <div class="section-head"><h2>Five collections</h2><span class="count">{total} PLATES</span></div>
+      <div class="section-head"><h2>{collectionsHeading}</h2><span class="count">{total} PLATES</span></div>
       <div class="cards">
         {colOrder.map((id, i) => (
           <a class="card" href={`/${id}`}>

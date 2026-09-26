@@ -66,7 +66,7 @@ export const COLLECTIONS = {
         def: 'Shard a partitionable task across independent agents and merge the results at one aggregation point.',
         insight: 'Wall-clock time collapses to the slowest shard — but only for tasks that genuinely decompose without shared state.',
         failure: 'Hidden coupling: if shards secretly depend on each other, the aggregation step inherits every inconsistency at once.',
-        related: [['Hierarchical', '/harnesses/hierarchical'], ['Best-of-N', '/harnesses/best-of-n']], refs: ['anthropicMultiAgent', 'mast'], kw: 'fanout mapreduce parallel independent aggregate' }),
+        related: [['Hierarchical', '/harnesses/hierarchical'], ['Best-of-N', '/harnesses/best-of-n'], ['Rate limits & backpressure', '/ops/rate-limits']], refs: ['anthropicMultiAgent', 'mast'], kw: 'fanout mapreduce parallel independent aggregate' }),
       P({ slug: 'human-in-the-loop', code: 'H-12', title: 'Human-in-the-loop', dg: 'humanLoop',
         def: 'The agent proposes; a gate routes risky actions to a human who approves or denies before execution.',
         insight: 'Put the human at the decision, not in the loop’s hot path: gate on irreversibility and blast radius, and let everything else flow.',
@@ -81,7 +81,7 @@ export const COLLECTIONS = {
         def: 'Work in bounded bursts, checkpoint durable state, sleep, and resume — for goals that outlive any single session.',
         insight: 'The context window is not the state. Anything that must survive lives in the checkpoint; the window is just a working set.',
         failure: 'Checkpoint drift: if the saved state and the real world diverge while the agent sleeps, it resumes confidently into a world that no longer exists.',
-        related: [['State machine', '/harnesses/state-machine'], ['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents/checkpointing']], refs: ['anthropicLongRunning', 'memgpt'], kw: 'durable checkpoint sleep resume persistent' }),
+        related: [['State machine', '/harnesses/state-machine'], ['Context compaction', '/context/context-compaction'], ['Checkpointing', '/coding-agents/checkpointing'], ['Durable execution', '/ops/durable-execution']], refs: ['anthropicLongRunning', 'memgpt'], kw: 'durable checkpoint sleep resume persistent' }),
     ],
   },
 
@@ -229,6 +229,52 @@ export const COLLECTIONS = {
   },
 };
 
+/* ============ Production & Operations (P-) ============ */
+COLLECTIONS.ops = {
+  title: 'Production & Operations',
+  short: 'Ops',
+  prefix: 'P',
+  intro: 'An agent that passes its evals on a laptop is a demo; one that holds up at 3am under real traffic is a system. These plates cover what happens after launch: seeing inside a run, surviving crashes and rate limits, streaming to people who are waiting, shipping changes without breaking what works, and knowing what all of it costs.',
+  plates: [
+    P({ slug: 'tracing', code: 'P-01', title: 'Tracing an Agent Run', dg: 'opsTrace',
+      def: 'One trace per run: every model call, tool call and subagent is a timed span under its parent, so any outcome can be walked back to the step that caused it.',
+      insight: 'The final answer tells you that a run went wrong; the trace tells you where. Record what each span would need to be replayed — prompt version, model id, arguments, tokens — and every failing trace is already most of an eval case.',
+      failure: 'Logging the final answer, or only the model calls. The bug lives in the tool result nobody recorded, and the run cannot be reproduced to find it.',
+      related: [['Offline vs online evals', '/evals/offline-vs-online'], ['Trajectory eval', '/evals/trajectory-eval'], ['Subagent isolation', '/context/subagent-isolation'], ['Cost monitoring', '/ops/cost-monitoring']],
+      refs: ['anthropicMultiAgent', 'anthropicEvalsDemystified', 'claudeCodeMonitoring'], kw: 'tracing trace spans observability opentelemetry otel trace id parent child subagent logging transcript debug replay eval dataset' }),
+    P({ slug: 'durable-execution', code: 'P-02', title: 'Durable Execution', dg: 'opsDurable',
+      def: 'Each workflow step journals its result before the next begins, so a crashed run resumes from the log instead of starting over — and every side effect carries an idempotency key.',
+      insight: 'Restarting from the top is not recovery for an agent: it repays every token and repeats every side effect. The unit of durability is the step, and the key for a side effect comes from the run and the step, never from the clock.',
+      failure: 'A retry wrapped around a call that is not idempotent. The charge succeeded, the response was lost, and the customer pays twice to a system that was only trying to be reliable.',
+      related: [['Long-running agent', '/harnesses/long-running'], ['Checkpointing', '/coding-agents/checkpointing'], ['Retry loop', '/harnesses/retry-loop'], ['Unsafe side effects', '/security/unsafe-side-effects']],
+      refs: ['anthropicMultiAgent', 'anthropicLongRunning'], kw: 'durable execution workflow journal event log replay resume crash recovery restart idempotency key exactly once side effects' }),
+    P({ slug: 'rate-limits', code: 'P-03', title: 'Rate Limits & Backpressure', dg: 'opsRateLimits',
+      def: 'A swarm shares one rate limit, so calls go through a queue and a shared concurrency cap, and a 429 means back off with jitter — not try again now.',
+      insight: 'Rate limits belong to the account, not the agent: forty subagents each running a polite retry policy still add up to one burst. Throttle at a single shared point, honour retry-after, and remember that cached input often does not count against the input-token limit.',
+      failure: 'Synchronized retries. Every client that got a 429 waits the same fixed second and fires again together, turning one burst into a retry storm that never drains.',
+      related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['Retry loop', '/harnesses/retry-loop'], ['Hierarchical agent', '/harnesses/hierarchical'], ['Cache-aware layout', '/context/cache-aware-layout']],
+      refs: ['claudeDocsRateLimits', 'claudeDocsApiErrors'], kw: 'rate limit 429 529 overloaded retry-after backoff jitter exponential queue concurrency cap semaphore token bucket throttle thundering herd rpm tpm' }),
+    P({ slug: 'streaming', code: 'P-04', title: 'Streaming & Cancellation', dg: 'opsStreaming',
+      def: 'The response arrives as ordered events: text renders as it lands, tool-call arguments accumulate until their block closes, and a cancel can end it at any event.',
+      insight: 'Streaming changes what the user waits for — the first token instead of the last — but tool arguments stream as fragments of JSON that are not valid until the block closes. Render text eagerly, act on tool calls only when complete, and treat cancel as a normal ending rather than an error.',
+      failure: 'A stop button that only hides the output. The request keeps generating and the agent loop keeps calling tools for a reader who has already left.',
+      related: [['Steering a running agent', '/harnesses/steering'], ['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Rate limits & backpressure', '/ops/rate-limits']],
+      refs: ['claudeDocsStreaming', 'claudeDocsApiErrors'], kw: 'streaming sse server-sent events token stream delta input_json_delta partial json tool call cancel abort stop time to first token ttft ui' }),
+    P({ slug: 'versioned-rollout', code: 'P-05', title: 'Versioning & Rollout', dg: 'opsRollout',
+      def: 'Prompt, model and tool schemas ship as one versioned release that must pass an eval gate, then shadow and canary traffic, with the last good release one pointer-flip away.',
+      insight: 'An agent changes whenever any of its three inputs changes, so version them together and never edit a release in place. Offline evals decide whether a release may start rolling out; only online metrics on real traffic decide whether it may finish.',
+      failure: 'Hot-editing the production prompt, or deploying against a moving alias. Behaviour shifts with no deploy to blame, and there is nothing to roll back to because the old version no longer exists.',
+      related: [['Regression evals', '/evals/regression-evals'], ['Offline vs online evals', '/evals/offline-vs-online'], ['Cross-model evals', '/evals/cross-model-evals'], ['Tracing an agent run', '/ops/tracing']],
+      refs: ['claudeDocsModelIds', 'anthropicPostmortemSept2025', 'anthropicMultiAgent'], kw: 'versioning version deploy release pin pinned model id prompt version canary shadow rollout rollback eval gate rainbow deployment' }),
+    P({ slug: 'cost-monitoring', code: 'P-06', title: 'Cost Monitoring in Production', dg: 'opsCost',
+      def: 'Price every call from its usage, attribute it to a run, a tenant and a release, and watch the distribution and the cache hit rate — because the tail writes the bill.',
+      insight: 'An average cost per run hides everything interesting: a few runaway loops can outspend thousands of normal runs. Attribute cost where it is spent, alert on per-run and per-tenant budgets, and treat a falling cache hit rate as a cost regression even when nothing errors.',
+      failure: 'Finding out from the invoice. The monthly total arrives weeks after the loop that caused it, with no link back to the run, the prompt or the release that spent the money.',
+      related: [['Budgets & stopping rules', '/harnesses/budgets-and-stopping'], ['Cost & latency as scores', '/evals/cost-and-latency'], ['Cache-aware layout', '/context/cache-aware-layout'], ['Tracing an agent run', '/ops/tracing']],
+      refs: ['claudeDocsUsageCostApi', 'claudeDocsPromptCaching', 'anthropicMultiAgent'], kw: 'cost monitoring spend attribution usage tokens pricing budget alert cache hit rate outlier finops tenant chargeback' }),
+  ],
+};
+
 
 const EXT_EVALS_PLATES = [
   P({ slug: 'adversarial-evals', code: 'E-08', title: 'Adversarial Evals', dg: 'adversarialEvals',
@@ -245,7 +291,7 @@ const EXT_EVALS_PLATES = [
     def: 'Static benchmarks are controlled but stale; production monitoring is live but noisy. Run both.',
     insight: 'The gap between offline and online numbers is itself the metric: it measures how far your benchmark has drifted from reality.',
     failure: 'Trusting the offline number when they disagree. Production is noisy, but it is not wrong.',
-    related: [['Regression evals', '/evals/regression-evals'], ['Failure taxonomy', '/evals/failure-taxonomy']], refs: ['taubench', 'llmJudge'], kw: 'offline online production monitoring drift benchmark' }),
+    related: [['Regression evals', '/evals/regression-evals'], ['Failure taxonomy', '/evals/failure-taxonomy'], ['Tracing an agent run', '/ops/tracing'], ['Versioning & rollout', '/ops/versioned-rollout']], refs: ['taubench', 'llmJudge'], kw: 'offline online production monitoring drift benchmark' }),
 ];
 
 const EXT_CONTEXT_PLATES = [
@@ -290,7 +336,7 @@ const EXT_HARNESS_PLATES = [
     def: 'Step, token and wall-clock ceilings bound the loop — and a stopping rule names why it ended.',
     insight: 'The harness, not the model, decides whether there is another iteration. Every other plate in this collection assumes something eventually says stop; this is that something.',
     failure: 'A silent halt. An agent that stops without reporting whether it solved the task, ran out of budget, or gave up is indistinguishable from one that crashed.',
-    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running']],
+    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running'], ['Cost monitoring', '/ops/cost-monitoring']],
     refs: ['anthropicAgents', 'mast'], kw: 'budget stopping rule step limit token limit timeout halt termination' }),
   P({ slug: 'model-router', code: 'H-16', title: 'Router / Model Cascade', dg: 'router',
     def: 'A cheap triage step picks the model; a quality check escalates only what needs escalating.',
@@ -302,7 +348,7 @@ const EXT_HARNESS_PLATES = [
     def: 'A correction arrives mid-task, queues to the next step boundary, and is applied without discarding accumulated state.',
     insight: 'Steering is the difference between an agent you supervise and one you submit to. It needs a defined interruption point and state that survives the interruption — both are harness properties, not model ones.',
     failure: 'Applying a correction mid-tool-call, or treating it as a new task: the first corrupts state, the second throws away every step already paid for.',
-    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['State machine', '/harnesses/state-machine'], ['State representation', '/context/state-representation']],
+    related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['State machine', '/harnesses/state-machine'], ['State representation', '/context/state-representation'], ['Streaming & cancellation', '/ops/streaming']],
     refs: ['anthropicLongRunning', 'anthropicAgents'], kw: 'steering interrupt redirect mid-task correction pause resume' }),
   P({ slug: 'guardrail-middleware', code: 'H-18', title: 'Guardrail Middleware', dg: 'guardrail',
     def: 'A policy layer wraps the loop and evaluates every proposed action before anything executes.',
@@ -380,7 +426,7 @@ const EXT_EVALS_PLATES_2 = [
     def: 'Pass rate is one axis; tokens and seconds per task are the other two, and they move in the opposite direction.',
     insight: 'Almost every technique in this atlas buys quality with compute. If your eval only reports quality, every one of them looks free, and the bill arrives in production.',
     failure: 'A leaderboard with one column. Four points of pass rate for three times the spend may be a great trade or a terrible one — but nobody can tell from a single number.',
-    related: [['Regression evals', '/evals/regression-evals'], ['Best-of-N', '/harnesses/best-of-n'], ['Router / cascade', '/harnesses/model-router']],
+    related: [['Regression evals', '/evals/regression-evals'], ['Best-of-N', '/harnesses/best-of-n'], ['Router / cascade', '/harnesses/model-router'], ['Cost monitoring', '/ops/cost-monitoring']],
     refs: ['testTimeCompute', 'taubench'], kw: 'cost latency tokens seconds efficiency tradeoff spend budget scoring' }),
   P({ slug: 'eval-environment', code: 'E-13', title: 'The Eval Environment', dg: 'evalEnv',
     def: 'Each task instance is built fresh from pinned dependencies, seeded data, a frozen clock and recorded network — then destroyed.',
@@ -401,7 +447,7 @@ const EXT_CONTEXT_PLATES_2 = [
     def: 'Order the window by how often each part changes, because a prompt cache is a prefix match and the first mutation invalidates everything after it.',
     insight: 'This reframes half of this collection: compaction, sliding windows and memory loading are not only token decisions, they are cache decisions. A rewrite in the middle makes the whole tail after it expensive again.',
     failure: 'A timestamp, a session id or an unsorted tool list in the system prompt. One volatile byte at the front and the cache never hits — for every request, forever.',
-    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context compaction', '/context/context-compaction'], ['Sliding window', '/context/sliding-window']],
+    related: [['Anatomy of a context window', '/context/context-window-anatomy'], ['Context compaction', '/context/context-compaction'], ['Sliding window', '/context/sliding-window'], ['Cost monitoring', '/ops/cost-monitoring']],
     refs: ['anthropicContext', 'anthropicLongRunning'], kw: 'prompt cache prefix caching kv reuse ordering stable latency cost invalidation' }),
   P({ slug: 'observation-compression', code: 'X-12', title: 'Observation Compression', dg: 'obsCompression',
     def: 'Shape tool output before it enters the window: the errors, the tail, the counts, and a pointer to the rest.',
@@ -498,7 +544,7 @@ const EXT_CODING_PLATES = [
     def: 'Commit at every good state; a bad direction becomes a reset, not a restart.',
     insight: 'Cheap recovery changes what the agent can afford to attempt — risky refactors are rational when undo is free.',
     failure: 'One giant commit at the end: when step 14 of 15 goes wrong, all fifteen are tangled together.',
-    related: [['Long-running agent', '/harnesses/long-running'], ['Retry loop', '/harnesses/retry-loop']], refs: ['anthropicLongRunning'], kw: 'checkpoint commit reset recovery git' }),
+    related: [['Long-running agent', '/harnesses/long-running'], ['Retry loop', '/harnesses/retry-loop'], ['Durable execution', '/ops/durable-execution']], refs: ['anthropicLongRunning'], kw: 'checkpoint commit reset recovery git' }),
   P({ slug: 'repo-indexing', code: 'G-10', title: 'Repo Indexing & Code Search', dg: 'repoIndex',
     def: 'Symbol maps and semantic search turn ten rounds of grep into one hop.',
     insight: 'Navigation is most of a coding agent’s token bill; an index converts that recurring cost into a one-time build.',
@@ -555,7 +601,7 @@ COLLECTIONS.evals.plates.push(
     def: 'Run version A and version B over the same benchmark set; look at per-task deltas, not just the mean.',
     insight: 'Averages hide regressions. A change that lifts the mean 9 points and silently breaks one capability is how agents get worse while dashboards get greener.',
     failure: 'A benchmark set too small or too easy to move: every change looks neutral, so every change ships.',
-    related: [['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals']], refs: ['swebench', 'taubench'], kw: 'regression version compare benchmark delta ab' }),
+    related: [['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals'], ['Versioning & rollout', '/ops/versioned-rollout']], refs: ['swebench', 'taubench'], kw: 'regression version compare benchmark delta ab' }),
   P({ slug: 'failure-taxonomy', code: 'E-06', title: 'Failure Taxonomy', custom: 'taxonomy',
     def: 'Classify every failure by where in the loop it originated — perception, reasoning, planning, tool use, recovery, verification, or the final answer.',
     insight: 'The distribution tells you what to fix next. A recovery-heavy histogram wants a better retry loop, not a bigger model.',
@@ -600,13 +646,14 @@ export const PLATE_LOOKUP = {};
 for (const [colId, col] of Object.entries(COLLECTIONS)) for (const p of col.plates) PLATE_LOOKUP[colId + '/' + p.slug] = p;
 
 
-export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents'];
+export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents', 'ops'];
 export const COL_BLURB = {
   harnesses: 'Eighteen recurring architectures, from a single forward pass to agents that run for days.',
   security: 'Agents possess authority. The ways untrusted text borrows it — and the boundaries that stop it.',
   evals: 'Outcome checks, trajectory review, judges you can trust — and whether the number is signal.',
   context: 'What earns a place in the window, in what order, and how memory brings the right things back.',
   'coding-agents': 'Test loops, verifier ladders, parallel worktrees, and how an edit actually reaches the file.',
+  ops: 'Traces, crash-proof workflows, rate limits, streaming, safe rollouts and the bill: agents under real traffic.',
 };
 export const DIAGRAM_COUNT = Object.keys(DIAGRAMS).length;
 export const PLATE_COUNT = Object.keys(PLATE_LOOKUP).length;
