@@ -210,6 +210,26 @@ export const REFERENCES = {
     where: 'Claude Code docs',
     url: 'https://code.claude.com/docs/en/sandboxing',
   },
+  claudeCodeCloudSessions: {
+    title: 'Use Claude Code in the cloud',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/claude-code-on-the-web',
+  },
+  claudeCodeHooksGuide: {
+    title: 'Automate actions with hooks',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/hooks-guide',
+  },
+  claudeCodeCodeIntelligence: {
+    title: 'Code intelligence plugins',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/plugins/code-intelligence',
+  },
+  claudeCodeCodeReview: {
+    title: 'Code Review',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/code-review',
+  },
 };
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
