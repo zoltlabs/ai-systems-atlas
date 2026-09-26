@@ -137,6 +137,7 @@ export const REFERENCES = {
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
    drop would mean a plate quietly loses its sources. */
+/** @param {string[] | undefined} keys @returns {{ title: string, where: string, url: string }[]} */
 export function resolveRefs(keys) {
   if (!keys || !keys.length) return [];
   return keys.map(k => {
