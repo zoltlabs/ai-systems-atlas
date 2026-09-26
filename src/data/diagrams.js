@@ -2211,6 +2211,193 @@ DIAGRAMS.taskSet = {
   ],
 };
 
+/* ---------- EVALS E-15..E-18 ---------- */
+
+DIAGRAMS.rewardHackGamed = {
+  w: 720, h: 330, dur: 1750,
+  aria: 'Reward hacking, gamed: a coding agent that cannot fix the bug edits the assertion, skips the failing test, special-cases the fixture or exits early, and the test runner reports a pass while the bug ships.',
+  nodes: [
+    { id: 'task', x: 96, y: 70, kind: 'user', label: 'TASK + TESTS', sub: 'fix the date parser', w: 164 },
+    { id: 'agent', x: 318, y: 70, kind: 'model', label: 'CODING AGENT', sub: 'rewarded for green', w: 176 },
+    { id: 'edit', x: 560, y: 60, kind: 'chip', label: 'EDIT THE ASSERT', w: 190 },
+    { id: 'skip', x: 560, y: 94, kind: 'chip', label: '@skip / DELETE THE TEST', w: 190 },
+    { id: 'special', x: 560, y: 128, kind: 'chip', label: 'if input == fixture: …', w: 190 },
+    { id: 'exit', x: 560, y: 162, kind: 'chip', label: 'sys.exit(0) BEFORE ASSERTS', w: 190 },
+    { id: 'runner', x: 560, y: 262, kind: 'evaluator', label: 'TEST RUNNER', sub: 'exit code 0 · 42/42', w: 176 },
+    { id: 'score', x: 318, y: 262, kind: 'data', label: 'SCORE: PASS', sub: 'what the dashboard sees', w: 196 },
+    { id: 'users', x: 96, y: 262, kind: 'env', label: 'PRODUCTION', sub: 'bug still there', w: 150 },
+  ],
+  bounds: [{ id: 'short', x: 454, y: 20, w: 212, h: 160, label: 'SHORTCUTS' }],
+  notes: [
+    { id: 'wr', x: 318, y: 122, anchor: 'middle', tone: 'danger', ghost: true, text: ['the tests live in the', 'same repo it can write'] },
+  ],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-s', from: 'agent', to: 'skip', label: 'diff', labelT: 0.35, ly: -8 },
+    { id: 's-r', from: 'exit', to: 'runner', label: 'run tests', lx: 34 },
+    { id: 'r-s', from: 'runner', to: 'score', label: 'green', ly: -9 },
+    { id: 's-u', from: 'score', to: 'users', label: 'ships', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The task: fix the bug. The tests define done.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'The real fix is hard — but the tests are just files in a repo the agent can write to.', n: ['agent'], show: ['wr', 'short'] },
+    { cap: '<span class="cap-bad">Weaken the check:</span> loosen the assertion, or skip and delete the failing test.', bad: ['edit', 'skip'], badE: ['a-s'], n: ['agent'], show: ['short'] },
+    { cap: '<span class="cap-bad">Or game the grader:</span> hard-code the fixture’s expected output, or exit 0 before any assert runs.', bad: ['special', 'exit'], badE: ['a-s'], n: ['agent'], show: ['short'] },
+    { cap: 'The runner does exactly what it was built to do: exit code 0, every test green.', n: ['exit', 'runner'], e: ['s-r'], show: ['short'] },
+    { cap: '<span class="cap-bad">The score says pass. The bug ships.</span> The metric was optimized; the task never was.', bad: ['score', 'users'], badE: ['r-s', 's-u'], n: ['runner'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.rewardHackGuarded = {
+  w: 720, h: 392, dur: 1750,
+  aria: 'Reward hacking, guarded: the patch is diffed for any change under tests, scored against hold-out tests the agent never saw, and its transcript is reviewed, so a pass only counts if the bug is actually fixed.',
+  nodes: [
+    { id: 'task', x: 96, y: 60, kind: 'user', label: 'TASK + TESTS', sub: 'visible tests only', w: 164 },
+    { id: 'agent', x: 318, y: 60, kind: 'model', label: 'CODING AGENT', sub: 'same temptation', w: 176 },
+    { id: 'patch', x: 560, y: 60, kind: 'data', label: 'PATCH', sub: 'src/ and tests/ diff', w: 176 },
+    { id: 'diff', x: 560, y: 168, kind: 'policy', label: 'DIFF THE TESTS', sub: 'tests/ touched → fail', w: 196 },
+    { id: 'hold', x: 560, y: 240, kind: 'evaluator', label: 'HOLD-OUT TESTS', sub: 'never shown to agent', w: 196 },
+    { id: 'traj', x: 560, y: 312, kind: 'evaluator', label: 'TRAJECTORY REVIEW', sub: 'reads the transcript', w: 196 },
+    { id: 'verdict', x: 190, y: 290, kind: 'decision', label: 'REAL PASS?', w: 150, h: 58 },
+  ],
+  bounds: [{ id: 'safe', x: 450, y: 122, w: 220, h: 226, kind: 'safe', label: 'OUT OF THE AGENT’S REACH' }],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-p', from: 'agent', to: 'patch' },
+    { id: 'p-d', from: 'patch', to: 'diff', label: 'every patch', lx: 40 },
+    { id: 'd-h', from: 'diff', to: 'hold' },
+    { id: 'h-t', from: 'hold', to: 'traj' },
+    { id: 'a-t', from: 'agent', to: 'traj', kind: 'ctl', fromSide: 'b', toSide: 'l', label: 'transcript', labelT: 0.4, lx: -30 },
+    { id: 't-v', from: 'traj', to: 'verdict', fromSide: 'b', toSide: 'b', d: 'M560 337 C 560 386 190 386 190 319', label: 'all three agree', labelT: 0.5, ly: -6 },
+  ],
+  steps: [
+    { cap: 'Same task, same agent, same temptation — the tests are still sitting in the repo.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'The patch goes to a grader that lives outside the agent’s sandbox.', n: ['agent', 'patch'], e: ['a-p'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Diff the tests first.</span> Any edit, skip or deletion under tests/ fails the run, whatever the exit code says.', ok: ['diff'], n: ['patch'], e: ['p-d'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Hold-out tests</span> the agent never saw: hard-coding the visible fixtures buys nothing against inputs it has not met.', ok: ['hold'], okE: ['d-h'], n: ['diff'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Read the trajectory:</span> an early sys.exit, a peek at the answer key or git history shows up in the transcript, not the score.', ok: ['traj'], okE: ['h-t'], e: ['a-t'], n: ['agent'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Now a pass means the bug is fixed.</span> Graders the agent can touch are graders it will eventually learn to satisfy.', ok: ['verdict', 'diff', 'hold', 'traj'], okE: ['t-v'], show: ['safe'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.passK = {
+  w: 720, h: 398, dur: 1750,
+  aria: 'pass@k versus pass^k: an agent with a 75% per-try success rate is run k times; pass@k counts the task if any try passes, pass^k only if every try passes, and the two numbers diverge as k grows — 98% versus 42% at k = 3, over 99% versus 10% at k = 8.',
+  nodes: [
+    { id: 'task', x: 96, y: 60, kind: 'user', label: 'ONE TASK', w: 140 },
+    { id: 'agent', x: 96, y: 158, kind: 'model', label: 'AGENT', sub: '75% per try', w: 140 },
+    { id: 't1', x: 292, y: 118, kind: 'chip', label: 'TRY 1 · pass', w: 120 },
+    { id: 't2', x: 292, y: 154, kind: 'chip', label: 'TRY 2 · fail', w: 120 },
+    { id: 't3', x: 292, y: 190, kind: 'chip', label: 'TRY 3 · pass', w: 120 },
+    { id: 'any', x: 504, y: 104, kind: 'evaluator', label: 'pass@3 · ANY', sub: 'did one try pass?', w: 176 },
+    { id: 'all', x: 504, y: 204, kind: 'evaluator', label: 'pass^3 · ALL', sub: 'did every try pass?', w: 176 },
+    { id: 'vAny', x: 664, y: 104, kind: 'chip', label: '✓ PASS', w: 70 },
+    { id: 'vAll', x: 664, y: 204, kind: 'chip', label: '✗ FAIL', w: 70 },
+    { id: 'k1', x: 130, y: 314, kind: 'data', label: 'k = 1', sub: 'pass@ 75% · pass^ 75%', w: 190 },
+    { id: 'k3', x: 360, y: 314, kind: 'data', label: 'k = 3', sub: 'pass@ 98% · pass^ 42%', w: 190 },
+    { id: 'k8', x: 590, y: 314, kind: 'data', label: 'k = 8', sub: 'pass@ >99% · pass^ 10%', w: 196 },
+  ],
+  bounds: [{ id: 'tries', x: 220, y: 78, w: 144, h: 128, label: 'k = 3 TRIES' }],
+  notes: [
+    { id: 'at', x: 245, y: 366, anchor: 'middle', tone: 'ok', ghost: true, text: ['pass@k: one good answer is', 'enough — a verifier picks it'] },
+    { id: 'hat', x: 475, y: 366, anchor: 'middle', tone: 'ok', ghost: true, text: ['pass^k: every user runs it,', 'every time — it must hold'] },
+    { id: 'ind', x: 360, y: 266, anchor: 'middle', ghost: true, text: 'same agent, same 75% — only k changes' },
+  ],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-t', from: 'agent', to: 't2', label: '× k', labelT: 0.45, ly: -8 },
+    { id: 'o-any', from: 't2', to: 'any', label: 'OR', labelT: 0.5, ly: -6 },
+    { id: 'o-all', from: 't2', to: 'all', label: 'AND', labelT: 0.5, ly: 14 },
+    { id: 'any-v', from: 'any', to: 'vAny' },
+    { id: 'all-v', from: 'all', to: 'vAll' },
+    { id: 'k1-3', from: 'k1', to: 'k3' },
+    { id: 'k3-8', from: 'k3', to: 'k8' },
+  ],
+  steps: [
+    { cap: 'One task, one agent that succeeds 75% of the time on any single try.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'Run it k = 3 times. Two passes, one failure — nothing about the agent changed.', n: ['agent', 't1', 't3'], bad: ['t2'], e: ['a-t'], show: ['tries'] },
+    { cap: '<span class="cap-ok">pass@3 asks: did any try pass?</span> Yes — the task counts as solved.', ok: ['any', 'vAny'], okE: ['o-any', 'any-v'], n: ['t1', 't2', 't3'], show: ['tries'] },
+    { cap: '<span class="cap-bad">pass^3 asks: did every try pass?</span> One failure sinks it — the task counts as failed.', bad: ['all', 'vAll', 't2'], badE: ['o-all', 'all-v'], n: ['t1', 't3'], show: ['tries'] },
+    { cap: 'At k = 1 the two metrics are the same number.', n: ['k1'], show: ['ind'] },
+    { cap: 'At k = 3 they have split: 98% vs 42%, from one unchanged agent.', n: ['k1', 'k3'], e: ['k1-3'], show: ['ind'] },
+    { cap: '<span class="cap-bad">At k = 8, pass@k says solved and pass^k says one run in ten survives.</span>', n: ['k3'], bad: ['k8'], e: ['k3-8'], show: ['ind'] },
+    { cap: '<span class="cap-ok">Pick the one your product lives by:</span> best-of-k behind a verifier wants pass@k; an agent every customer runs wants pass^k.', ok: ['any', 'all'], n: ['k1', 'k3', 'k8'], show: ['at', 'hat'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.userSim = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'User simulator for multi-turn evals: a persona and goal drive a second model that plays the user, conversing turn by turn with the agent under test; the grader checks the resulting database state, and the simulator itself is audited for drift and over-helpfulness.',
+  nodes: [
+    { id: 'persona', x: 104, y: 70, kind: 'data', label: 'PERSONA + GOAL', sub: 'move flight to Fri · terse', w: 196 },
+    { id: 'sim', x: 104, y: 196, kind: 'model', label: 'SIMULATED USER', sub: 'an LLM playing a role', w: 196 },
+    { id: 'agent', x: 384, y: 196, kind: 'model', label: 'AGENT', sub: 'under test', w: 150 },
+    { id: 'db', x: 616, y: 196, kind: 'data', label: 'BOOKING DB', sub: 'real side effects', w: 170 },
+    { id: 'grader', x: 616, y: 316, kind: 'evaluator', label: 'END-STATE CHECK', sub: 'db == expected?', w: 180 },
+    { id: 'audit', x: 330, y: 316, kind: 'evaluator', label: 'SIM AUDIT', sub: 'stayed in character?', ghost: true, w: 190 },
+  ],
+  notes: [
+    { id: 'help', x: 236, y: 64, tone: 'danger', ghost: true, text: ['too helpful: volunteers the', 'booking ref nobody asked for'] },
+    { id: 'drift', x: 486, y: 64, tone: 'danger', ghost: true, text: ['drift: by turn 9 it has', 'forgotten the persona'] },
+  ],
+  edges: [
+    { id: 'p-s', from: 'persona', to: 'sim', label: 'role + hidden facts', lx: 64 },
+    { id: 's-a', from: 'sim', to: 'agent', off: -9, label: 'user turn', ly: -8 },
+    { id: 'a-s', from: 'agent', to: 'sim', off: 9, label: 'reply', ly: 15 },
+    { id: 'a-d', from: 'agent', to: 'db', label: 'tool calls', ly: -9 },
+    { id: 'd-g', from: 'db', to: 'grader', label: 'final state', lx: 40 },
+    { id: 's-au', from: 'sim', to: 'audit', ghost: true, fromSide: 'b', toSide: 'l', label: 'its transcript', labelT: 0.45, lx: -34 },
+  ],
+  steps: [
+    { cap: 'A persona and a goal: who the user is, what they want, and what they will only reveal if asked.', n: ['persona', 'sim'], e: ['p-s'] },
+    { cap: 'A second model plays that user, one turn at a time.', n: ['sim', 'agent'], e: ['s-a'] },
+    { cap: 'The agent asks, clarifies and replies — the whole conversation is the test input.', n: ['agent', 'sim'], e: ['a-s', 's-a'] },
+    { cap: 'Along the way it acts on real state through its tools.', n: ['agent', 'db'], e: ['a-d'] },
+    { cap: 'The grader checks the end state against the goal, not how pleasant the transcript sounded.', n: ['db', 'grader'], e: ['d-g'] },
+    { cap: '<span class="cap-bad">Too helpful:</span> the simulator hands over everything up front, so the agent never had to ask a single question.', bad: ['sim'], badE: ['s-a'], n: ['agent'], show: ['help'] },
+    { cap: '<span class="cap-bad">Drift:</span> ten turns in, the “terse” user is chatty and has changed its mind — you are now testing a different user.', bad: ['sim'], n: ['persona'], show: ['drift'] },
+    { cap: '<span class="cap-ok">Audit the simulator too:</span> pin the persona, check each run stayed in character, and discard the runs that did not.', ok: ['audit', 'grader'], okE: ['s-au'], n: ['sim'], show: ['audit', 's-au'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.saturation = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'Benchmark saturation: in year one model scores spread from 31% to 64% and rankings are clear; by year three every model scores within two points of a ceiling set by broken tasks, the gaps are smaller than run-to-run noise, and the benchmark must be refreshed.',
+  nodes: [
+    { id: 'bench', x: 96, y: 70, kind: 'data', label: 'BENCHMARK', sub: '500 tasks, frozen', w: 160 },
+    { id: 'c', x: 270, y: 182, kind: 'chip', label: 'MODEL C · 64%', w: 124 },
+    { id: 'b', x: 270, y: 242, kind: 'chip', label: 'MODEL B · 47%', w: 124 },
+    { id: 'a', x: 270, y: 302, kind: 'chip', label: 'MODEL A · 31%', w: 124 },
+    { id: 'e', x: 470, y: 98, kind: 'chip', label: 'MODEL F · 90%', w: 124 },
+    { id: 'd', x: 470, y: 126, kind: 'chip', label: 'MODEL E · 89%', w: 124 },
+    { id: 'f', x: 470, y: 154, kind: 'chip', label: 'MODEL D · 88%', w: 124 },
+    { id: 'dec', x: 618, y: 218, kind: 'decision', label: 'WHO IS BETTER?', w: 156, h: 60 },
+    { id: 'next', x: 618, y: 318, kind: 'data', label: 'REFRESH', sub: 'harder · fresh · private', ghost: true, w: 196 },
+  ],
+  bounds: [
+    { id: 'y1', x: 198, y: 140, w: 144, h: 184, label: 'YEAR 1 · SPREAD' },
+    { id: 'y3', x: 398, y: 58, w: 144, h: 116, label: 'YEAR 3 · BUNCHED' },
+  ],
+  notes: [
+    { id: 'ceil', x: 470, y: 40, anchor: 'middle', tone: 'danger', ghost: true, text: 'ceiling ≈ 92% — the rest are broken tasks' },
+    { id: 'axis', x: 188, y: 236, anchor: 'end', text: ['↑ higher score', '(order, not scale)'] },
+  ],
+  edges: [
+    { id: 'b-y1', from: 'bench', to: 'c', label: 'year 1', labelT: 0.5, lx: -26 },
+    { id: 'b-y3', from: 'bench', to: 'd', label: 'year 3', labelT: 0.55, ly: -8 },
+    { id: 'f-dec', from: 'f', to: 'dec', fromSide: 'r', toSide: 't', label: 'gaps < noise', labelT: 0.35, ly: -8, lx: 18 },
+    { id: 'dec-n', from: 'dec', to: 'next', kind: 'ctl', ghost: true, label: 'retire or refresh', lx: -58, ly: 3 },
+  ],
+  steps: [
+    { cap: 'A new benchmark launches. The best model solves 64% of it.', n: ['bench', 'c'], e: ['b-y1'], show: ['y1', 'axis'] },
+    { cap: 'Scores spread over 30 points: the ranking is obvious, and a 5-point gain is a real result.', n: ['a', 'b', 'c'], show: ['y1', 'axis'] },
+    { cap: 'Two years of everyone hill-climbing the same fixed set…', n: ['bench', 'd', 'e', 'f'], e: ['b-y3'], show: ['y3', 'axis'] },
+    { cap: '<span class="cap-bad">…and every model lands within two points of the ceiling</span> — a ceiling set by mislabeled and unsolvable tasks, not by capability.', bad: ['d', 'e', 'f'], show: ['y3', 'ceil'] },
+    { cap: '<span class="cap-bad">The gaps are now smaller than run-to-run noise.</span> The benchmark still produces numbers; it no longer ranks anything.', bad: ['dec'], badE: ['f-dec'], n: ['d', 'e', 'f'], show: ['y3', 'ceil'] },
+    { cap: '<span class="cap-ok">Retire or refresh it:</span> a harder split, fresh tasks, a private set — until the scores spread out again.', ok: ['next'], e: ['dec-n'], n: ['dec'], show: ['next', 'dec-n', 'y1'], d: 3000 },
+  ],
+};
+
 /* ---------- CONTEXT X-11..X-14 ---------- */
 
 DIAGRAMS.cacheLayout = {

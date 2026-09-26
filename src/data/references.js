@@ -78,6 +78,17 @@ export const REFERENCES = {
     where: 'Anthropic Engineering, 2025',
     url: 'https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills',
   },
+  /* evals E-15..E-18 */
+  anthropicRewardHackingMisalignment: {
+    title: 'From shortcuts to sabotage: natural emergent misalignment from reward hacking',
+    where: 'Anthropic Research, 2025',
+    url: 'https://www.anthropic.com/research/emergent-misalignment-reward-hacking',
+  },
+  claudeDocsPromptingTestsHardcoding: {
+    title: 'Prompting best practices — avoid focusing on passing tests and hardcoding',
+    where: 'Claude Docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices',
+  },
   cognitionMultiAgent: {
     title: 'Don’t build multi-agents',
     where: 'Cognition, 2025',

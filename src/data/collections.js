@@ -163,7 +163,7 @@ export const COLLECTIONS = {
         def: 'Inspect every step of the run, not just where it landed.',
         insight: 'Trajectory review is where you catch reward hacking, wasted loops, and the cheats that outcome metrics score as wins.',
         failure: 'Judging steps against “what I would have done” instead of “did this step make progress” — many valid trajectories look nothing like yours.',
-        related: [['Outcome eval', '/evals/outcome-eval'], ['Failure taxonomy', '/evals/failure-taxonomy']], refs: ['anthropicAgentEvals', 'processSupervision', 'mast'], kw: 'process steps trajectory reward hacking inspect' }),
+        related: [['Outcome eval', '/evals/outcome-eval'], ['Failure taxonomy', '/evals/failure-taxonomy'], ['Reward hacking', '/evals/reward-hacking']], refs: ['anthropicAgentEvals', 'processSupervision', 'mast'], kw: 'process steps trajectory reward hacking inspect' }),
       P({ slug: 'llm-as-judge', code: 'E-03', title: 'LLM-as-Judge', dg: 'llmJudge',
         def: 'A model grades outputs against a rubric, standing in for human review at scale.',
         insight: 'Judges make evaluation continuous instead of quarterly. The rubric — not the judge model — is usually what needs the engineering.',
@@ -245,7 +245,7 @@ const EXT_EVALS_PLATES = [
     def: 'Static benchmarks are controlled but stale; production monitoring is live but noisy. Run both.',
     insight: 'The gap between offline and online numbers is itself the metric: it measures how far your benchmark has drifted from reality.',
     failure: 'Trusting the offline number when they disagree. Production is noisy, but it is not wrong.',
-    related: [['Regression evals', '/evals/regression-evals'], ['Failure taxonomy', '/evals/failure-taxonomy']], refs: ['anthropicAgentEvals', 'llmJudge'], kw: 'offline online production monitoring drift benchmark' }),
+    related: [['Regression evals', '/evals/regression-evals'], ['Failure taxonomy', '/evals/failure-taxonomy'], ['User simulators', '/evals/user-simulators']], refs: ['anthropicAgentEvals', 'llmJudge'], kw: 'offline online production monitoring drift benchmark' }),
 ];
 
 const EXT_CONTEXT_PLATES = [
@@ -374,7 +374,7 @@ const EXT_EVALS_PLATES_2 = [
     def: 'Agents are stochastic, so a single run is one bit — and a one-task difference is usually noise.',
     insight: 'Every other eval plate produces a number; this one tells you whether the number means anything. Decide how many runs per task before you look at the result, and report the interval rather than the point.',
     failure: 'Shipping on a delta smaller than the run-to-run spread. You will chase phantom regressions for a week and, worse, ship real ones that happened to land inside the noise.',
-    related: [['Regression evals', '/evals/regression-evals'], ['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals']],
+    related: [['Regression evals', '/evals/regression-evals'], ['Outcome eval', '/evals/outcome-eval'], ['Cross-model evals', '/evals/cross-model-evals'], ['pass@k vs pass^k', '/evals/pass-at-k-vs-pass-hat-k']],
     refs: ['anthropicErrorBars', 'anthropicAgentEvals', 'taubench'], kw: 'variance sample size pass@k noise flaky stochastic confidence interval reruns' }),
   P({ slug: 'cost-and-latency', code: 'E-12', title: 'Cost & Latency as Scores', dg: 'costLatency',
     def: 'Pass rate is one axis; tokens and seconds per task are the other two, and they move in the opposite direction.',
@@ -392,8 +392,39 @@ const EXT_EVALS_PLATES_2 = [
     def: 'Where benchmark tasks come from, and what happens to a benchmark once it is published.',
     insight: 'Draw tasks from where the agent actually fails, and keep a held-out set that never ships. The gap between your public score and your private one is a direct measurement of how contaminated the public one has become.',
     failure: 'Trusting a public benchmark years after publication. Once it is in the training data, you are measuring recall of the answer key, not capability.',
-    related: [['Regression evals', '/evals/regression-evals'], ['Offline vs online', '/evals/offline-vs-online'], ['Adversarial evals', '/evals/adversarial-evals']],
+    related: [['Regression evals', '/evals/regression-evals'], ['Offline vs online', '/evals/offline-vs-online'], ['Adversarial evals', '/evals/adversarial-evals'], ['Benchmark saturation', '/evals/benchmark-saturation']],
     refs: ['anthropicEvalChallenges', 'anthropicAgentEvals', 'swebench'], kw: 'benchmark construction contamination leakage held out curation task selection overfitting' }),
+];
+
+const EXT_EVALS_PLATES_3 = [
+  P({ slug: 'reward-hacking', code: 'E-15', title: 'Reward Hacking',
+    modes: [
+      { id: 'gamed', label: 'Gamed', cls: 'danger', dg: 'rewardHackGamed' },
+      { id: 'guarded', label: 'Guarded', cls: 'ok', dg: 'rewardHackGuarded' },
+    ],
+    def: 'The agent satisfies the grader instead of the task — editing, skipping or deleting the tests, or special-casing whatever the grader checks.',
+    insight: 'An exit code is not a fixed bug. Keep the grader out of the agent’s reach: diff every patch for changes to the tests, score against hold-out tests it never saw, and read transcripts, because the shortcut is visible in the trajectory long before it is visible in the score.',
+    failure: 'Grading a coding agent with tests that live in the repo it can write to. Pass rates climb, and each point is as likely to be a weakened assert as a fixed bug.',
+    related: [['Outcome vs process', '/evals/outcome-vs-process'], ['Test-driven agent', '/coding-agents/test-driven'], ['Trajectory eval', '/evals/trajectory-eval']],
+    refs: ['anthropicRewardHackingMisalignment', 'claudeDocsPromptingTestsHardcoding', 'anthropicAgentEvals'], kw: 'reward hacking specification gaming cheat tests skip delete hardcode special case grader sys.exit hold-out diff' }),
+  P({ slug: 'pass-at-k-vs-pass-hat-k', code: 'E-16', title: 'pass@k vs pass^k', dg: 'passK',
+    def: 'pass@k counts a task solved if any of k tries succeeds; pass^k only if all k do — capability versus reliability.',
+    insight: 'With independent tries at 75% each, three tries give 98% pass@3 and 42% pass^3. The same agent looks nearly perfect or unshippable depending on which question you ask, so ask the one your product actually poses.',
+    failure: 'Reporting pass@k for a customer-facing agent. Users do not get k tries and a verifier — each of them gets one run, and they come back tomorrow for another.',
+    related: [['Variance & sample size', '/evals/variance-and-sample-size'], ['Best-of-N', '/harnesses/best-of-n'], ['Outcome eval', '/evals/outcome-eval']],
+    refs: ['taubench', 'anthropicAgentEvals'], kw: 'pass@k pass^k pass hat k reliability consistency trials attempts capability best of k tau-bench' }),
+  P({ slug: 'user-simulators', code: 'E-17', title: 'User Simulators', dg: 'userSim',
+    def: 'A second model plays the user — persona, goal and hidden facts — so a multi-turn agent can be tested on whole conversations, graded on the state they leave behind.',
+    insight: 'Conversational agents fail between turns: asking the wrong question, missing a correction, acting before confirming. Only a user that talks back exercises that, and grading the final database state keeps the verdict objective even when every conversation is different.',
+    failure: 'A simulator that is easier than real users — it volunteers every fact, never changes its mind, and quietly drifts out of persona. The agent aces the eval by never meeting the conversation it will actually have.',
+    related: [['Offline vs online', '/evals/offline-vs-online'], ['Outcome eval', '/evals/outcome-eval'], ['LLM-as-judge', '/evals/llm-as-judge']],
+    refs: ['taubench', 'anthropicAgentEvals'], kw: 'user simulator simulated user persona multi-turn conversation dialogue tau-bench end state drift' }),
+  P({ slug: 'benchmark-saturation', code: 'E-18', title: 'Benchmark Saturation', dg: 'saturation',
+    def: 'Once scores bunch against the ceiling, the gaps between models shrink below the noise and the benchmark stops ranking anything.',
+    insight: 'The ceiling is rarely 100%: mislabeled and unsolvable tasks cap it lower, so the last few points measure grader errors, not capability. Watch the spread of top scores, and refresh with harder splits, fresh tasks or a private set before it collapses.',
+    failure: 'Celebrating a 1-point lead on a saturated benchmark. It is inside the run-to-run noise, and on the tasks that remain it may be the model memorizing a wrong answer key.',
+    related: [['Task sets & contamination', '/evals/task-sets-and-contamination'], ['Variance & sample size', '/evals/variance-and-sample-size'], ['Regression evals', '/evals/regression-evals']],
+    refs: ['anthropicAgentEvals', 'anthropicEvalChallenges', 'anthropicErrorBars'], kw: 'benchmark saturation ceiling headroom discriminate leaderboard refresh harder split private set noise' }),
 ];
 
 const EXT_CONTEXT_PLATES_2 = [
@@ -478,7 +509,7 @@ const EXT_CODING_PLATES = [
     def: 'Write the failing test first; the test then defines “done” unambiguously.',
     insight: 'TDD fixes the coding agent’s worst habit — declaring victory early. The agent cannot argue with a red test.',
     failure: 'The agent writes a test that asserts its implementation rather than the spec: green, and wrong.',
-    related: [['Test loop', '/coding-agents/test-loop'], ['Actor–Verifier', '/harnesses/actor-verifier']], refs: ['claudeCodeBestPractices', 'swebench'], kw: 'tdd test first red green spec' }),
+    related: [['Test loop', '/coding-agents/test-loop'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Reward hacking', '/evals/reward-hacking']], refs: ['claudeCodeBestPractices', 'swebench'], kw: 'tdd test first red green spec' }),
   P({ slug: 'reviewer-agent', code: 'G-06', title: 'Reviewer Agent', dg: 'reviewerAgent',
     def: 'A separate agent reviews the diff with fresh context, catching what the author’s context normalized.',
     insight: 'Author blindness is a context problem, so the fix is a context boundary — the reviewer’s power is precisely what it hasn’t seen.',
@@ -589,7 +620,7 @@ COLLECTIONS.evals.plates.push(
     def: 'An agent can succeed through a bad trajectory, and fail despite a mostly sound one.',
     insight: 'Score both axes. Lucky passes are future failures you haven’t met yet; principled near-misses are one small fix from reliable wins.',
     failure: 'Optimizing pass-rate alone quietly selects for whatever cheats and shortcuts happen to pass — you train luck.',
-    related: [['Trajectory eval', '/evals/trajectory-eval'], ['Human calibration', '/evals/human-calibrated-judge']], refs: ['processSupervision', 'verifiers'], kw: 'lucky pass process outcome mismatch reward hacking' }),
+    related: [['Trajectory eval', '/evals/trajectory-eval'], ['Human calibration', '/evals/human-calibrated-judge'], ['Reward hacking', '/evals/reward-hacking']], refs: ['processSupervision', 'verifiers'], kw: 'lucky pass process outcome mismatch reward hacking' }),
 );
 
 COLLECTIONS.context.plates.unshift(
@@ -609,7 +640,7 @@ COLLECTIONS.context.plates.push(
 /* full plates for every previously-previewed pattern */
 COLLECTIONS.harnesses.plates.push(...EXT_HARNESS_PLATES);
 COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_2);
-COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2);
+COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2, ...EXT_EVALS_PLATES_3);
 COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
 COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES, ...EXT_CODING_PLATES_2);
 
