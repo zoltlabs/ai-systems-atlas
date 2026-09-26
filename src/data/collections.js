@@ -10,7 +10,7 @@ export const COLLECTIONS = {
     title: 'Agent Harness Patterns',
     short: 'Harnesses',
     prefix: 'H',
-    intro: 'The harness is everything around the model: the loop, the state, the retries, the stopping rule. These eighteen plates cover the architectures that recur in almost every production agent — from a single forward pass to systems that run for days, plus the budgets, routing and control surfaces that decide what any of them cost.',
+    intro: 'The harness is everything around the model: the loop, the state, the retries, the stopping rule. These twenty-three plates cover the architectures that recur in almost every production agent — from a single forward pass to systems that run for days, the ways several agents hand off, share state and argue, and the thinking budgets, routing and control surfaces that decide what any of them cost.',
     plates: [
       P({ slug: 'single-shot', code: 'H-01', title: 'Single-shot', dg: 'singleShot',
         def: 'One prompt in, one completion out. No loop, no tools, no feedback.',
@@ -21,7 +21,7 @@ export const COLLECTIONS = {
         def: 'The model alternates reasoning with tool calls, folding each observation back into context until it can answer.',
         insight: 'The loop converts a static predictor into something that can gather its own evidence. Nearly every modern agent is a descendant of this cycle.',
         failure: 'Unbounded loops: without a step budget and a stopping rule, an agent that cannot solve the task will happily keep observing forever.',
-        related: [['Plan → Execute', '/harnesses/plan-execute'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Coding loop', '/coding-agents/test-loop']], refs: ['react', 'anthropicAgents'], kw: 'reason act observe tool loop reasoning' }),
+        related: [['Plan → Execute', '/harnesses/plan-execute'], ['Actor–Verifier', '/harnesses/actor-verifier'], ['Coding loop', '/coding-agents/test-loop'], ['Interleaved thinking', '/harnesses/interleaved-thinking']], refs: ['react', 'anthropicAgents'], kw: 'reason act observe tool loop reasoning' }),
       P({ slug: 'plan-execute', code: 'H-03', title: 'Plan → Execute', dg: 'planExecute',
         def: 'Plan the whole task up front, then run the steps without further deliberation.',
         insight: 'Separating planning from execution makes runs cheap, auditable and parallelizable — you can review the plan before anything happens.',
@@ -36,7 +36,7 @@ export const COLLECTIONS = {
         def: 'One role produces a draft; a separate role critiques it; the draft is revised against the critique.',
         insight: 'Models are better at spotting flaws in text than at avoiding them while writing. Splitting the roles exploits that asymmetry.',
         failure: 'Sycophantic critique: if generator and critic share a model and a prompt style, the critic tends to approve whatever it would have written.',
-        related: [['Actor–Verifier', '/harnesses/actor-verifier'], ['LLM-as-judge', '/evals/llm-as-judge']], refs: ['selfRefine', 'reflexion'], kw: 'critique feedback revision draft reflection' }),
+        related: [['Actor–Verifier', '/harnesses/actor-verifier'], ['LLM-as-judge', '/evals/llm-as-judge'], ['Multi-agent debate', '/harnesses/multi-agent-debate']], refs: ['selfRefine', 'reflexion'], kw: 'critique feedback revision draft reflection' }),
       P({ slug: 'actor-verifier', code: 'H-06', title: 'Actor → Verifier', dg: 'actorVerifier',
         def: 'One agent performs the task; another independently checks whether it actually succeeded.',
         insight: 'Separating execution from verification is the single most reliable upgrade to an agent loop — especially when the verifier is grounded in tests, builds or other hard checks.',
@@ -46,7 +46,7 @@ export const COLLECTIONS = {
         def: 'Sample several independent attempts in parallel and keep the one a judge scores highest.',
         insight: 'When attempts are cheap and judging is easier than generating, N tries plus a selector beats one careful try.',
         failure: 'The judge is the ceiling: if it can’t tell good from bad, you pay N× inference to select noise.',
-        related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['LLM-as-judge', '/evals/llm-as-judge']], refs: ['selfConsistency', 'testTimeCompute'], kw: 'sampling parallel attempts judge search candidates' }),
+        related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['LLM-as-judge', '/evals/llm-as-judge'], ['Multi-agent debate', '/harnesses/multi-agent-debate']], refs: ['selfConsistency', 'testTimeCompute'], kw: 'sampling parallel attempts judge search candidates' }),
       P({ slug: 'retry-loop', code: 'H-08', title: 'Retry / Recovery Loop', dg: 'retryLoop',
         def: 'On failure, classify what kind of failure it was — and only then decide how to retry.',
         insight: 'The classification step is the whole pattern. Transient errors want patience; systematic errors want a different strategy.',
@@ -61,7 +61,7 @@ export const COLLECTIONS = {
         def: 'A manager agent decomposes the goal and delegates to specialized workers, integrating their reports.',
         insight: 'The hierarchy is really a context architecture: each level compresses detail before passing it up, so no single context holds everything.',
         failure: 'Compression loss: every report is a lossy summary. Critical detail dies in the middle of the org chart, same as in human ones.',
-        related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['Multi-agent coding', '/coding-agents/single-vs-multi']], refs: ['anthropicMultiAgent', 'autogen', 'mast'], kw: 'manager delegate subagent orchestration workers' }),
+        related: [['Parallel swarm', '/harnesses/parallel-swarm'], ['Multi-agent coding', '/coding-agents/single-vs-multi'], ['Agent handoffs', '/harnesses/agent-handoffs'], ['Shared blackboard', '/harnesses/shared-blackboard']], refs: ['anthropicMultiAgent', 'autogen', 'mast'], kw: 'manager delegate subagent orchestration workers' }),
       P({ slug: 'parallel-swarm', code: 'H-11', title: 'Parallel Swarm', dg: 'swarm',
         def: 'Shard a partitionable task across independent agents and merge the results at one aggregation point.',
         insight: 'Wall-clock time collapses to the slowest shard — but only for tasks that genuinely decompose without shared state.',
@@ -290,13 +290,13 @@ const EXT_HARNESS_PLATES = [
     def: 'Step, token and wall-clock ceilings bound the loop — and a stopping rule names why it ended.',
     insight: 'The harness, not the model, decides whether there is another iteration. Every other plate in this collection assumes something eventually says stop; this is that something.',
     failure: 'A silent halt. An agent that stops without reporting whether it solved the task, ran out of budget, or gave up is indistinguishable from one that crashed.',
-    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running']],
+    related: [['ReAct loop', '/harnesses/react'], ['Retry loop', '/harnesses/retry-loop'], ['Long-running agent', '/harnesses/long-running'], ['Thinking budgets', '/harnesses/thinking-budgets']],
     refs: ['anthropicAgents', 'mast'], kw: 'budget stopping rule step limit token limit timeout halt termination' }),
   P({ slug: 'model-router', code: 'H-16', title: 'Router / Model Cascade', dg: 'router',
     def: 'A cheap triage step picks the model; a quality check escalates only what needs escalating.',
     insight: 'Most traffic is easy. Routing lets you price for the median request instead of the worst one, and a failed cheap attempt is still cheap.',
     failure: 'A router that costs as much as what it routes to. If triage needs the big model to decide, the cascade has bought latency and nothing else.',
-    related: [['Best-of-N', '/harnesses/best-of-n'], ['Single-shot', '/harnesses/single-shot'], ['Cross-model evals', '/evals/cross-model-evals']],
+    related: [['Best-of-N', '/harnesses/best-of-n'], ['Single-shot', '/harnesses/single-shot'], ['Cross-model evals', '/evals/cross-model-evals'], ['Thinking budgets', '/harnesses/thinking-budgets']],
     refs: ['testTimeCompute', 'anthropicAgents'], kw: 'router cascade escalate cheap model cost latency triage tiered' }),
   P({ slug: 'steering', code: 'H-17', title: 'Steering a Running Agent', dg: 'steering',
     def: 'A correction arrives mid-task, queues to the next step boundary, and is applied without discarding accumulated state.',
@@ -310,6 +310,43 @@ const EXT_HARNESS_PLATES = [
     failure: 'Denials that surface as opaque errors. If the agent cannot see why a call was refused, it retries the same call until the budget runs out.',
     related: [['Human-in-the-loop', '/harnesses/human-in-the-loop'], ['Direct prompt injection', '/security/direct-prompt-injection'], ['Privilege escalation', '/security/privilege-escalation']],
     refs: ['camel', 'willisonDesignPatterns', 'owaspLlm'], kw: 'guardrail policy middleware enforcement allowlist interception authorization' }),
+];
+
+const EXT_HARNESS_PLATES_2 = [
+  P({ slug: 'agent-handoffs', code: 'H-19', title: 'Agent Handoffs',
+    modes: [
+      { id: 'handoff', label: 'Handoff', cls: '', dg: 'handoff' },
+      { id: 'as-tool', label: 'Agent as tool', cls: '', dg: 'handoffAsTool' },
+    ],
+    def: 'One agent transfers control of the conversation, with a slice of its history, to another agent that takes over from there.',
+    insight: 'A handoff moves ownership; calling a subagent as a tool only borrows its work. Hand off when the specialist should talk to the user itself; call it as a tool when one agent must keep the voice, the policy and the final say.',
+    failure: 'A thin slice. The receiving agent knows only what was packed for it, so a dropped fact means re-asking the user, or quietly guessing.',
+    related: [['Router / cascade', '/harnesses/model-router'], ['Hierarchical', '/harnesses/hierarchical'], ['Subagent isolation', '/context/subagent-isolation']],
+    refs: ['anthropicAgents', 'cognitionMultiAgent', 'mast'], kw: 'handoff transfer control triage specialist routing agent as tool supervisor multi-agent conversation' }),
+  P({ slug: 'shared-blackboard', code: 'H-20', title: 'Shared Blackboard', dg: 'blackboard',
+    def: 'Agents coordinate by reading and posting to a shared workspace, never by messaging each other; a controller watching it picks who acts next.',
+    insight: 'The board replaces a web of conversations with one piece of state. Agents stay decoupled, any of them can join by reading it, and nothing passes through a supervisor’s context as a lossy summary.',
+    failure: 'Write contention. Two agents update the same fact at once and the board holds both; without slot ownership or versioning, every later reader inherits the contradiction.',
+    related: [['Hierarchical', '/harnesses/hierarchical'], ['Parallel swarm', '/harnesses/parallel-swarm'], ['State representation', '/context/state-representation']],
+    refs: ['anthropicMultiAgent', 'autogen', 'mast'], kw: 'blackboard shared state workspace scratchpad controller scheduler multi-agent coordination artifacts' }),
+  P({ slug: 'multi-agent-debate', code: 'H-21', title: 'Multi-agent Debate', dg: 'debate',
+    def: 'Several agents answer the same question, then read and critique each other’s answers over rounds until a judge or vote settles it.',
+    insight: 'Debate pays off only when the agents’ errors are independent and an argument can actually expose one. Otherwise it is best-of-N with extra rounds: several times the tokens for the same majority.',
+    failure: 'Conformity. Copies of one model share one set of blind spots, and a confident majority can argue a correct minority out of its answer.',
+    related: [['Best-of-N', '/harnesses/best-of-n'], ['Generator–Critic', '/harnesses/generator-critic'], ['LLM-as-judge', '/evals/llm-as-judge']],
+    refs: ['anthropicAgents', 'selfConsistency', 'mast'], kw: 'debate critique rounds judge vote consensus multi-agent argue society of minds' }),
+  P({ slug: 'thinking-budgets', code: 'H-22', title: 'Thinking Budgets', dg: 'thinkingBudget',
+    def: 'The model spends reasoning tokens before it answers, and the harness sets how many: a dial trading latency and cost for accuracy.',
+    insight: 'Accuracy tends to climb with thinking tokens but with diminishing returns, so the right budget depends on the request. Adaptive effort — deciding per request how hard to think — beats any single fixed setting.',
+    failure: 'One budget for everything. A high fixed budget pays hard-problem prices on easy requests; a low one quietly degrades exactly the requests that needed the thinking.',
+    related: [['Budgets & stopping', '/harnesses/budgets-and-stopping'], ['Router / cascade', '/harnesses/model-router'], ['Interleaved thinking', '/harnesses/interleaved-thinking']],
+    refs: ['anthropicVisibleThinking', 'claudeDocsExtendedThinking', 'claudeDocsEffort'], kw: 'thinking budget reasoning tokens effort extended thinking test-time compute latency cost adaptive' }),
+  P({ slug: 'interleaved-thinking', code: 'H-23', title: 'Interleaved Thinking', dg: 'interleavedThinking',
+    def: 'The model reasons between tool calls, reading each result before choosing the next call, instead of thinking only once up front.',
+    insight: 'Up-front thinking plans at the moment of least information. Thinking after each result spends reasoning where new evidence just arrived, which matters most in long tool chains where one result can invalidate the plan.',
+    failure: 'Thinking between every trivial call. When calls are independent or the results are predictable, the extra reasoning adds latency and tokens without changing a single decision.',
+    related: [['ReAct loop', '/harnesses/react'], ['Thinking budgets', '/harnesses/thinking-budgets'], ['Replanner', '/harnesses/replanner']],
+    refs: ['anthropicThinkTool', 'claudeDocsThinking', 'anthropicMultiAgent'], kw: 'interleaved thinking reasoning between tool calls think tool reflect on results tool chain' }),
 ];
 
 const EXT_SECURITY_PLATES = [
@@ -419,7 +456,7 @@ const EXT_CONTEXT_PLATES_2 = [
     def: 'Delegation as a context move: the subagent spends a fresh window on the search and returns only the answer.',
     insight: 'Read the org chart as a context diagram. The parent pays for the digest, not the exploration — which is why a subagent is worth it even when a single agent could have done the work.',
     failure: 'A digest that omits what the parent didn’t know to ask for. Everything not written down dies with the subagent’s window, and the parent cannot tell the difference between “no traps” and “traps not mentioned”.',
-    related: [['Hierarchical', '/harnesses/hierarchical'], ['Researcher + Implementer', '/coding-agents/researcher-implementer'], ['Context budget', '/context/context-budget']],
+    related: [['Hierarchical', '/harnesses/hierarchical'], ['Researcher + Implementer', '/coding-agents/researcher-implementer'], ['Context budget', '/context/context-budget'], ['Agent handoffs', '/harnesses/agent-handoffs']],
     refs: ['anthropicMultiAgent', 'anthropicContext', 'cognitionMultiAgent'], kw: 'subagent isolation delegation fresh window digest context offload exploration tax' }),
 ];
 
@@ -583,7 +620,7 @@ COLLECTIONS.context.plates.push(
     related: [['Anatomy', '/context/context-window-anatomy'], ['Retrieval', '/context/retrieval'], ['Compaction', '/context/context-compaction']], refs: ['anthropicContext', 'anthropicTools'], kw: 'budget toggle tokens selection tradeoff interactive' }),
 );
 /* full plates for every previously-previewed pattern */
-COLLECTIONS.harnesses.plates.push(...EXT_HARNESS_PLATES);
+COLLECTIONS.harnesses.plates.push(...EXT_HARNESS_PLATES, ...EXT_HARNESS_PLATES_2);
 COLLECTIONS.security.plates.push(...EXT_SECURITY_PLATES, ...EXT_SECURITY_PLATES_2);
 COLLECTIONS.evals.plates.push(...EXT_EVALS_PLATES, ...EXT_EVALS_PLATES_2);
 COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
@@ -602,7 +639,7 @@ for (const [colId, col] of Object.entries(COLLECTIONS)) for (const p of col.plat
 
 export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents'];
 export const COL_BLURB = {
-  harnesses: 'Eighteen recurring architectures, from a single forward pass to agents that run for days.',
+  harnesses: 'Twenty-three recurring architectures, from a single forward pass to multi-agent teams and agents that run for days.',
   security: 'Agents possess authority. The ways untrusted text borrows it — and the boundaries that stop it.',
   evals: 'Outcome checks, trajectory review, judges you can trust — and whether the number is signal.',
   context: 'What earns a place in the window, in what order, and how memory brings the right things back.',

@@ -15,7 +15,7 @@ const CUSTOM_HEIGHTS: Record<string, number> = { map: 470, regression: 340, taxo
 const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
 const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
 const Heading = heading;
-const refs = resolveRefs(p.refs);
+const refs: { title: string; where: string; url: string }[] = resolveRefs(p.refs);
 ---
 <article class="plate" id={`plate-${p.slug}`}>
   <div class="plate-head">
