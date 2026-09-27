@@ -628,3 +628,65 @@ footer a:hover{color:var(--accent-ink)}
 /* no-JS: say what the empty panel is, and point at the text walkthrough */
 .dg-ph{display:flex;align-items:center;justify-content:center}
 .dg-nojs{margin:0;padding:16px;max-width:42ch;text-align:center;font-size:14.5px;color:var(--ink2)}
+
+/* ---------- narrow viewports: diagrams pan, they don't shrink (DESIGN.md §4) ----------
+   Under 900px a diagram keeps at least --dg-min-scale of its native width (svg.dg and its
+   server-rendered placeholder carry --dg-w = viewBox width), so 11px / 9.5px mono labels
+   never render below ~9.4 / ~8.1px. When that is wider than the panel, .dg-scroll pans
+   horizontally inside the panel; the page never does. The control bar, caption and
+   inspector sit outside the scroller and stay put. Affordance: edge fades on whichever
+   side has more, plus a one-time "Swipe" pill until the reader pans (engine.js
+   attachScroll; it retires after ~5s in view). ≥900px is untouched, and so are the 1200px OG render targets. */
+:root{--dg-min-scale:.85}
+.dg-hint{display:none}
+@media (max-width:899px){
+  .dg-scroll{
+    position:relative;overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .dg-scroll:focus-visible{outline-offset:-2px}
+  .dg-scroll > svg.dg,.dg-scroll > .dg-ph{min-width:calc(var(--dg-w) * var(--dg-min-scale) * 1px)}
+  .map-panel .dg-scroll > svg{min-width:calc(880px * var(--dg-min-scale))}
+  /* no-JS: keep the note on screen inside a placeholder wider than the panel */
+  .dg-scroll > .dg-ph{justify-content:flex-start}
+  .dg-scroll .dg-nojs{position:sticky;left:0;max-width:min(42ch,calc(100vw - 72px))}
+
+  .sc-host{position:relative}
+  .sc-host::before,.sc-host::after{
+    content:"";position:absolute;top:1px;bottom:1px;width:32px;z-index:1;
+    pointer-events:none;opacity:0;transition:opacity .2s ease;
+  }
+  .sc-host::before{left:0;border-radius:11px 0 0 11px;background:linear-gradient(to right,var(--panel),transparent)}
+  .sc-host::after{right:0;border-radius:0 11px 11px 0;background:linear-gradient(to left,var(--panel),transparent)}
+  .sc-host.sc-l::before,.sc-host.sc-r::after{opacity:1}
+  .sc-host.sc-on:not(.sc-touched) > .dg-hint{
+    display:inline-flex;align-items:center;gap:6px;
+    position:absolute;right:6px;bottom:6px;z-index:2;pointer-events:none;
+    font-size:13px;font-weight:600;line-height:1;color:var(--ink2);
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 9px;
+  }
+  .sc-host .dg-hint svg{display:block;min-width:0;margin:0}
+  .map-frame::before,.map-frame::after{border-radius:0;top:0;bottom:0}
+
+  /* touch targets: step controls and mode toggles at 44px; dots get a 16×44 hit area */
+  .dg-btn{width:44px;height:44px;border-radius:9px}
+  .dg-mode{min-height:44px;padding:6px 14px}
+  .dg-dots{gap:0;padding:0}
+  .dg-dot{width:16px;height:44px;background:none;border-radius:0;position:relative}
+  .dg-dot::before{
+    content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;
+    border-radius:50%;background:var(--line);transition:background .2s,transform .2s;
+  }
+  .dg-dot.on{background:none;transform:none}
+  .dg-dot.on::before{background:var(--accent);transform:scale(1.25)}
+
+  /* walkthrough summary: pin the chevron to the first line once the count wraps below it */
+  .plate-steps summary::before{top:calc(10px + .825em)}
+}
+/* touch screens pan by swiping; the fades and hint replace the scrollbar */
+@media (max-width:899px) and (pointer:coarse){
+  .dg-scroll{scrollbar-width:none}
+  .dg-scroll::-webkit-scrollbar{display:none}
+}
+/* phones: a task label can wrap to three lines (name + ▼ flag); grow it down, not up into the bars */
+@media(max-width:640px){.rg-task{top:100%;bottom:auto}.regchart{margin-bottom:70px}}

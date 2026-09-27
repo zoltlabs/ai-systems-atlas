@@ -3,7 +3,7 @@
    - every page has title, description, canonical, og:image, JSON-LD
    - every OG image referenced by a page exists, is a PNG, and is 1200×630
    - every page loads in headless Chromium with zero console errors
-   - no horizontal page overflow at 390px
+   - no horizontal page overflow at 390px, and no diagram rendered below its minimum scale there
    usage: npm run build && npm run og && npm run verify
    set CHROME_PATH to use an existing Chromium instead of Playwright's downloaded one. */
 import fs from 'node:fs';
@@ -104,6 +104,12 @@ for (const u of urls) {
     if (label === 'mobile') {
       const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
       ok(sw <= iw, `${u}: horizontal overflow at 390px (${sw} > ${iw})`);
+      // diagrams pan rather than shrink on phones: none may render under --dg-min-scale (DESIGN.md §4)
+      const [minScale, floor] = await page.evaluate(() => [
+        Math.min(...[...document.querySelectorAll('.dg-scroll > svg')].map(s => s.getBoundingClientRect().width / s.viewBox.baseVal.width)),
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dg-min-scale')),
+      ]);
+      ok(!(minScale < floor - 0.005), `${u}: a diagram renders at ${minScale.toFixed(3)}× at 390px (floor ${floor}×)`);
     }
     const mounted = await page.evaluate(() => document.querySelectorAll('[data-dg] svg.dg, [data-plate-modes] svg.dg, [data-custom] svg, [data-custom] .b-window, [data-custom] .regchart, [data-custom] .tax').length);
     const expected = await page.evaluate(() => document.querySelectorAll('[data-dg], [data-plate-modes], [data-custom]').length);

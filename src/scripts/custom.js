@@ -2,7 +2,7 @@
    Comparison map, regression chart, failure taxonomy, outcome/process mismatch,
    context-window anatomy and the budget builder. Ported from atlas/p5_app.js;
    the only behavioural change is that the map navigates to real URLs. */
-import { NS, staticSVG } from '../engine/engine.js';
+import { NS, staticSVG, attachScroll } from '../engine/engine.js';
 import { HARNESS_MAP, FAILURE_TAXONOMY, CONTEXT_SEGMENTS, BUDGET_ITEMS, BUDGET_MAX } from '../data/custom-data.js';
 
 export const CUSTOM_MOUNTS = {
@@ -22,10 +22,12 @@ export const CUSTOM_MOUNTS = {
     inner += `<text class="map-axis" x="${x0 - 10}" y="${y0 - 2}" text-anchor="start" transform="rotate(-90 ${x0 - 10} ${y0 - 2})">DETERMINISTIC</text>`;
     inner += `<text class="map-axis" x="${x0 - 10}" y="${y1 + 4}" transform="rotate(-90 ${x0 - 10} ${y1 + 4})" text-anchor="end">AUTONOMOUS →</text>`;
     el.innerHTML = `<div class="map-panel">
-      <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Comparison map of harness patterns positioned by complexity, autonomy and cost. Positions are illustrative.">${inner}</svg>
+      <div class="map-frame"><div class="dg-scroll"><svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Comparison map of harness patterns positioned by complexity, autonomy and cost. Positions are illustrative.">${inner}</svg></div></div>
       <div class="dg-cap" style="padding:8px 6px 6px">circle area ≈ relative cost per task · positions are illustrative, not measured · <b>click a pattern to jump to its plate</b></div>
     </div>`;
     const svg = el.querySelector('svg');
+    const scroller = el.querySelector('.dg-scroll');
+    attachScroll(el.querySelector('.map-frame'), scroller);
     for (const d of HARNESS_MAP) {
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', 'map-dot'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'link');

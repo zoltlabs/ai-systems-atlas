@@ -2,7 +2,8 @@
 /* A diagram mount point. The definition(s) are inlined as JSON next to the
    mount so the page ships exactly the data it renders; src/scripts/atlas.js
    hydrates it with the vanilla engine. A same-size placeholder is rendered
-   server-side so hydration causes no layout shift. */
+   server-side so hydration causes no layout shift — including on phones, where it
+   carries --dg-w so it takes the same minimum-scale width as the svg (atlas.css). */
 interface Props {
   def?: any;                       // single diagram definition
   modes?: { id: string; label: string; cls?: string; def: any }[];   // variant toggle
@@ -26,7 +27,7 @@ const style = custom && minHeight ? `min-height:${minHeight}px` : mini && first 
 ---
 <div {...attrs} style={style}>
   {!mini && !custom && first && (
-    <><div class="dg-panel"><div class="dg-ph" style={`max-width:${first.w}px;aspect-ratio:${first.w}/${first.h}`}><noscript><p class="dg-nojs">{nojs}</p></noscript></div></div><div class="dg-bar"></div></>
+    <><div class="dg-panel"><div class="dg-scroll"><div class="dg-ph" style={`--dg-w:${first.w};max-width:${first.w}px;aspect-ratio:${first.w}/${first.h}`}><noscript><p class="dg-nojs">{nojs}</p></noscript></div></div></div><div class="dg-bar"></div></>
   )}
   {json && <script type="application/json" set:html={json} />}
 </div>

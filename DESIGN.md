@@ -63,7 +63,7 @@ Captions, buttons, chips, meta labels, and all prose are Plus Jakarta Sans.
 | Meta text, list rows | 14.5px |
 | Step captions | 13.5px |
 | Chips | 13px / 600 |
-| SVG node label | 11px mono 600 · sublabel 9.5px · edge label 9.5px |
+| SVG node label | 11px mono 600 · sublabel 9.5px · edge label 9.5px (at native scale; on phones never below 0.85× — see §4) |
 
 ### Hard rules
 
@@ -135,6 +135,23 @@ one. A reader's explicit choice always beats the OS.
   is external and Related is internal, and internal navigation closes the plate.
 - Wide content (diagrams, tables, the map) scrolls inside its own `overflow-x: auto`
   container. The page body never scrolls horizontally, at any viewport.
+- **Diagrams on narrow viewports pan; they don't shrink.** Under 900px an interactive
+  diagram (plates, the home hero, the harness map) never renders below `--dg-min-scale`
+  (0.85×) of its viewBox width, so node labels stay ≥ ~9.4px and edge labels ≥ ~8.1px. When
+  that is wider than the panel, the svg pans horizontally inside `.dg-scroll` within the
+  panel; the control bar, caption and inspector sit outside the scroller and never move.
+  - Affordance: a `--panel`-to-transparent edge fade on each side that has more to show,
+    plus a one-time "Swipe ↔" pill (13px sans) that retires on the first pan or ~5s after
+    the panel is seen. Touch screens hide the scrollbar; fine pointers get a thin one.
+  - Follow: as steps advance, the panel scrolls so the step's lit nodes/edges are in view
+    (centred if they fit, else from their left edge); the first step lands instantly, later
+    ones glide, and reduced motion makes every move instant. Once the reader pans by hand
+    their position wins until they press a step control or mode toggle.
+  - The server-rendered placeholder carries the same `--dg-w`, so hydration doesn't shift.
+  - Step buttons and mode toggles are 44px tall under 900px; step dots get a 16×44 hit area.
+  - Exempt: card minis (decorative thumbnails, stay fit-to-width), the static
+    outcome/process pair (320 wide, fits at ≥ 0.9×), HTML-built charts (regression,
+    taxonomy, anatomy, budget — they reflow instead), and the 1200px OG render targets.
 
 ---
 
@@ -228,7 +245,8 @@ resolution beat — land the risk, then the fix.
 - [ ] Nothing meaningful is color-only (see §3).
 - [ ] All three theme states checked on every new surface: un-stamped (system), forced light
       on a dark OS, and forced dark on a light OS.
-- [ ] Mobile (390px): zero horizontal page overflow; diagrams scale via viewBox.
+- [ ] Mobile (390px): zero horizontal page overflow; diagrams hold ≥ 0.85× and pan inside
+      their panel (§4), with the controls still reachable at 44px.
 
 ---
 

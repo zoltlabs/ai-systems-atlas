@@ -253,7 +253,84 @@ const ICO = {
   prev: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M8.5 1.5L3 6l5.5 4.5zM2.5 1.5h1.4v9H2.5z" fill="currentColor"/></svg>',
   next: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 1.5L9 6l-5.5 4.5zM8.1 1.5h1.4v9H8.1z" fill="currentColor"/></svg>',
   replay: '<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.2a4.8 4.8 0 1 1-4.6 3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 1.5v4h4z" fill="currentColor" transform="translate(-.4 -.1) scale(.85)"/></svg>',
+  pan: '<svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M1.5 5h11M4.5 2L1.5 5l3 3M9.5 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
+
+/* ---------- narrow viewports: diagrams keep a minimum scale and pan inside their panel ----------
+   Below the mobile breakpoint (atlas.css) an svg never renders under --dg-min-scale of its
+   native width; the .dg-scroll wrapper scrolls horizontally instead (DESIGN.md §4). This adds
+   the affordance (edge fades + a one-time "Swipe" hint that retires on the first pan or ~5s after
+   it is seen, all CSS-driven off classes on the host) and, for step players, keeps the active
+   region in view as steps advance — until the
+   reader pans by hand, after which their position is respected until they use a step control. */
+function attachScroll(host, scroller) {
+  host.classList.add('sc-host');
+  const hint = document.createElement('div');
+  hint.className = 'dg-hint'; hint.setAttribute('aria-hidden', 'true');
+  hint.innerHTML = `Swipe ${ICO.pan}`;
+  host.append(hint);
+  const ctl = { user: false };
+  const update = () => {
+    const max = scroller.scrollWidth - scroller.clientWidth;
+    const on = max > 2;
+    host.classList.toggle('sc-on', on);
+    host.classList.toggle('sc-l', on && scroller.scrollLeft > 2);
+    host.classList.toggle('sc-r', on && scroller.scrollLeft < max - 2);
+    // a scrollable region must be keyboard-reachable; a non-scrolling one must not add a tab stop
+    if (on) scroller.tabIndex = 0; else scroller.removeAttribute('tabindex');
+  };
+  // Only a scroll the reader caused counts as panning: one during a touch/pointer press, or
+  // just after a wheel/arrow key. Programmatic follow-scrolls leave the hint and follow alone.
+  // (touch is tracked with touch events: a pan fires pointercancel as soon as it starts; the
+  // nudge window after touchend covers momentum scrolling)
+  let touching = false, mouse = false, nudgedAt = 0;
+  scroller.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+  for (const ev of ['touchend', 'touchcancel']) window.addEventListener(ev, () => { if (touching) { touching = false; nudgedAt = Date.now(); } }, { passive: true });
+  scroller.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') mouse = true; }, { passive: true });
+  window.addEventListener('pointerup', () => { mouse = false; }, { passive: true });
+  scroller.addEventListener('wheel', (e) => { if (e.deltaX || e.shiftKey) nudgedAt = Date.now(); }, { passive: true });
+  scroller.addEventListener('keydown', (e) => { if (/^(Arrow|Home|End|Page)/.test(e.key)) nudgedAt = Date.now(); });
+  scroller.addEventListener('scroll', () => {
+    if (touching || mouse || Date.now() - nudgedAt < 500) { ctl.user = true; host.classList.add('sc-touched'); }
+    update();
+  }, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  // the pill is a one-time cue: it retires a few seconds after the panel is first seen (the
+  // edge fades stay as the lasting affordance), so it never sits on a label for good
+  if ('IntersectionObserver' in window) {
+    const seen = new IntersectionObserver((entries) => {
+      if (!entries.some(en => en.isIntersecting)) return;
+      seen.disconnect();
+      setTimeout(() => host.classList.add('sc-touched'), 5000);
+    }, { threshold: 0.3 });
+    seen.observe(host);
+  }
+  ctl.update = update;
+  ctl.resume = () => { ctl.user = false; };
+  /* scroll so the lit part of the diagram is on screen (no-op when it already is, when the
+     panel doesn't scroll, or after the reader has panned by hand) */
+  ctl.follow = (svg, smooth) => {
+    update();
+    if (ctl.user || !host.classList.contains('sc-on')) return;
+    const lit = svg.querySelectorAll('.nd.on,.nd.ok,.nd.bad,.edge.on,.edge.okE,.edge.badE,.shown');
+    let x0 = Infinity, x1 = -Infinity;
+    lit.forEach(el => { try { const b = el.getBBox(); if (b.width || b.height) { x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width); } } catch (err) { /* not rendered */ } });
+    if (!isFinite(x0)) return;
+    const vb = svg.viewBox.baseVal, sr = svg.getBoundingClientRect(), cr = scroller.getBoundingClientRect();
+    const k = sr.width / (vb && vb.width ? vb.width : sr.width);
+    const base = sr.left - cr.left + scroller.scrollLeft;
+    const a = base + x0 * k, b = base + x1 * k;
+    const left = scroller.scrollLeft, vw = scroller.clientWidth, pad = 16;
+    if (a >= left + pad / 2 && b <= left + vw - pad / 2) return;
+    const max = scroller.scrollWidth - vw;
+    // fits → centre it; wider than the panel → start at its left edge, where flows begin
+    const want = b - a <= vw - 2 * pad ? (a + b) / 2 - vw / 2 : a - pad;
+    const target = Math.max(0, Math.min(max, want));
+    scroller.scrollTo({ left: target, behavior: smooth && !REDUCED ? 'smooth' : 'auto' });
+  };
+  update();
+  return ctl;
+}
 
 /* ---------- full interactive mount (panel + controls + modes + inspector) ---------- */
 const livePlayers = [];
@@ -276,8 +353,13 @@ function mountDiagram(container, spec) {
   container.innerHTML = '';
   container.classList.add('dg-shell');
   const panel = document.createElement('div'); panel.className = 'dg-panel';
+  const scroller = document.createElement('div'); scroller.className = 'dg-scroll';
+  panel.append(scroller);
   const bar = document.createElement('div'); bar.className = 'dg-bar';
   container.append(panel, bar);
+  const pan = attachScroll(panel, scroller);
+  // any step control hands the viewport back to follow mode (capture: before the control acts)
+  bar.addEventListener('click', (ev) => { if (ev.target.closest('.dg-btn,.dg-dot,.dg-mode')) pan.resume(); }, true);
 
   let inspectEl = null;
   let player = null;
@@ -286,10 +368,12 @@ function mountDiagram(container, spec) {
 
   function build() {
     if (player) { player.destroy(); if (dgObserver) dgObserver.unobserve(container); }
-    panel.innerHTML = ''; bar.innerHTML = '';
+    scroller.innerHTML = ''; bar.innerHTML = '';
     const def = currentDef();
     const { svg, refs } = renderSVG(def);
-    panel.append(svg);
+    svg.style.setProperty('--dg-w', def.w);
+    scroller.append(svg);
+    pan.update();
 
     // mode toggle
     if (modes) {
@@ -317,7 +401,10 @@ function mountDiagram(container, spec) {
       };
       dotsEl = document.createElement('div'); dotsEl.className = 'dg-dots';
       capEl = document.createElement('div'); capEl.className = 'dg-cap'; capEl.setAttribute('aria-live', 'polite');
-      player = new Player(svg, refs, def, capEl, dotsEl);
+      // first step on mount/mode switch lands instantly; later steps glide (unless reduced motion)
+      let settled = false;
+      player = new Player(svg, refs, def, capEl, dotsEl, { onchange: () => pan.follow(svg, settled) });
+      settled = true;
       const playB = mk(ICO.play, 'Play animation', () => { player._userPaused = player.playing; player.toggle(); });
       player.playBtn = playB;
       ctr.append(
@@ -380,4 +467,4 @@ function staticSVG(def) {
 }
 
 
-export { NS, S, esc, ICONS, REDUCED, renderSVG, Player, ICO, livePlayers, dgObserver, mountDiagram, miniSVG, staticSVG };
+export { NS, S, esc, ICONS, REDUCED, renderSVG, Player, ICO, livePlayers, dgObserver, mountDiagram, miniSVG, staticSVG, attachScroll };
