@@ -68,4 +68,14 @@ export const CARD_MINIS = {
       { from: 'te', to: 'di', kind: 'ctl' }, { from: 'di', to: 'ed', kind: 'ctl' },
     ],
   },
+  ops: {
+    w: 270, h: 132, aria: 'Trace waterfall: one run span with model, tool and model call spans beneath it in time order',
+    nodes: [
+      { id: 'run', x: 135, y: 22, kind: 'chip', label: 'RUN', w: 230 },
+      { id: 'm1', x: 62, y: 58, kind: 'chip', label: 'MODEL', w: 80 },
+      { id: 't', x: 136, y: 88, kind: 'chip', label: 'TOOL', w: 64 },
+      { id: 'm2', x: 208, y: 118, kind: 'chip', label: 'MODEL', w: 76 },
+    ],
+    edges: [],
+  },
 };

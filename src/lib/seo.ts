@@ -16,6 +16,10 @@ export const collections = COLLECTIONS as unknown as Record<string, Collection>;
 export const colOrder = COL_ORDER as readonly string[];
 export const plateLookup = PLATE_LOOKUP as Record<string, Plate>;
 
+/** "Six collections": the home heading, spelled out and derived from COL_ORDER so it never goes stale. */
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+export const collectionsHeading = `${NUMBER_WORDS[colOrder.length] ?? colOrder.length} collections`;
+
 const stripTags = (s: string) => s.replace(/<[^>]+>/g, '');
 
 /** Meta description: the plate's one-line definition, extended with the insight when short, capped at ~160 chars. */
