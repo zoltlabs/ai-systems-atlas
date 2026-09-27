@@ -22,6 +22,8 @@ const PLATES = [
   'evals/regression-evals',                // regression chart
   'context/context-budget',                // budget builder
   'coding-agents/single-vs-multi',         // one agent / multi-agent toggle
+  'tools/tool-errors',                     // mode toggle (exception/observation)
+  'ops/tracing',                           // ops: trace waterfall
 ];
 const pages = [{ name: 'home', route: '/', ref: '#/' }];
 for (const c of COL_ORDER) pages.push({ name: c, route: `/${c}`, ref: `#/${c}` });

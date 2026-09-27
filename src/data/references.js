@@ -78,6 +78,42 @@ export const REFERENCES = {
     where: 'Anthropic Engineering, 2025',
     url: 'https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills',
   },
+  /* evals E-15..E-18 */
+  anthropicRewardHackingMisalignment: {
+    title: 'From shortcuts to sabotage: natural emergent misalignment from reward hacking',
+    where: 'Anthropic Research, 2025',
+    url: 'https://www.anthropic.com/research/emergent-misalignment-reward-hacking',
+  },
+  claudeDocsPromptingTestsHardcoding: {
+    title: 'Prompting best practices — avoid focusing on passing tests and hardcoding',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices',
+  },
+  anthropicThinkTool: {
+    title: 'The “think” tool: enabling Claude to stop and think in complex tool use situations',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/claude-think-tool',
+  },
+  anthropicVisibleThinking: {
+    title: 'Claude’s extended thinking',
+    where: 'Anthropic, 2025',
+    url: 'https://www.anthropic.com/news/visible-extended-thinking',
+  },
+  claudeDocsThinking: {
+    title: 'Thinking — including interleaved thinking between tool calls',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/thinking',
+  },
+  claudeDocsExtendedThinking: {
+    title: 'Extended thinking — setting and tuning a thinking budget',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking',
+  },
+  claudeDocsEffort: {
+    title: 'Effort — trading thoroughness for token efficiency',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/effort',
+  },
   cognitionMultiAgent: {
     title: 'Don’t build multi-agents',
     where: 'Cognition, 2025',
@@ -113,6 +149,26 @@ export const REFERENCES = {
     where: 'Simon Willison, 2025',
     url: 'https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/',
   },
+  claudeCodePermissions: {
+    title: 'Configure permissions',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/permissions',
+  },
+  claudeCodeSecurity: {
+    title: 'Security',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/security',
+  },
+  claudeCodeMonitoring: {
+    title: 'Monitoring (OpenTelemetry metrics and events)',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/monitoring-usage',
+  },
+  claudeApiRateLimits: {
+    title: 'Rate limits',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/rate-limits',
+  },
   owaspLlm: {
     title: 'OWASP Top 10 for Large Language Model Applications',
     where: 'OWASP GenAI Security Project',
@@ -133,10 +189,184 @@ export const REFERENCES = {
     where: 'Git documentation',
     url: 'https://git-scm.com/docs/git-worktree',
   },
+
+  /* ---------- tools and protocols ---------- */
+  anthropicAdvancedToolUse: {
+    title: 'Introducing advanced tool use on the Claude Developer Platform',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/advanced-tool-use',
+  },
+  anthropicCodeExecMcp: {
+    title: 'Code execution with MCP: building more efficient AI agents',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/code-execution-with-mcp',
+  },
+  anthropicMcpLaunch: {
+    title: 'Introducing the Model Context Protocol',
+    where: 'Anthropic, 2024',
+    url: 'https://www.anthropic.com/news/model-context-protocol',
+  },
+  claudeCodeMcp: {
+    title: 'Connect Claude Code to tools via MCP',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/mcp',
+  },
+  claudeDefineTools: {
+    title: 'Define tools',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools',
+  },
+  claudeHandleToolCalls: {
+    title: 'Handle tool calls',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls',
+  },
+  claudeParallelToolUse: {
+    title: 'Parallel tool use',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use',
+  },
+  claudeToolSearch: {
+    title: 'Tool search tool',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool',
+  },
+  claudeStructuredOutputs: {
+    title: 'Structured outputs',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/structured-outputs',
+  },
+  claudeStrictToolUse: {
+    title: 'Strict tool use',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use',
+  },
+  /* ---------- Anthropic research and product docs ---------- */
+  anthropicAgentEvals: {
+    title: 'Demystifying evals for AI agents',
+    where: 'Anthropic Engineering, 2026',
+    url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents',
+  },
+  anthropicErrorBars: {
+    title: 'A statistical approach to model evaluations',
+    where: 'Anthropic Research, 2024',
+    url: 'https://www.anthropic.com/research/statistical-approach-to-model-evals',
+  },
+  anthropicEvalChallenges: {
+    title: 'Challenges in evaluating AI systems',
+    where: 'Anthropic Research, 2023',
+    url: 'https://www.anthropic.com/research/evaluating-ai-systems',
+  },
+  anthropicSweBench: {
+    title: 'Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet',
+    where: 'Anthropic Research, 2025',
+    url: 'https://www.anthropic.com/research/swe-bench-sonnet',
+  },
+  anthropicSandboxing: {
+    title: 'Beyond permission prompts: making Claude Code more secure and autonomous',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/claude-code-sandboxing',
+  },
+  claudeAgentSdk: {
+    title: 'Building agents with the Claude Agent SDK',
+    where: 'Claude Blog, 2025',
+    url: 'https://claude.com/blog/building-agents-with-the-claude-agent-sdk',
+  },
+  claudeCostIntelligence: {
+    title: 'Optimizing for cost and intelligence',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence',
+  },
+  anthropicPostmortemSept2025: {
+    title: 'A postmortem of three recent issues',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues',
+  },
+  claudeDocsApiErrors: {
+    title: 'Claude API errors',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/api/errors',
+  },
+  claudeDocsStreaming: {
+    title: 'Streaming messages',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/streaming',
+  },
+  claudePromptCaching: {
+    title: 'Prompt caching',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching',
+  },
+  claudeCodeBestPractices: {
+    title: 'Best practices for Claude Code',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/best-practices',
+  },
+  claudeCodeCheckpointing: {
+    title: 'Checkpointing',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/checkpointing',
+  },
+  claudeCodeInteractive: {
+    title: 'Interactive mode — queue messages while Claude works',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/interactive-mode#queue-messages-while-claude-works',
+  },
+  claudeCodeGithubActions: {
+    title: 'Claude Code GitHub Actions',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/github-actions',
+  },
+  claudeCodeAutoFix: {
+    title: 'Use Claude Code in the cloud — auto-fix pull requests',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/claude-code-on-the-web#auto-fix-pull-requests',
+  },
+  claudeCodeChrome: {
+    title: 'Use Claude Code with Chrome',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/chrome',
+  },
+  claudeCodeSandbox: {
+    title: 'Configure the sandboxed Bash tool',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/sandboxing',
+  },
+  claudeCodeCloudSessions: {
+    title: 'Use Claude Code in the cloud',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/claude-code-on-the-web',
+  },
+  claudeCodeHooksGuide: {
+    title: 'Automate actions with hooks',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/hooks-guide',
+  },
+  claudeCodeCodeIntelligence: {
+    title: 'Code intelligence plugins',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/plugins/code-intelligence',
+  },
+  claudeCodeCodeReview: {
+    title: 'Code Review',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/code-review',
+  },
+  claudeDocsUsageCostApi: {
+    title: 'Usage and Cost API',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/manage-claude/usage-cost-api',
+  },
+  claudeDocsModelIds: {
+    title: 'Model IDs and versioning',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions',
+  },
 };
 
 /* Resolve a plate's `refs` keys to entries, loudly: an unknown key is a typo, and a silent
    drop would mean a plate quietly loses its sources. */
+/** @param {string[] | undefined} keys @returns {{ title: string, where: string, url: string }[]} */
 export function resolveRefs(keys) {
   if (!keys || !keys.length) return [];
   return keys.map(k => {

@@ -3,7 +3,7 @@ import { COLLECTIONS, PLATE_LOOKUP, COL_ORDER } from '../data/collections.js';
 
 export type Plate = {
   slug: string; code: string; title: string; def: string; insight: string; failure: string;
-  dg?: string; custom?: string; kw?: string;
+  dg?: string; custom?: string; kw?: string; refs?: string[];
   modes?: { id: string; label: string; cls?: string; dg: string }[];
   related?: [string, string][];
 };
@@ -15,6 +15,10 @@ export type Collection = {
 export const collections = COLLECTIONS as unknown as Record<string, Collection>;
 export const colOrder = COL_ORDER as readonly string[];
 export const plateLookup = PLATE_LOOKUP as Record<string, Plate>;
+
+/** "Six collections" — the home heading, spelled out and derived from COL_ORDER. */
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+export const collectionsHeading = `${NUMBER_WORDS[colOrder.length] ?? colOrder.length} collection${colOrder.length === 1 ? '' : 's'}`;
 
 const stripTags = (s: string) => s.replace(/<[^>]+>/g, '');
 

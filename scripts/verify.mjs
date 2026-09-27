@@ -3,13 +3,15 @@
    - every page has title, description, canonical, og:image, JSON-LD
    - every OG image referenced by a page exists, is a PNG, and is 1200×630
    - every page loads in headless Chromium with zero console errors
-   - no horizontal page overflow at 390px
+   - no horizontal page overflow at 390px, and no diagram rendered below its minimum scale there
    usage: npm run build && npm run og && npm run verify
    set CHROME_PATH to use an existing Chromium instead of Playwright's downloaded one. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { launchBrowser, stubWebfonts } from './browser.mjs';
 import { serveDist } from './serve.mjs';
+import { PLATE_LOOKUP } from '../src/data/collections.js';
+import { DIAGRAMS } from '../src/data/diagrams.js';
 
 const SITE = 'https://aisystemsatlas.com';
 const fail = [];
@@ -66,6 +68,30 @@ for (const u of urls) {
     if (pathName.split('/').length === 3) ok(imgPath === `/og${pathName}.png`, `${u}: plate OG image is not per-plate (${imgPath})`);
   }
 
+  // server-rendered walkthrough: one <section data-walk> per mode (in mode order) whose <li>s are
+  // that diagram's step captions, in order and word for word — so the list's "3." is the
+  // player's "3/6". An empty caption would make them drift, so non-custom plates may not have one.
+  const plate = pathName.split('/').length === 3 ? PLATE_LOOKUP[pathName.slice(1)] : null;
+  if (plate && !plate.custom) {
+    const strip = h => h.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const want = (plate.modes || [{ id: 'main', dg: plate.dg }]).map(m => {
+      const steps = DIAGRAMS[m.dg]?.steps || [];
+      steps.forEach((st, i) => ok(typeof st.cap === 'string' && st.cap.trim(), `${u}: diagram ${m.dg} step ${i + 1} has an empty caption`));
+      return { id: m.id, caps: steps.map(st => strip(st.cap || '')).filter(Boolean) };
+    }).filter(m => m.caps.length);
+    const walk = /<details class="plate-steps">([\s\S]*?)<\/details>/.exec(html);
+    const got = walk ? [...walk[1].matchAll(/<section[^>]*\sdata-walk="([^"]*)"[^>]*>([\s\S]*?)<\/section>/g)]
+      .map(([, id, body]) => ({ id, caps: [...body.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x => strip(x[1])) })) : [];
+    ok(want.length > 0, `${u}: plate has no step captions to walk through`);
+    ok(got.map(m => m.id).join() === want.map(m => m.id).join(), `${u}: walkthrough sections [${got.map(m => m.id)}], expected [${want.map(m => m.id)}]`);
+    for (const [i, w] of want.entries()) {
+      const g = got[i];
+      if (!g || g.id !== w.id) continue;
+      ok(g.caps.length === w.caps.length, `${u}: walkthrough "${w.id}" has ${g.caps.length} steps, expected ${w.caps.length}`);
+      w.caps.forEach((c, j) => ok(g.caps[j] === c, `${u}: walkthrough "${w.id}" step ${j + 1} is "${g.caps[j]}", expected "${c}"`));
+    }
+  }
+
   // runtime: console errors + mobile overflow
   for (const [c, label] of [[ctx, 'desktop'], [mobile, 'mobile']]) {
     const page = await c.newPage();
@@ -78,6 +104,12 @@ for (const u of urls) {
     if (label === 'mobile') {
       const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
       ok(sw <= iw, `${u}: horizontal overflow at 390px (${sw} > ${iw})`);
+      // diagrams pan rather than shrink on phones: none may render under --dg-min-scale (DESIGN.md §4)
+      const [minScale, floor] = await page.evaluate(() => [
+        Math.min(...[...document.querySelectorAll('.dg-scroll > svg')].map(s => s.getBoundingClientRect().width / s.viewBox.baseVal.width)),
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dg-min-scale')),
+      ]);
+      ok(!(minScale < floor - 0.005), `${u}: a diagram renders at ${minScale.toFixed(3)}× at 390px (floor ${floor}×)`);
     }
     const mounted = await page.evaluate(() => document.querySelectorAll('[data-dg] svg.dg, [data-plate-modes] svg.dg, [data-custom] svg, [data-custom] .b-window, [data-custom] .regchart, [data-custom] .tax').length);
     const expected = await page.evaluate(() => document.querySelectorAll('[data-dg], [data-plate-modes], [data-custom]').length);

@@ -9,7 +9,7 @@ export function getStaticPaths() { return colOrder.map(collection => ({ params: 
 const { collection: colId } = Astro.params;
 const col = collections[colId!];
 const M = CARD_MINIS as Record<string, any>;
-const mini = M[colId === 'coding-agents' ? 'coding' : colId!];
+const mini = M[colId!];
 ---
 <OgFrame title={`OG · ${col.title}`}>
   <div class="og-left">

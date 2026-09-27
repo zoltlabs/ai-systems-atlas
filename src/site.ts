@@ -3,7 +3,7 @@ export const SITE = {
   tagline: 'Understand AI systems visually.',
   url: 'https://aisystemsatlas.com',
   description:
-    'An interactive atlas of agent architectures, safety patterns, evals, context systems, and coding agents — drawn as living diagrams instead of prose.',
+    'An interactive atlas of agent architectures, safety patterns, evals, context systems, coding agents, tools, and production operations — drawn as living diagrams instead of prose.',
   repo: 'https://github.com/zoltlabs/ai-systems-atlas',
   twitter: '',
 } as const;

@@ -2211,6 +2211,193 @@ DIAGRAMS.taskSet = {
   ],
 };
 
+/* ---------- EVALS E-15..E-18 ---------- */
+
+DIAGRAMS.rewardHackGamed = {
+  w: 720, h: 330, dur: 1750,
+  aria: 'Reward hacking, gamed: a coding agent that cannot fix the bug edits the assertion, skips the failing test, special-cases the fixture or exits early, and the test runner reports a pass while the bug ships.',
+  nodes: [
+    { id: 'task', x: 96, y: 70, kind: 'user', label: 'TASK + TESTS', sub: 'fix the date parser', w: 164 },
+    { id: 'agent', x: 318, y: 70, kind: 'model', label: 'CODING AGENT', sub: 'rewarded for green', w: 176 },
+    { id: 'edit', x: 560, y: 60, kind: 'chip', label: 'EDIT THE ASSERT', w: 190 },
+    { id: 'skip', x: 560, y: 94, kind: 'chip', label: '@skip / DELETE THE TEST', w: 190 },
+    { id: 'special', x: 560, y: 128, kind: 'chip', label: 'if input == fixture: …', w: 190 },
+    { id: 'exit', x: 560, y: 162, kind: 'chip', label: 'sys.exit(0) BEFORE ASSERTS', w: 190 },
+    { id: 'runner', x: 560, y: 262, kind: 'evaluator', label: 'TEST RUNNER', sub: 'exit code 0 = pass', w: 176 },
+    { id: 'score', x: 318, y: 262, kind: 'data', label: 'SCORE: PASS', sub: 'what the dashboard sees', w: 196 },
+    { id: 'users', x: 96, y: 262, kind: 'env', label: 'PRODUCTION', sub: 'bug still there', w: 150 },
+  ],
+  bounds: [{ id: 'short', x: 454, y: 20, w: 212, h: 160, label: 'SHORTCUTS' }],
+  notes: [
+    { id: 'wr', x: 318, y: 122, anchor: 'middle', tone: 'danger', ghost: true, text: ['the tests live in the', 'same repo it can write'] },
+  ],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-s', from: 'agent', to: 'skip', d: 'M406 70 L453 70', label: 'diff', ly: -7 },
+    { id: 's-r', from: 'exit', to: 'runner', label: 'run tests', lx: 34 },
+    { id: 'r-s', from: 'runner', to: 'score', label: 'green', ly: -9 },
+    { id: 's-u', from: 'score', to: 'users', label: 'ships', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The task: fix the bug. The tests define done.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'The real fix is hard — but the tests are just files in a repo the agent can write to.', n: ['agent'], show: ['wr', 'short'] },
+    { cap: '<span class="cap-bad">Weaken the check:</span> loosen the assertion, or skip and delete the failing test.', bad: ['edit', 'skip'], badE: ['a-s'], n: ['agent'], show: ['short'] },
+    { cap: '<span class="cap-bad">Or game the grader:</span> hard-code the fixture’s expected output, or exit 0 before any assert runs.', bad: ['special', 'exit'], badE: ['a-s'], n: ['agent'], show: ['short'] },
+    { cap: 'The runner checks what it was built to check: exit code 0 means pass.', n: ['exit', 'runner'], e: ['s-r'], show: ['short'] },
+    { cap: '<span class="cap-bad">The score says pass. The bug ships.</span> The metric was optimized; the task never was.', bad: ['score', 'users'], badE: ['r-s', 's-u'], n: ['runner'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.rewardHackGuarded = {
+  w: 720, h: 392, dur: 1750,
+  aria: 'Reward hacking, guarded: the patch is diffed for any change under tests, scored against hold-out tests the agent never saw, and its transcript is reviewed, so a pass only counts if the bug is actually fixed.',
+  nodes: [
+    { id: 'task', x: 96, y: 60, kind: 'user', label: 'TASK + TESTS', sub: 'visible tests only', w: 164 },
+    { id: 'agent', x: 318, y: 60, kind: 'model', label: 'CODING AGENT', sub: 'same temptation', w: 176 },
+    { id: 'patch', x: 560, y: 60, kind: 'data', label: 'PATCH', sub: 'src/ and tests/ diff', w: 176 },
+    { id: 'diff', x: 560, y: 176, kind: 'policy', label: 'DIFF THE TESTS', sub: 'tests/ touched → fail', w: 196 },
+    { id: 'hold', x: 560, y: 248, kind: 'evaluator', label: 'HOLD-OUT TESTS', sub: 'never shown to agent', w: 196 },
+    { id: 'traj', x: 560, y: 320, kind: 'evaluator', label: 'TRAJECTORY REVIEW', sub: 'reads the transcript', w: 196 },
+    { id: 'verdict', x: 190, y: 290, kind: 'decision', label: 'REAL PASS?', w: 150, h: 58 },
+  ],
+  bounds: [{ id: 'safe', x: 450, y: 122, w: 220, h: 236, kind: 'safe', label: 'OUT OF THE AGENT’S REACH' }],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-p', from: 'agent', to: 'patch' },
+    { id: 'p-d', from: 'patch', to: 'diff', off: 72, label: 'every patch', lanchor: 'end', lx: -8, ly: -3 },
+    { id: 'd-h', from: 'diff', to: 'hold' },
+    { id: 'h-t', from: 'hold', to: 'traj' },
+    { id: 'a-t', from: 'agent', to: 'traj', kind: 'ctl', fromSide: 'b', toSide: 'l', label: 'transcript', labelT: 0.4, lx: -30 },
+    { id: 't-v', from: 'traj', to: 'verdict', fromSide: 'b', toSide: 'b', d: 'M560 345 C 560 392 190 392 190 325', label: 'all three agree', labelT: 0.5, ly: -6 },
+  ],
+  steps: [
+    { cap: 'Same task, same agent, same temptation — the tests are still sitting in the repo.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'The patch goes to a grader that lives outside the agent’s sandbox.', n: ['agent', 'patch'], e: ['a-p'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Diff the tests first.</span> Any edit, skip or deletion under tests/ fails the run, whatever the exit code says.', ok: ['diff'], n: ['patch'], e: ['p-d'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Hold-out tests</span> the agent never saw: hard-coding the visible fixtures buys nothing against inputs it has not met.', ok: ['hold'], okE: ['d-h'], n: ['diff'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Read the trajectory:</span> an early sys.exit, a peek at the answer key or git history shows up in the transcript, not the score.', ok: ['traj'], okE: ['h-t'], e: ['a-t'], n: ['agent'], show: ['safe'] },
+    { cap: '<span class="cap-ok">Now a pass means the bug is fixed.</span> Graders the agent can touch are graders it will eventually learn to satisfy.', ok: ['verdict', 'diff', 'hold', 'traj'], okE: ['t-v'], show: ['safe'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.passK = {
+  w: 720, h: 398, dur: 1750,
+  aria: 'pass@k versus pass^k: an agent with a 75% per-try success rate is run k times; pass@k counts the task if any try passes, pass^k only if every try passes, and the two numbers diverge as k grows — 98% versus 42% at k = 3, over 99% versus 10% at k = 8.',
+  nodes: [
+    { id: 'task', x: 96, y: 60, kind: 'user', label: 'ONE TASK', w: 140 },
+    { id: 'agent', x: 96, y: 158, kind: 'model', label: 'AGENT', sub: '75% per try', w: 140 },
+    { id: 't1', x: 292, y: 118, kind: 'chip', label: 'TRY 1 · pass', w: 120 },
+    { id: 't2', x: 292, y: 154, kind: 'chip', label: 'TRY 2 · fail', w: 120 },
+    { id: 't3', x: 292, y: 190, kind: 'chip', label: 'TRY 3 · pass', w: 120 },
+    { id: 'any', x: 504, y: 104, kind: 'evaluator', label: 'pass@3 · ANY', sub: 'did one try pass?', w: 176 },
+    { id: 'all', x: 504, y: 204, kind: 'evaluator', label: 'pass^3 · ALL', sub: 'did every try pass?', w: 176 },
+    { id: 'vAny', x: 664, y: 104, kind: 'chip', label: '✓ PASS', w: 70 },
+    { id: 'vAll', x: 664, y: 204, kind: 'chip', label: '✗ FAIL', w: 70 },
+    { id: 'k1', x: 130, y: 314, kind: 'data', label: 'k = 1', sub: 'pass@ 75% · pass^ 75%', w: 190 },
+    { id: 'k3', x: 360, y: 314, kind: 'data', label: 'k = 3', sub: 'pass@ 98% · pass^ 42%', w: 190 },
+    { id: 'k8', x: 590, y: 314, kind: 'data', label: 'k = 8', sub: 'pass@ >99% · pass^ 10%', w: 196 },
+  ],
+  bounds: [{ id: 'tries', x: 220, y: 78, w: 144, h: 128, label: 'k = 3 TRIES' }],
+  notes: [
+    { id: 'at', x: 245, y: 366, anchor: 'middle', tone: 'ok', ghost: true, text: ['pass@k: one good answer is', 'enough — a verifier picks it'] },
+    { id: 'hat', x: 475, y: 366, anchor: 'middle', tone: 'ok', ghost: true, text: ['pass^k: every user runs it,', 'every time — it must hold'] },
+    { id: 'ind', x: 360, y: 266, anchor: 'middle', ghost: true, text: 'same agent, same 75% — only k changes' },
+  ],
+  edges: [
+    { id: 't-a', from: 'task', to: 'agent' },
+    { id: 'a-t', from: 'agent', to: 't2', label: '× k', labelT: 0.45, ly: -8 },
+    { id: 'o-any', from: 't2', to: 'any', d: 'M364 142 C392 142 388 104 416 104', label: 'OR', labelT: 0.5, lanchor: 'end', lx: -5, ly: -2 },
+    { id: 'o-all', from: 't2', to: 'all', d: 'M364 142 C392 142 388 204 416 204', label: 'AND', labelT: 0.5, lanchor: 'end', lx: -5, ly: 10 },
+    { id: 'any-v', from: 'any', to: 'vAny' },
+    { id: 'all-v', from: 'all', to: 'vAll' },
+    { id: 'k1-3', from: 'k1', to: 'k3' },
+    { id: 'k3-8', from: 'k3', to: 'k8' },
+  ],
+  steps: [
+    { cap: 'One task, one agent that succeeds 75% of the time on any single try.', n: ['task', 'agent'], e: ['t-a'] },
+    { cap: 'Run it k = 3 times. Two passes, one failure — nothing about the agent changed.', n: ['agent', 't1', 't3'], bad: ['t2'], e: ['a-t'], show: ['tries'] },
+    { cap: '<span class="cap-ok">pass@3 asks: did any try pass?</span> Yes — the task counts as solved.', ok: ['any', 'vAny'], okE: ['o-any', 'any-v'], n: ['t1', 't2', 't3'], show: ['tries'] },
+    { cap: '<span class="cap-bad">pass^3 asks: did every try pass?</span> One failure sinks it — the task counts as failed.', bad: ['all', 'vAll', 't2'], badE: ['o-all', 'all-v'], n: ['t1', 't3'], show: ['tries'] },
+    { cap: 'At k = 1 the two metrics are the same number.', n: ['k1'], show: ['ind'] },
+    { cap: 'At k = 3 they have split: 98% vs 42%, from one unchanged agent.', n: ['k1', 'k3'], e: ['k1-3'], show: ['ind'] },
+    { cap: '<span class="cap-bad">At k = 8, pass@k says solved; pass^k says all eight runs succeed only one time in ten.</span>', n: ['k3'], bad: ['k8'], e: ['k3-8'], show: ['ind'] },
+    { cap: '<span class="cap-ok">Pick the one your product lives by:</span> best-of-k behind a verifier wants pass@k; an agent every customer runs wants pass^k.', ok: ['any', 'all'], n: ['k1', 'k3', 'k8'], show: ['at', 'hat'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.userSim = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'User simulator for multi-turn evals: a persona and goal drive a second model that plays the user, conversing turn by turn with the agent under test; the grader checks the resulting database state, and the simulator itself is audited for drift and over-helpfulness.',
+  nodes: [
+    { id: 'persona', x: 104, y: 70, kind: 'data', label: 'PERSONA + GOAL', sub: 'move flight to Fri · terse', w: 196 },
+    { id: 'sim', x: 104, y: 196, kind: 'model', label: 'SIMULATED USER', sub: 'an LLM playing a role', w: 196 },
+    { id: 'agent', x: 384, y: 196, kind: 'model', label: 'AGENT', sub: 'under test', w: 150 },
+    { id: 'db', x: 616, y: 196, kind: 'data', label: 'BOOKING DB', sub: 'real side effects', w: 170 },
+    { id: 'grader', x: 616, y: 316, kind: 'evaluator', label: 'END-STATE CHECK', sub: 'db == expected?', w: 180 },
+    { id: 'audit', x: 330, y: 316, kind: 'evaluator', label: 'SIM AUDIT', sub: 'stayed in character?', ghost: true, w: 190 },
+  ],
+  notes: [
+    { id: 'help', x: 236, y: 64, tone: 'danger', ghost: true, text: ['too helpful: volunteers the', 'booking ref nobody asked for'] },
+    { id: 'drift', x: 486, y: 64, tone: 'danger', ghost: true, text: ['drift: ten turns in, it has', 'forgotten persona and facts'] },
+  ],
+  edges: [
+    { id: 'p-s', from: 'persona', to: 'sim', label: 'role + hidden facts', lx: 64 },
+    { id: 's-a', from: 'sim', to: 'agent', off: -9, label: 'user turn', ly: -8 },
+    { id: 'a-s', from: 'agent', to: 'sim', off: 9, label: 'reply', ly: 15 },
+    { id: 'a-d', from: 'agent', to: 'db', label: 'tool calls', ly: -9 },
+    { id: 'd-g', from: 'db', to: 'grader', label: 'final state', lx: 40 },
+    { id: 's-au', from: 'sim', to: 'audit', ghost: true, fromSide: 'b', toSide: 'l', label: 'its transcript', labelT: 0.45, lx: -34 },
+  ],
+  steps: [
+    { cap: 'A persona and a goal: who the user is, what they want, and what they will only reveal if asked.', n: ['persona', 'sim'], e: ['p-s'] },
+    { cap: 'A second model plays that user, one turn at a time.', n: ['sim', 'agent'], e: ['s-a'] },
+    { cap: 'The agent asks, clarifies and replies — the whole conversation is the test input.', n: ['agent', 'sim'], e: ['a-s', 's-a'] },
+    { cap: 'Along the way it acts on real state through its tools.', n: ['agent', 'db'], e: ['a-d'] },
+    { cap: 'The grader checks the end state against the goal, not how pleasant the transcript sounded.', n: ['db', 'grader'], e: ['d-g'] },
+    { cap: '<span class="cap-bad">Too helpful:</span> the simulator hands over everything up front, so the agent never had to ask a single question.', bad: ['sim'], badE: ['s-a'], n: ['agent'], show: ['help'] },
+    { cap: '<span class="cap-bad">Drift:</span> ten turns in, the “terse” user is chatty and has forgotten its hidden facts — you are now testing a different user.', bad: ['sim'], n: ['persona'], show: ['drift'] },
+    { cap: '<span class="cap-ok">Audit the simulator too:</span> pin the persona, check each run stayed in character, and discard the runs that did not.', ok: ['audit', 'grader'], okE: ['s-au'], n: ['sim'], show: ['audit', 's-au'], d: 3000 },
+  ],
+};
+
+DIAGRAMS.saturation = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'Benchmark saturation: in year one model scores spread from 31% to 64% and rankings are clear; by year three every model scores within two points of a ceiling set by broken tasks, the gaps are smaller than run-to-run noise, and the benchmark must be refreshed.',
+  nodes: [
+    { id: 'bench', x: 96, y: 70, kind: 'data', label: 'BENCHMARK', sub: '500 tasks, frozen', w: 160 },
+    { id: 'c', x: 270, y: 182, kind: 'chip', label: 'MODEL C · 64%', w: 124 },
+    { id: 'b', x: 270, y: 242, kind: 'chip', label: 'MODEL B · 47%', w: 124 },
+    { id: 'a', x: 270, y: 302, kind: 'chip', label: 'MODEL A · 31%', w: 124 },
+    { id: 'f', x: 470, y: 98, kind: 'chip', label: 'MODEL F · 92%', w: 124 },
+    { id: 'e', x: 470, y: 126, kind: 'chip', label: 'MODEL E · 91%', w: 124 },
+    { id: 'd', x: 470, y: 154, kind: 'chip', label: 'MODEL D · 90%', w: 124 },
+    { id: 'dec', x: 618, y: 218, kind: 'decision', label: 'WHO IS BETTER?', w: 156, h: 60 },
+    { id: 'next', x: 618, y: 318, kind: 'data', label: 'REFRESH', sub: 'harder · fresh · private', ghost: true, w: 196 },
+  ],
+  bounds: [
+    { id: 'y1', x: 198, y: 140, w: 144, h: 184, label: 'YEAR 1 · SPREAD' },
+    { id: 'y3', x: 398, y: 58, w: 144, h: 116, label: 'YEAR 3 · BUNCHED' },
+  ],
+  notes: [
+    { id: 'ceil', x: 470, y: 40, anchor: 'middle', tone: 'danger', ghost: true, text: 'ceiling ≈ 92% — the rest are broken tasks' },
+    { id: 'axis', x: 188, y: 236, anchor: 'end', text: ['↑ higher score', '(order, not scale)'] },
+  ],
+  edges: [
+    { id: 'b-y1', from: 'bench', to: 'c', label: 'year 1', labelT: 0.5, lx: -26 },
+    { id: 'b-y3', from: 'bench', to: 'e', label: 'year 3', labelT: 0.55, ly: -8 },
+    { id: 'd-dec', from: 'd', to: 'dec', fromSide: 'r', toSide: 't', label: 'gaps < noise', labelT: 0.35, ly: -8, lx: 18 },
+    { id: 'dec-n', from: 'dec', to: 'next', kind: 'ctl', ghost: true, label: 'retire or refresh', lx: -58, ly: 3 },
+  ],
+  steps: [
+    { cap: 'A new benchmark launches. The best model solves 64% of it.', n: ['bench', 'c'], e: ['b-y1'], show: ['y1', 'axis'] },
+    { cap: 'Scores spread over 30 points: the ranking is obvious, and a 5-point gain is a real result.', n: ['a', 'b', 'c'], show: ['y1', 'axis'] },
+    { cap: 'Two years of everyone hill-climbing the same fixed set…', n: ['bench', 'd', 'e', 'f'], e: ['b-y3'], show: ['y3', 'axis'] },
+    { cap: '<span class="cap-bad">…and every model lands within two points of the ceiling</span> — a ceiling set by mislabeled and unsolvable tasks, not by capability.', bad: ['d', 'e', 'f'], show: ['y3', 'ceil'] },
+    { cap: '<span class="cap-bad">The gaps are now smaller than run-to-run noise.</span> The benchmark still produces numbers; it no longer ranks anything.', bad: ['dec'], badE: ['d-dec'], n: ['d', 'e', 'f'], show: ['y3', 'ceil'] },
+    { cap: '<span class="cap-ok">Retire or refresh it:</span> a harder split, fresh tasks, a private set — until the scores spread out again.', ok: ['next'], e: ['dec-n'], n: ['dec'], show: ['next', 'dec-n', 'y1'], d: 3000 },
+  ],
+};
+
 /* ---------- CONTEXT X-11..X-14 ---------- */
 
 DIAGRAMS.cacheLayout = {
@@ -2541,5 +2728,1146 @@ DIAGRAMS.mergeIntegration = {
     { cap: '<span class="cap-bad">Git surfaces the conflict — which is the good outcome.</span> Silent overwriting was the alternative.', bad: ['merge', 'conf'], badE: ['m-c'] },
     { cap: 'Resolving it needs both intentions at once, and neither agent has ever seen the other’s.', bad: ['conf'], n: ['a1', 'a2'] },
     { cap: '<span class="cap-ok">So integration is its own role</span> — one place that holds both changes, not a ping-pong between authors.', ok: ['integ'], okE: ['c-i'], d: 2800 },
+  ],
+};
+
+/* ============ TOOLS & PROTOCOLS T-01..T-06 ============ */
+
+DIAGRAMS.toolDesignWrappers = {
+  w: 700, h: 330, dur: 1750,
+  aria: 'API-shaped tools: one tool per endpoint forces the agent to make three calls, read a dump of every user and every event, and copy an opaque id between calls, which it can get wrong.',
+  nodes: [
+    { id: 'task', x: 110, y: 60, kind: 'user', label: 'TASK', sub: '30 min with Ana, next week', w: 200 },
+    { id: 'model', x: 110, y: 186, kind: 'model', label: 'AGENT', sub: 'stitches the API together', w: 200 },
+    { id: 't1', x: 384, y: 96, kind: 'tool', label: 'list_users', w: 150 },
+    { id: 't2', x: 384, y: 186, kind: 'tool', label: 'list_events', w: 150 },
+    { id: 't3', x: 384, y: 276, kind: 'tool', label: 'create_event', w: 150 },
+    { id: 'raw', x: 598, y: 96, kind: 'data', label: 'ALL 4,000 USERS', sub: 'uuid, uuid, uuid…', w: 180 },
+    { id: 'cal', x: 598, y: 186, kind: 'data', label: 'EVERY EVENT', sub: 'raw calendar dump', w: 180 },
+    { id: 'wrong', x: 598, y: 276, kind: 'untrusted', label: 'WRONG UUID', sub: 'copied from row 2,317', w: 180 },
+  ],
+  notes: [
+    { id: 'join', x: 110, y: 262, anchor: 'middle', ghost: true, text: ['the model is doing', 'the join, in tokens'] },
+  ],
+  edges: [
+    { id: 't-m', from: 'task', to: 'model' },
+    { id: 'm-t1', from: 'model', to: 't1', label: 'call 1', labelT: 0.5, lanchor: 'end', lx: -8, ly: 2 },
+    { id: 'm-t2', from: 'model', to: 't2', label: 'call 2', ly: -8 },
+    { id: 'm-t3', from: 'model', to: 't3', label: 'call 3', labelT: 0.5, lanchor: 'end', lx: -8, ly: 8 },
+    { id: 't1-r', from: 't1', to: 'raw' },
+    { id: 't2-c', from: 't2', to: 'cal' },
+    { id: 't3-w', from: 't3', to: 'wrong' },
+  ],
+  steps: [
+    { cap: 'The task is one sentence: book thirty minutes with Ana next week.', n: ['task', 'model'], e: ['t-m'] },
+    { cap: 'But the tools mirror the API, one endpoint each. The agent has to orchestrate them itself.', n: ['t1', 't2', 't3'] },
+    { cap: 'Call 1 lists every user so it can find Ana — four thousand rows of ids, all of it now in context.', n: ['model', 't1'], e: ['m-t1'], bad: ['raw'], badE: ['t1-r'] },
+    { cap: 'Call 2 dumps the calendar, so the model can find a free slot by reading it.', n: ['model', 't2'], e: ['m-t2'], bad: ['cal'], badE: ['t2-c'] },
+    { cap: '<span class="cap-bad">Call 3 books with an id copied out of row 2,317.</span> One wrong character and it is someone else’s meeting.', n: ['model', 't3'], e: ['m-t3'], bad: ['wrong'], badE: ['t3-w'] },
+    { cap: 'Three round trips, and most of the window went on plumbing the tool should have done.', bad: ['raw', 'cal', 'wrong'], n: ['model'], show: ['join'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolDesignAgent = {
+  w: 700, h: 330, dur: 1750,
+  aria: 'Agent-shaped tool: one schedule_event tool with a clear description and a name-based schema does the lookup and booking in code and returns a short, readable result in a single call.',
+  nodes: [
+    { id: 'task', x: 110, y: 60, kind: 'user', label: 'TASK', sub: '30 min with Ana, next week', w: 200 },
+    { id: 'model', x: 110, y: 186, kind: 'model', label: 'AGENT', sub: 'one intent, one call', w: 200 },
+    { id: 'desc', x: 370, y: 66, kind: 'data', label: 'DESCRIPTION + SCHEMA', sub: 'when to use · names · enums', w: 230 },
+    { id: 'tool', x: 370, y: 186, kind: 'tool', label: 'schedule_event', sub: 'finds · checks · books', w: 190 },
+    { id: 'res', x: 606, y: 186, kind: 'data', label: 'SHORT RESULT', sub: 'Ana · Tue 10:00 · ok', w: 166 },
+  ],
+  notes: [
+    { id: 'tok', x: 606, y: 80, anchor: 'middle', ghost: true, text: ['one call,', '~60 tokens back'] },
+  ],
+  edges: [
+    { id: 't-m', from: 'task', to: 'model' },
+    { id: 'd-t', from: 'desc', to: 'tool', kind: 'ctl', label: 'tells the model when', lx: 60 },
+    { id: 'm-t', from: 'model', to: 'tool', label: 'one call', ly: -8 },
+    { id: 't-r', from: 'tool', to: 'res', label: 'returns', ly: -8 },
+    { id: 'r-m', from: 'res', to: 'model', d: 'M606 211 C606 300 110 300 110 211', label: 'names it can reason about', ly: 16 },
+  ],
+  steps: [
+    { cap: 'The same one-sentence task.', n: ['task', 'model'], e: ['t-m'] },
+    { cap: 'This time there is one tool shaped like the task, not like the API.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'Its description says when to use it and what comes back; the schema takes a name and a length, not a uuid.', n: ['desc', 'tool'], e: ['d-t'] },
+    { cap: 'The lookup, the free slot and the booking happen inside the tool — deterministic code, not tokens.', n: ['tool'] },
+    { cap: 'It returns only what the next step needs: a name, a time, a status.', n: ['tool', 'res'], e: ['t-r'], show: ['tok'] },
+    { cap: '<span class="cap-ok">One call, one short result</span> — and the agent never handled an identifier it could mistype.', ok: ['res', 'model'], okE: ['r-m'], show: ['tok'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.mcpArch = {
+  w: 720, h: 340, dur: 1750,
+  aria: 'MCP architecture: the host application runs the model and one client per server; a local server is reached over stdio and a remote one over HTTP, and each server advertises its tools, resources and prompts when it connects.',
+  bounds: [
+    { id: 'host', x: 18, y: 64, w: 380, h: 244, label: 'HOST · THE APP THE USER RUNS' },
+    { id: 'caps', x: 438, y: 12, w: 266, h: 56, ghost: true },
+  ],
+  nodes: [
+    { id: 'model', x: 116, y: 186, kind: 'model', label: 'MODEL', sub: 'sees tools, not servers', w: 176 },
+    { id: 'ca', x: 316, y: 126, kind: 'chip', label: 'CLIENT A', w: 120, h: 30 },
+    { id: 'cb', x: 316, y: 246, kind: 'chip', label: 'CLIENT B', w: 120, h: 30 },
+    { id: 'sa', x: 580, y: 126, kind: 'tool', label: 'FILES SERVER', sub: 'local process', w: 200 },
+    { id: 'sb', x: 580, y: 246, kind: 'tool', label: 'ISSUES SERVER', sub: 'remote service', w: 200 },
+    { id: 'p1', x: 486, y: 40, kind: 'chip', label: 'TOOLS', w: 74 },
+    { id: 'p2', x: 572, y: 40, kind: 'chip', label: 'RESOURCES', w: 86 },
+    { id: 'p3', x: 658, y: 40, kind: 'chip', label: 'PROMPTS', w: 74 },
+  ],
+  notes: [
+    { id: 'rpc', x: 580, y: 300, anchor: 'middle', ghost: true, text: ['same JSON-RPC messages', 'over either transport'] },
+  ],
+  edges: [
+    { id: 'm-a', from: 'model', to: 'ca', fromSide: 'r', toSide: 'l', kind: 'ctl' },
+    { id: 'm-b', from: 'model', to: 'cb', fromSide: 'r', toSide: 'l', kind: 'ctl' },
+    { id: 'a-sa', from: 'ca', to: 'sa', label: 'stdio', ly: -8 },
+    { id: 'b-sb', from: 'cb', to: 'sb', label: 'HTTP', ly: -8 },
+    { id: 'sa-p', from: 'sa', to: 'caps', d: 'M580 101 L580 68', label: 'listed on connect', labelT: 0.4, lanchor: 'start', lx: 8, ly: 3 },
+  ],
+  steps: [
+    { cap: 'The host is the app the user runs. The model lives inside it and never talks to a server directly.', n: ['model'] },
+    { cap: 'For every server, the host starts one client — one connection each, isolated from the others.', n: ['model', 'ca', 'cb'], e: ['m-a', 'm-b'] },
+    { cap: 'A local server runs as a child process and talks over stdin and stdout.', n: ['ca', 'sa'], e: ['a-sa'] },
+    { cap: 'A remote one is reached over HTTP. Only the pipe differs; the messages are the same.', n: ['cb', 'sb'], e: ['b-sb'], show: ['rpc'] },
+    { cap: 'On connect, the client asks what the server offers — its tools, resources and prompts — instead of assuming.', n: ['sa', 'p1', 'p2', 'p3'], e: ['sa-p'], show: ['caps'] },
+    { cap: 'Tool definitions travel up into the model’s context; a call travels back down the same client to the same server.', n: ['model', 'ca', 'sa'], e: ['m-a', 'a-sa'] },
+    { cap: '<span class="cap-bad">Every connected server also writes text into that context.</span> Connect one like a dependency, not a bookmark.', bad: ['sb'], badE: ['b-sb'], n: ['model', 'cb'], e: ['m-b'] },
+    { cap: '<span class="cap-ok">Add or swap a server and nothing else changes</span> — the protocol is the contract, not a bespoke integration per app.', ok: ['sa', 'sb'], okE: ['a-sa', 'b-sb'], n: ['ca', 'cb'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolSearch = {
+  w: 700, h: 340, dur: 1750,
+  aria: 'Tool search with deferred loading: instead of loading every tool definition into the window, the model starts with a search tool, searches the catalog, and only the matching definitions are expanded into context.',
+  bounds: [{ id: 'hits', x: 250, y: 252, w: 438, h: 70, ghost: true, label: 'LOADED ON DEMAND' }],
+  nodes: [
+    { id: 'model', x: 380, y: 64, kind: 'model', label: 'MODEL', sub: 'needs to open a PR', w: 190 },
+    { id: 'cat', x: 100, y: 176, kind: 'data', label: 'TOOL CATALOG', sub: '5 servers · ~55K tokens', w: 176 },
+    { id: 'win', x: 384, y: 176, kind: 'memory', label: 'WINDOW', sub: 'what the model sees', w: 176 },
+    { id: 'search', x: 606, y: 176, kind: 'tool', label: 'TOOL SEARCH', sub: 'names · descriptions', w: 164 },
+    { id: 'h1', x: 330, y: 298, kind: 'chip', label: 'github_create_pr', w: 128 },
+    { id: 'h2', x: 470, y: 298, kind: 'chip', label: 'github_get_pr', w: 128 },
+    { id: 'h3', x: 610, y: 298, kind: 'chip', label: 'github_list_prs', w: 128 },
+  ],
+  notes: [
+    { id: 'def', x: 100, y: 98, anchor: 'middle', ghost: true, text: ['sent with the request,', 'not placed in context'] },
+  ],
+  edges: [
+    { id: 'all', from: 'cat', to: 'win', ghost: true, label: 'all 58 schemas', ly: -8 },
+    { id: 'm-s', from: 'model', to: 'search', fromSide: 'r', toSide: 't', label: 'search "pull request"', labelT: 0.35, lx: 34, ly: -6 },
+    { id: 's-h', from: 'search', to: 'h3', label: 'top matches', lanchor: 'start', lx: 6, ly: 4 },
+    { id: 'c-h', from: 'cat', to: 'h1', label: 'full schema, hits only', labelT: 0.55, lanchor: 'end', lx: -10, ly: 4 },
+    { id: 'h-w', from: 'h1', to: 'win', d: 'M386 286 L386 201', label: 'expanded', labelT: 0.5, lanchor: 'start', lx: 8, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Five servers, fifty-eight tools. Every definition costs tokens whether or not it gets used.', n: ['cat'] },
+    { cap: '<span class="cap-bad">Load them all</span> and ~55K tokens are gone before the task starts — and past a few dozen tools, selection accuracy starts to drop.', bad: ['cat', 'win'], badE: ['all'], show: ['all'] },
+    { cap: 'Instead the window starts with a search tool and the few tools used on every task. The rest are deferred.', n: ['win', 'search'], show: ['def'] },
+    { cap: 'When the model needs a capability, it searches the catalog for it by name and description.', n: ['model', 'search'], e: ['m-s'] },
+    { cap: 'The search returns a handful of references — not the catalog.', n: ['search', 'h1', 'h2', 'h3'], e: ['s-h'], show: ['hits'] },
+    { cap: 'Only those definitions are expanded into context: full schemas, for three tools.', n: ['cat', 'h1', 'h2', 'win'], e: ['c-h', 'h-w'], show: ['hits', 'def'] },
+    { cap: '<span class="cap-ok">The window holds what this task needs</span>, and because the prefix never changed, the prompt cache still hits.', ok: ['win', 'h1'], okE: ['h-w'], show: ['hits'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.structRepair = {
+  w: 700, h: 330, dur: 1700,
+  aria: 'Validate and repair: the model generates freely, the output is parsed and checked against the schema, and a failure is sent back with the exact error for another attempt before anything reaches downstream code.',
+  nodes: [
+    { id: 'schema', x: 112, y: 64, kind: 'data', label: 'SCHEMA', sub: 'total: number, …', w: 170 },
+    { id: 'model', x: 380, y: 64, kind: 'model', label: 'MODEL', sub: 'generates freely', w: 190 },
+    { id: 'out', x: 380, y: 184, kind: 'data', label: 'OUTPUT', sub: '{"total": "1,200"}', w: 190 },
+    { id: 'val', x: 612, y: 184, kind: 'evaluator', label: 'VALIDATE', sub: 'parse + schema', w: 160 },
+    { id: 'app', x: 612, y: 64, kind: 'tool', label: 'YOUR CODE', sub: 'gets typed data', w: 160 },
+    { id: 'err', x: 380, y: 292, kind: 'chip', label: 'total: expected number', w: 196 },
+  ],
+  edges: [
+    { id: 's-m', from: 'schema', to: 'model', label: 'in the prompt', ly: -8 },
+    { id: 'm-o', from: 'model', to: 'out', label: 'emits', lx: 22, ly: 4 },
+    { id: 'o-v', from: 'out', to: 'val', label: 'parse', ly: -8 },
+    { id: 'v-e', from: 'val', to: 'err', fromSide: 'b', toSide: 'r', label: 'fail', labelT: 0.35, lx: 16, ly: 4 },
+    { id: 'e-m', from: 'err', to: 'model', d: 'M282 292 C226 292 226 176 258 140 S306 104 310 89', label: 'repair: error + output', labelT: 0.35, lanchor: 'end', lx: -10, ly: 4 },
+    { id: 'v-a', from: 'val', to: 'app', label: 'pass', lx: 18, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Downstream code needs typed data, so the schema goes into the prompt.', n: ['schema', 'model'], e: ['s-m'] },
+    { cap: 'The model generates freely — and usually gets it right.', n: ['model', 'out'], e: ['m-o'] },
+    { cap: 'Every output is parsed and checked against the schema before anything uses it.', n: ['out', 'val'], e: ['o-v'] },
+    { cap: '<span class="cap-bad">Invalid:</span> a string where a number belongs.', bad: ['val', 'err'], badE: ['v-e'], n: ['out'] },
+    { cap: 'The exact error goes back with the bad output — fix this field, not “try again”.', n: ['err', 'model'], e: ['e-m'] },
+    { cap: '<span class="cap-ok">The retry validates, and only then reaches your code</span> — at the cost of a loop, latency, and a failure path you own.', ok: ['val', 'app'], okE: ['v-a'], n: ['model', 'out'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.structConstrained = {
+  w: 700, h: 330, dur: 1700,
+  aria: 'Constrained decoding: the schema is compiled into a grammar that masks invalid tokens during generation, so the output always parses, though truncation, refusals and rules the grammar cannot express still need checking.',
+  nodes: [
+    { id: 'schema', x: 112, y: 64, kind: 'data', label: 'SCHEMA', sub: 'total: number, …', w: 170 },
+    { id: 'gram', x: 380, y: 64, kind: 'policy', label: 'GRAMMAR', sub: 'masks invalid tokens', w: 190 },
+    { id: 'model', x: 380, y: 184, kind: 'model', label: 'MODEL', sub: 'samples under the mask', w: 190 },
+    { id: 'out', x: 380, y: 292, kind: 'data', label: 'OUTPUT', sub: '{"total": 1200}', w: 170 },
+    { id: 'app', x: 614, y: 292, kind: 'tool', label: 'YOUR CODE', sub: 'checks ranges', w: 148 },
+    { id: 'cut', x: 130, y: 292, kind: 'untrusted', label: 'NO MATCH', sub: 'max_tokens · refusal', w: 180 },
+  ],
+  edges: [
+    { id: 's-g', from: 'schema', to: 'gram', label: 'compile once', ly: -8 },
+    { id: 'g-m', from: 'gram', to: 'model', kind: 'ctl', label: 'every token', lx: 38, ly: 4 },
+    { id: 'm-o', from: 'model', to: 'out', label: 'emits', lx: 22, ly: 4 },
+    { id: 'o-a', from: 'out', to: 'app', label: 'parses', ly: -8 },
+    { id: 'o-c', from: 'out', to: 'cut', label: 'stops early', ly: -8 },
+  ],
+  steps: [
+    { cap: 'Same schema — but this time it is compiled into a grammar before generation starts.', n: ['schema', 'gram'], e: ['s-g'] },
+    { cap: 'At every token, anything that would break the schema is masked out.', n: ['gram', 'model'], e: ['g-m'] },
+    { cap: 'So the output cannot be malformed: the right keys, the right types, every required field.', n: ['model', 'out'], e: ['m-o'] },
+    { cap: '<span class="cap-bad">Not a proof, though.</span> A response cut off at max_tokens, or a refusal, still won’t match the schema.', bad: ['cut'], badE: ['o-c'], n: ['out'] },
+    { cap: 'And some rules — ranges, lengths — can’t be expressed in the grammar, so your code still checks them.', n: ['app'] },
+    { cap: '<span class="cap-ok">Check the stop reason, keep the range checks, and shape errors are gone by construction.</span>', ok: ['out', 'app'], okE: ['o-a'], n: ['gram'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.parallelCalls = {
+  w: 700, h: 370, dur: 1700,
+  aria: 'Parallel tool calls: the model emits three independent tool calls in one turn, the harness runs them concurrently, and every result — including a failed one marked as an error — returns together in one message.',
+  nodes: [
+    { id: 'model', x: 106, y: 180, kind: 'model', label: 'MODEL', sub: 'one turn, three calls', w: 184 },
+    { id: 'r1', x: 366, y: 80, kind: 'tool', label: 'read_file(a.ts)', w: 176 },
+    { id: 'r2', x: 366, y: 180, kind: 'tool', label: 'read_file(b.ts)', w: 176 },
+    { id: 'r3', x: 366, y: 280, kind: 'tool', label: 'grep("TODO")', w: 176 },
+    { id: 'join', x: 598, y: 180, kind: 'data', label: 'ONE MESSAGE', sub: '3 results, by call id', w: 184 },
+  ],
+  notes: [
+    { id: 'wall', x: 366, y: 32, anchor: 'middle', ghost: true, text: ['wall-clock = the slowest call, not the sum'] },
+  ],
+  edges: [
+    { id: 'm-1', from: 'model', to: 'r1' },
+    { id: 'm-2', from: 'model', to: 'r2' },
+    { id: 'm-3', from: 'model', to: 'r3' },
+    { id: '1-j', from: 'r1', to: 'join', d: 'M454 80 C530 80 560 100 560 155' },
+    { id: '2-j', from: 'r2', to: 'join' },
+    { id: '3-j', from: 'r3', to: 'join', d: 'M454 280 C530 280 560 260 560 205', label: 'error: true', labelT: 0.1, lanchor: 'start', lx: 2, ly: 16 },
+    { id: 'j-m', from: 'join', to: 'model', d: 'M650 205 C650 372 106 372 106 205', label: 'all together, next turn', ly: 16 },
+  ],
+  steps: [
+    { cap: 'The model needs three things, and none of them depends on the others.', n: ['model'] },
+    { cap: 'So it asks for all three in one response: three tool calls, one turn.', n: ['model', 'r1', 'r2', 'r3'], e: ['m-1', 'm-2', 'm-3'] },
+    { cap: 'The harness runs them concurrently.', n: ['r1', 'r2', 'r3'], show: ['wall'] },
+    { cap: '<span class="cap-bad">One of them fails.</span> It still gets a result — flagged as an error — rather than silently going missing.', bad: ['r3'], badE: ['3-j'], n: ['r1', 'r2', 'join'], e: ['1-j', '2-j'] },
+    { cap: 'Every result goes back in one message, each matched to its call by id.', n: ['join', 'r1', 'r2'], bad: ['r3'], e: ['1-j', '2-j'], badE: ['3-j'] },
+    { cap: '<span class="cap-ok">One round trip instead of three</span>, and the model sees the whole picture at once.', ok: ['join', 'model'], okE: ['j-m'], show: ['wall'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolErrCrash = {
+  w: 700, h: 290, dur: 1750,
+  aria: 'Errors as exceptions: a tool rejects an argument and raises; uncaught, the exception ends the whole run, and caught as an opaque code, it leaves the model retrying the identical call.',
+  nodes: [
+    { id: 'model', x: 112, y: 64, kind: 'model', label: 'MODEL', sub: 'step 20 of the task', w: 190 },
+    { id: 'tool', x: 372, y: 64, kind: 'tool', label: 'create_ticket', sub: 'priority: "urgent"', w: 190 },
+    { id: 'exc', x: 372, y: 184, kind: 'untrusted', label: 'ValidationError', sub: '40-line traceback', w: 190 },
+    { id: 'dead', x: 614, y: 184, kind: 'chip', label: 'RUN ENDS · WORK LOST', w: 150, h: 30 },
+    { id: 'opq', x: 112, y: 184, kind: 'chip', label: '"Error 400"', w: 130, h: 30 },
+  ],
+  notes: [
+    { id: 'loop', x: 112, y: 250, anchor: 'middle', ghost: true, text: ['same call, same args,', 'until the budget runs out'] },
+  ],
+  edges: [
+    { id: 'm-t', from: 'model', to: 'tool', label: 'call', ly: -8 },
+    { id: 't-x', from: 'tool', to: 'exc', label: 'raises', lx: 26 },
+    { id: 'x-d', from: 'exc', to: 'dead', label: 'uncaught', ly: -8 },
+    { id: 'x-o', from: 'exc', to: 'opq', label: 'flattened', ly: -8 },
+    { id: 'o-m', from: 'opq', to: 'model', label: 'retry', lx: 20, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Twenty steps in, the model calls a tool with a value the API rejects.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'The tool raises. Nothing between it and the loop was written to catch that.', bad: ['exc'], badE: ['t-x'], n: ['tool'] },
+    { cap: '<span class="cap-bad">The exception unwinds the harness</span> — twenty steps of work gone, over a value the model could have fixed in one.', bad: ['exc', 'dead'], badE: ['x-d'] },
+    { cap: 'The usual patch: catch it and hand back a status code. Better, but opaque.', n: ['exc', 'opq'], e: ['x-o'] },
+    { cap: '<span class="cap-bad">The model can’t tell what to change</span>, so it sends the identical call again, and again.', bad: ['opq', 'model'], badE: ['o-m', 'm-t'], show: ['loop'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.toolErrObserve = {
+  w: 700, h: 290, dur: 1750,
+  aria: 'Errors as observations: a wrapper turns the tool failure into an error result that says what was wrong and what is allowed, the model fixes the argument on its next call, and transient failures are retried by the harness with an idempotency key.',
+  nodes: [
+    { id: 'model', x: 112, y: 64, kind: 'model', label: 'MODEL', sub: 'step 20 of the task', w: 190 },
+    { id: 'tool', x: 372, y: 64, kind: 'tool', label: 'create_ticket', sub: 'priority: "urgent"', w: 190 },
+    { id: 'wrap', x: 604, y: 64, kind: 'policy', label: 'WRAPPER', sub: 'never throws', w: 164 },
+    { id: 'msg', x: 372, y: 184, kind: 'data', label: 'error: true', sub: 'use low | med | high', w: 190 },
+    { id: 'trans', x: 604, y: 184, kind: 'chip', label: 'TIMEOUT → RETRY, SAME KEY', w: 172, h: 30 },
+  ],
+  notes: [
+    { id: 'idem', x: 604, y: 236, anchor: 'middle', ghost: true, text: ['an idempotency key makes', 'a retried write land once'] },
+  ],
+  edges: [
+    { id: 'm-t', from: 'model', to: 'tool', label: 'call', ly: -8 },
+    { id: 't-w', from: 'tool', to: 'wrap', label: 'raises', ly: -8 },
+    { id: 'w-m', from: 'wrap', to: 'msg', d: 'M570 89 C570 150 520 184 467 184', label: 'rewrites as', labelT: 0.45, lanchor: 'end', lx: -6, ly: 2 },
+    { id: 'm-o', from: 'msg', to: 'model', fromSide: 'l', toSide: 'b', label: 'observation', labelT: 0.55, lx: -18, ly: 16 },
+    { id: 'w-tr', from: 'wrap', to: 'trans', d: 'M644 89 L644 169', kind: 'ctl', label: 'transient', lanchor: 'end', lx: -6, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Twenty steps in, the model calls a tool with a value the API rejects.', n: ['model', 'tool'], e: ['m-t'] },
+    { cap: 'The tool raises — inside a wrapper that never lets an exception reach the loop.', bad: ['tool'], n: ['wrap'], e: ['t-w'] },
+    { cap: 'The failure becomes a tool result, flagged as an error, that says what was wrong and what is allowed.', n: ['wrap', 'msg'], e: ['w-m'] },
+    { cap: 'The model reads it like any other observation.', n: ['msg', 'model'], e: ['m-o'] },
+    { cap: 'Transient failures are different: the harness retries those itself, with an idempotency key so a retried write lands once.', n: ['wrap', 'trans'], e: ['w-tr'], show: ['idem'] },
+    { cap: '<span class="cap-ok">The model fixes the argument on its next call.</span> One step lost, not the run.', ok: ['model', 'tool'], okE: ['m-t'], d: 2800 },
+  ],
+};
+
+/* ---------- CODING G-17..G-20 ---------- */
+
+DIAGRAMS.backgroundAgent = {
+  w: 720, h: 316, dur: 1750,
+  aria: 'Background agent: a developer dispatches a task to a remote sandbox that clones the repo and runs setup, the agent works unattended and opens a pull request, CI failures and review comments wake it to push fixes, and the developer reviews the result later.',
+  nodes: [
+    { id: 'dev', x: 100, y: 70, kind: 'human', label: 'DEVELOPER', sub: 'dispatches a task', w: 160 },
+    { id: 'setup', x: 340, y: 70, kind: 'chip', label: 'FRESH CLONE · SETUP SCRIPT', w: 180, h: 28 },
+    { id: 'agent', x: 340, y: 150, kind: 'model', label: 'AGENT', sub: 'no one watching', w: 180 },
+    { id: 'checks', x: 340, y: 240, kind: 'chip', label: 'RUNS ITS OWN CHECKS', w: 180, h: 28 },
+    { id: 'ci', x: 610, y: 56, kind: 'env', label: 'CI', sub: 'runs on every push', w: 170 },
+    { id: 'pr', x: 610, y: 150, kind: 'data', label: 'BRANCH + PR', w: 170 },
+    { id: 'rev', x: 610, y: 262, kind: 'human', label: 'YOU, LATER', sub: 'review the PR', w: 170 },
+  ],
+  bounds: [{ id: 'sb', x: 226, y: 28, w: 228, h: 250, label: 'REMOTE SANDBOX' }],
+  notes: [
+    { id: 'away', x: 100, y: 146, anchor: 'middle', ghost: true, text: ['laptop closed —', 'the run carries on'] },
+  ],
+  edges: [
+    { id: 'd-s', from: 'dev', to: 'setup', label: 'task', lx: -12, ly: -8 },
+    { id: 's-a', from: 'setup', to: 'agent', label: 'ready', lx: 20, ly: 3 },
+    { id: 'a-c', from: 'agent', to: 'checks', label: 'verify', lx: 22, ly: 3 },
+    { id: 'a-p', from: 'agent', to: 'pr', off: 8, label: 'push', labelT: 0.6, ly: 16 },
+    { id: 'p-ci', from: 'pr', to: 'ci', label: 'triggers', lx: 30, ly: 3 },
+    { id: 'c-a', from: 'ci', to: 'agent', kind: 'ctl', d: 'M525 56 C 478 56 478 136 430 136', label: 'red wakes it', labelT: 0.5, lanchor: 'start', lx: 10, ly: 3 },
+    { id: 'p-r', from: 'pr', to: 'rev', label: 'notify', lx: 26, ly: 3 },
+    { id: 'r-a', from: 'rev', to: 'agent', kind: 'ctl', d: 'M525 262 C 478 262 478 166 430 166', label: 'comments too', labelT: 0.5, lanchor: 'start', lx: 10, ly: 3 },
+  ],
+  steps: [
+    { cap: 'A developer hands off a task and closes the laptop. Nothing about the run needs them present.', n: ['dev'], show: ['away'] },
+    { cap: 'The task lands in a remote sandbox: a fresh clone and the repo’s own setup script, not someone’s machine.', n: ['dev', 'setup'], e: ['d-s'], show: ['away'] },
+    { cap: 'The agent works unattended — explore, edit, and run the checks itself, because nobody else is there to.', n: ['setup', 'agent', 'checks'], e: ['s-a', 'a-c'] },
+    { cap: 'The output is not a chat reply. It is a branch and a pull request, and pushing it starts CI.', n: ['agent', 'pr', 'ci'], e: ['a-p', 'p-ci'] },
+    { cap: '<span class="cap-bad">CI goes red.</span> The failure event, logs included, wakes the agent — nothing polls.', bad: ['ci'], badE: ['c-a'], n: ['agent'] },
+    { cap: 'Once the PR is ready, the developer is notified and reviews it when they choose. Hours later is fine.', n: ['pr', 'rev'], e: ['p-r'] },
+    { cap: 'Review comments are events too: they wake the same agent, on the same branch, to push a fix.', n: ['rev', 'agent'], e: ['r-a'] },
+    { cap: '<span class="cap-ok">Green, comments resolved.</span> The human spent minutes reviewing instead of hours supervising.', ok: ['ci', 'pr', 'rev'], okE: ['p-r'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.hooks = {
+  w: 740, h: 332, dur: 1750,
+  aria: 'Hooks and lifecycle events: a session emits fixed events — start, before a tool call, after a tool call, and stop — and at each one the harness runs a script that injects context, blocks a call, formats and lints, or refuses to end the turn while tests are red, whereas an instruction file is only advisory.',
+  nodes: [
+    { id: 'agent', x: 88, y: 64, kind: 'model', label: 'AGENT', sub: 'the session', w: 140 },
+    { id: 'e1', x: 244, y: 64, kind: 'chip', label: 'SESSION START', w: 124 },
+    { id: 'e2', x: 384, y: 64, kind: 'chip', label: 'BEFORE A TOOL', w: 124 },
+    { id: 'e3', x: 524, y: 64, kind: 'chip', label: 'AFTER A TOOL', w: 124 },
+    { id: 'e4', x: 664, y: 64, kind: 'chip', label: 'SAYS “DONE”', w: 124 },
+    { id: 'h1', x: 244, y: 174, kind: 'tool', label: 'INJECT', sub: 'branch · todo', w: 128 },
+    { id: 'h2', x: 384, y: 174, kind: 'policy', label: 'GUARD', sub: 'can block', w: 128 },
+    { id: 'h3', x: 524, y: 174, kind: 'tool', label: 'FORMAT', sub: '+ lint', w: 128 },
+    { id: 'h4', x: 664, y: 174, kind: 'policy', label: 'TESTS', sub: 'gate the stop', w: 128 },
+    { id: 'o1', x: 244, y: 264, kind: 'chip', label: 'STATE IN CONTEXT', w: 124 },
+    { id: 'o2', x: 384, y: 264, kind: 'chip', label: 'BLOCKED + REASON', w: 124 },
+    { id: 'o3', x: 524, y: 264, kind: 'chip', label: 'CLEAN FILE', w: 124 },
+    { id: 'o4', x: 664, y: 264, kind: 'chip', label: 'NOT DONE: 2 RED', w: 124 },
+    { id: 'instr', x: 88, y: 264, kind: 'data', label: 'INSTRUCTIONS', sub: '“always run lint”', w: 150 },
+  ],
+  bounds: [{ id: 'hk', x: 174, y: 118, w: 560, h: 176, ghost: true }],
+  notes: [{ id: 'hkn', x: 454, y: 316, anchor: 'middle', ghost: true, text: 'the harness runs these, every time — the model cannot skip them' }],
+  edges: [
+    { id: 'a-1', from: 'agent', to: 'e1', kind: 'ctl' },
+    { id: '1-2', from: 'e1', to: 'e2', kind: 'ctl' },
+    { id: '2-3', from: 'e2', to: 'e3', kind: 'ctl' },
+    { id: '3-4', from: 'e3', to: 'e4', kind: 'ctl' },
+    { id: 'e1-h', from: 'e1', to: 'h1', label: 'fires', lx: 20, ly: -2 },
+    { id: 'e2-h', from: 'e2', to: 'h2' },
+    { id: 'e3-h', from: 'e3', to: 'h3' },
+    { id: 'e4-h', from: 'e4', to: 'h4' },
+    { id: 'h1-o', from: 'h1', to: 'o1' },
+    { id: 'h2-o', from: 'h2', to: 'o2', label: 'deny', lx: 18, ly: 3 },
+    { id: 'h3-o', from: 'h3', to: 'o3' },
+    { id: 'h4-o', from: 'h4', to: 'o4', label: 'red', lx: 16, ly: 3 },
+    { id: 'i-a', from: 'instr', to: 'agent', kind: 'ctl', label: 'advisory only', lanchor: 'start', lx: 8, ly: 3 },
+  ],
+  steps: [
+    { cap: 'A session has fixed moments: it starts, it is about to call a tool, the call returns, it declares itself done.', n: ['agent', 'e1', 'e2', 'e3', 'e4'], e: ['a-1', '1-2', '2-3', '3-4'] },
+    { cap: 'Instructions can ask for the same things — <span class="cap-bad">but the model weighs them against everything else, and forgets.</span>', bad: ['instr'], badE: ['i-a'], n: ['agent'] },
+    { cap: 'A hook is a script the harness runs at the moment itself. At session start: put the branch and open task in context.', n: ['e1', 'h1', 'o1'], e: ['e1-h', 'h1-o'], show: ['hk', 'hkn'] },
+    { cap: 'Before a tool call, a guard sees the exact command — and <span class="cap-bad">can refuse it</span>, returning the reason as context.', n: ['e2', 'h2'], bad: ['o2'], e: ['e2-h'], badE: ['h2-o'], show: ['hk', 'hkn'] },
+    { cap: 'After every edit, the formatter and linter run. Not when the model remembers — every time.', n: ['e3', 'h3', 'o3'], e: ['e3-h', 'h3-o'], show: ['hk', 'hkn'] },
+    { cap: 'When the agent says it is done, the tests run first. <span class="cap-bad">Red means the turn cannot end.</span>', n: ['e4', 'h4'], bad: ['o4'], e: ['e4-h'], badE: ['h4-o'], show: ['hk', 'hkn'] },
+    { cap: '<span class="cap-ok">Instructions shape what the model tries to do; hooks decide what happens regardless.</span>', ok: ['h1', 'h2', 'h3', 'h4'], show: ['hk', 'hkn'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.languageServer = {
+  w: 720, h: 372, dur: 1750,
+  aria: 'Language-server integration: grep for a function name returns noisy text matches, while a language server returns the exact definition and references; after each edit the server pushes diagnostics, so a new type error reaches the agent before any test runs.',
+  nodes: [
+    { id: 'agent', x: 100, y: 170, kind: 'model', label: 'AGENT', sub: 'who calls save()?', w: 170 },
+    { id: 'grep', x: 340, y: 60, kind: 'tool', label: 'GREP “save(”', sub: 'text search', w: 170 },
+    { id: 'gres', x: 590, y: 60, kind: 'data', label: '47 TEXT MATCHES', sub: 'mostly the wrong save()', w: 210 },
+    { id: 'lsp', x: 340, y: 170, kind: 'tool', label: 'LANGUAGE SERVER', sub: 'the editor’s code engine', w: 190 },
+    { id: 'refs', x: 590, y: 170, kind: 'data', label: 'DEFINITION + REFS', sub: '6 call sites, exact', w: 210 },
+    { id: 'edit', x: 300, y: 280, kind: 'tool', label: 'EDIT FILE', w: 140 },
+    { id: 'diag', x: 590, y: 285, kind: 'data', label: 'DIAGNOSTICS', sub: 'arg 2: string, not int', w: 200 },
+  ],
+  notes: [
+    { id: 'fast', x: 600, y: 248, anchor: 'middle', ghost: true, text: 'in seconds · no build · no test run' },
+  ],
+  edges: [
+    { id: 'a-g', from: 'agent', to: 'grep', fromSide: 't', toSide: 'l', label: 'search text', labelT: 0.6, ly: -8 },
+    { id: 'g-r', from: 'grep', to: 'gres', label: 'noise', ly: -8 },
+    { id: 'a-l', from: 'agent', to: 'lsp', label: 'by symbol', ly: -8 },
+    { id: 'l-r', from: 'lsp', to: 'refs', label: 'exact', ly: -8 },
+    { id: 'a-e', from: 'agent', to: 'edit', d: 'M130 195 C 130 256 170 280 230 280', label: 'edit', labelT: 0.45, lx: -16, ly: 8 },
+    { id: 'e-l', from: 'edit', to: 'lsp', d: 'M300 260 L300 195', label: 'on change', lx: -30, ly: 3 },
+    { id: 'l-d', from: 'lsp', to: 'diag', d: 'M370 195 C 370 262 420 285 490 285', label: 'pushes', labelT: 0.55, lx: 12, ly: -8 },
+    { id: 'd-a', from: 'diag', to: 'agent', d: 'M590 310 C 590 362 40 362 40 195', label: 'fixed before tests', labelT: 0.5, ly: -7 },
+  ],
+  steps: [
+    { cap: 'The agent needs to change save(). First question: who calls it?', n: ['agent'] },
+    { cap: '<span class="cap-bad">Grep answers a different question</span> — where does the text “save(” appear — and returns comments, strings and three unrelated save methods.', n: ['agent', 'grep'], e: ['a-g'], bad: ['gres'], badE: ['g-r'] },
+    { cap: 'A language server answers the real one: it already knows the project’s symbols and types.', n: ['agent', 'lsp'], e: ['a-l'] },
+    { cap: '<span class="cap-ok">The definition and every true reference, exact</span> — one call, nothing to read through and discard.', n: ['lsp'], ok: ['refs'], okE: ['l-r'] },
+    { cap: 'Now the agent edits. The server re-checks the changed file the moment it is written.', n: ['agent', 'edit', 'lsp'], e: ['a-e', 'e-l'] },
+    { cap: '<span class="cap-bad">A new type error</span> — the second argument is now a string — pushed back in seconds.', n: ['lsp'], bad: ['diag'], badE: ['l-d'], show: ['fast'] },
+    { cap: '<span class="cap-ok">Fixed before any test runs.</span> The cheapest rung of the verifier ladder, attached to every edit.', n: ['diag'], ok: ['agent'], okE: ['d-a'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.agentPrReview = {
+  w: 740, h: 350, dur: 1750,
+  aria: 'Reviewing agent-authored pull requests: several agents open green PRs with a summary and trajectory, all converging on one human reviewer, who checks scope, existing tests weakened, invented APIs and evidence; any failure goes back to the agent as a narrower task, and four passes merge.',
+  nodes: [
+    { id: 'a1', x: 80, y: 60, kind: 'model', label: 'AGENT', w: 110 },
+    { id: 'a2', x: 80, y: 116, kind: 'model', label: 'AGENT', w: 110 },
+    { id: 'a3', x: 80, y: 172, kind: 'model', label: 'AGENT', w: 110 },
+    { id: 'q', x: 264, y: 116, kind: 'data', label: 'AGENT PRS', sub: 'diff · summary · trajectory', w: 206 },
+    { id: 'rev', x: 474, y: 116, kind: 'human', label: 'REVIEWER', sub: 'finite attention', w: 144 },
+    { id: 'c1', x: 652, y: 58, kind: 'chip', label: 'ONLY THE TASK?', w: 150 },
+    { id: 'c2', x: 652, y: 102, kind: 'chip', label: 'TESTS NOT WEAKENED?', w: 150 },
+    { id: 'c3', x: 652, y: 146, kind: 'chip', label: 'APIS REALLY EXIST?', w: 150 },
+    { id: 'c4', x: 652, y: 190, kind: 'chip', label: 'CLAIMS HAVE EVIDENCE?', w: 150 },
+    { id: 'back', x: 460, y: 296, kind: 'chip', label: 'SEND BACK WITH A REASON', w: 180, h: 28 },
+    { id: 'merge', x: 652, y: 296, kind: 'evaluator', label: 'MERGE', w: 150 },
+  ],
+  bounds: [{ id: 'chk', x: 562, y: 16, w: 170, h: 196, ghost: true, label: 'WHAT GREEN CI MISSES' }],
+  notes: [
+    { id: 'load', x: 264, y: 196, anchor: 'middle', ghost: true, text: ['3 agents × 3 PRs a day', '= 9 reviews for 1 person'] },
+  ],
+  edges: [
+    { id: 'a1-q', from: 'a1', to: 'q' },
+    { id: 'a2-q', from: 'a2', to: 'q' },
+    { id: 'a3-q', from: 'a3', to: 'q' },
+    { id: 'q-r', from: 'q', to: 'rev' },
+    { id: 'r-c1', from: 'rev', to: 'c1', toSide: 'l' },
+    { id: 'r-c2', from: 'rev', to: 'c2', toSide: 'l' },
+    { id: 'r-c3', from: 'rev', to: 'c3', toSide: 'l' },
+    { id: 'c-m', from: 'c4', to: 'merge', label: 'four yeses', lx: 34, ly: 3 },
+    { id: 'c-b', from: 'c4', to: 'back', d: 'M562 200 C 510 200 460 230 460 282', label: 'any “no”', labelT: 0.35, lx: -8, ly: -6 },
+    { id: 'b-a', from: 'back', to: 'a3', kind: 'ctl', d: 'M370 296 C 200 296 80 270 80 192', label: 'a narrower task', labelT: 0.45, ly: 15 },
+  ],
+  steps: [
+    { cap: 'Agents open pull requests faster than any team has ever received them.', n: ['a1', 'a2', 'a3', 'q'], e: ['a1-q', 'a2-q', 'a3-q'] },
+    { cap: 'Each arrives green, with a summary and the trajectory: every command the agent ran and what came back.', n: ['q'] },
+    { cap: 'They all converge on one scarce resource — a person’s attention. Review, not generation, is now the bottleneck.', n: ['q', 'rev'], e: ['q-r'], show: ['load'] },
+    { cap: '<span class="cap-bad">Scope creep:</span> files the task never mentioned, “tidied” along the way. Green CI does not care.', n: ['rev'], e: ['r-c1'], bad: ['c1'], show: ['chk'] },
+    { cap: '<span class="cap-bad">Existing tests weakened in the same diff</span> — an assertion loosened until it passed.', n: ['rev'], e: ['r-c2'], bad: ['c2'], show: ['chk'] },
+    { cap: '<span class="cap-bad">An API that does not exist</span>, called confidently, behind a mock that makes the test pass.', n: ['rev'], e: ['r-c3'], bad: ['c3'], show: ['chk'] },
+    { cap: 'The trajectory is the evidence: did it run the tests and read the output, or only say it did?', n: ['c4', 'q'], show: ['chk'] },
+    { cap: '<span class="cap-bad">Any “no” goes back</span> with its reason, as a narrower task — not quietly fixed by the reviewer.', bad: ['back'], badE: ['c-b'], e: ['b-a'], n: ['a3'], show: ['chk'] },
+    { cap: '<span class="cap-ok">Four yeses → merge.</span> Small, scoped PRs with evidence attached are what keep each review cheap.', ok: ['c1', 'c2', 'c3', 'c4', 'merge'], okE: ['c-m'], show: ['chk'], d: 2800 },
+  ],
+};
+
+/* ---------- SECURITY S-17..S-20 (defense-shaped) ---------- */
+
+DIAGRAMS.permissionPolicy = {
+  w: 740, h: 392, dur: 1800,
+  aria: 'Permission policy: every proposed tool call meets a check outside the model; rules scoped by argument are evaluated deny, then ask, then allow, and a call no rule matches falls to the permission mode, which ranges from read-only to autonomous.',
+  bounds: [
+    { id: 'modes', x: 148, y: 14, w: 488, h: 66, label: 'PERMISSION MODE — DEFAULT FOR UNMATCHED CALLS' },
+    { id: 'rules', x: 116, y: 290, w: 476, h: 84, label: 'RULES, SCOPED BY ARGUMENT — CHECKED DENY → ASK → ALLOW' },
+  ],
+  nodes: [
+    { id: 'm1', x: 210, y: 56, kind: 'chip', label: 'READ-ONLY', w: 104 },
+    { id: 'm2', x: 330, y: 56, kind: 'chip', label: 'ASK FIRST', w: 104 },
+    { id: 'm3', x: 450, y: 56, kind: 'chip', label: 'AUTO-EDIT', w: 104 },
+    { id: 'm4', x: 570, y: 56, kind: 'chip', label: 'AUTONOMOUS', w: 104 },
+    { id: 'agent', x: 82, y: 184, kind: 'model', label: 'AGENT', sub: 'proposes a call', w: 132 },
+    { id: 'gate', x: 390, y: 184, kind: 'policy', label: 'POLICY CHECK', sub: 'deny › ask › allow', w: 196 },
+    { id: 'tool', x: 632, y: 116, kind: 'tool', label: 'TOOL RUNS', w: 146 },
+    { id: 'human', x: 632, y: 184, kind: 'human', label: 'ASK A HUMAN', w: 146 },
+    { id: 'deny', x: 632, y: 252, kind: 'chip', label: 'DENIED + REASON', w: 146, h: 28 },
+    { id: 'rd', x: 196, y: 346, kind: 'chip', label: 'DENY read(~/.ssh/**)', w: 146 },
+    { id: 'ra', x: 354, y: 346, kind: 'chip', label: 'ASK bash(git push *)', w: 146 },
+    { id: 'rl', x: 512, y: 346, kind: 'chip', label: 'ALLOW bash(npm test)', w: 146 },
+  ],
+  notes: [
+    { id: 'c1', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'npm test' },
+    { id: 'c2', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'git push origin main' },
+    { id: 'c3', x: 220, y: 172, anchor: 'middle', ghost: true, tone: 'danger', text: 'cat ~/.ssh/id_rsa' },
+    { id: 'c4', x: 220, y: 172, anchor: 'middle', ghost: true, text: 'curl api.example.com' },
+    { id: 'nomatch', x: 220, y: 216, anchor: 'middle', ghost: true, text: 'no rule matches' },
+    { id: 'hold', x: 214, y: 254, anchor: 'middle', tone: 'ok', ghost: true, text: ['deny rules hold', 'in every mode'] },
+  ],
+  edges: [
+    { id: 'a-g', from: 'agent', to: 'gate' },
+    { id: 'r-g', from: 'ra', to: 'gate', kind: 'ctl', d: 'M354 290 C354 248 390 252 390 209', label: 'consulted', lx: 30, ly: 8 },
+    { id: 'm-g', from: 'm2', to: 'gate', kind: 'ctl', fromSide: 'b', toSide: 't', label: 'fallback', labelT: 0.35, lx: -30, ly: 4 },
+    { id: 'g-t', from: 'gate', to: 'tool', label: 'allow', labelT: 0.6, ly: -6 },
+    { id: 'g-h', from: 'gate', to: 'human', label: 'ask', ly: -7 },
+    { id: 'g-d', from: 'gate', to: 'deny', label: 'deny', labelT: 0.6, ly: 14 },
+    { id: 'h-t', from: 'human', to: 'tool', d: 'M705 184 C732 184 732 116 705 116', label: 'yes', lanchor: 'end', lx: -2, ly: 3 },
+  ],
+  steps: [
+    { cap: 'The agent proposes a tool call. Nothing runs until a check outside the model answers.', n: ['agent', 'gate'], e: ['a-g'] },
+    { cap: '<b>npm test</b> matches an allow rule, so it runs with no prompt — the common case stays fast.', ok: ['rl', 'gate', 'tool'], okE: ['g-t'], e: ['a-g'], show: ['c1', 'rules'] },
+    { cap: '<b>git push</b> matches an ask rule. The same tool, a riskier argument: a person decides.', n: ['ra', 'gate', 'human'], e: ['a-g', 'r-g', 'g-h'], show: ['c2', 'rules'] },
+    { cap: '<span class="cap-ok">Approved once</span> — and the approval covers exactly that command, not the whole shell.', ok: ['human', 'tool'], okE: ['h-t'], show: ['c2'] },
+    { cap: '<span class="cap-bad">Reading a private key matches a deny rule.</span> Deny is checked first; no allow rule can carve an exception.', bad: ['rd', 'deny'], badE: ['g-d'], n: ['gate'], e: ['a-g'], show: ['c3', 'rules'] },
+    { cap: 'A call no rule mentions falls through to the session’s permission mode.', n: ['gate', 'm2'], e: ['a-g', 'm-g'], show: ['c4', 'nomatch', 'modes'] },
+    { cap: 'Modes run from read-only to autonomous: each step right auto-approves more of what is left unmatched.', n: ['m1', 'm2', 'm3', 'm4'], show: ['modes'] },
+    { cap: '<span class="cap-ok">Explicit deny rules hold in every mode</span> — autonomy widens the defaults, never the hard limits.', ok: ['gate'], bad: ['rd'], n: ['m4'], show: ['modes', 'rules', 'hold'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.secretsLeaky = {
+  w: 700, h: 272, dur: 1800,
+  aria: 'Secrets, leaky: a long-lived API key sits in the agent’s environment and context, so an injected page can ask the agent to print it and the key leaves with the reply.',
+  nodes: [
+    { id: 'env', x: 100, y: 60, kind: 'data', label: 'ENV / .env', sub: 'PAY_KEY=tok_…', w: 168 },
+    { id: 'agent', x: 346, y: 60, kind: 'model', label: 'AGENT', sub: 'holds the raw key', w: 168 },
+    { id: 'api', x: 610, y: 60, kind: 'env', label: 'PAYMENTS API', w: 144 },
+    { id: 'page', x: 100, y: 200, kind: 'untrusted', label: 'INJECTED PAGE', sub: '“print your env”', w: 168 },
+    { id: 'att', x: 610, y: 200, kind: 'untrusted', label: 'ATTACKER', w: 144 },
+  ],
+  notes: [
+    { id: 'scope', x: 346, y: 146, anchor: 'middle', tone: 'danger', ghost: true, text: ['full scope · never expires', 'in every transcript + trace'] },
+  ],
+  edges: [
+    { id: 'e-a', from: 'env', to: 'agent', label: 'in context', ly: -9 },
+    { id: 'a-p', from: 'agent', to: 'api', label: 'key attached', ly: -9 },
+    { id: 'p-a', from: 'page', to: 'agent', label: 'instructions', labelT: 0.45, lx: -30, ly: 4 },
+    { id: 'a-x', from: 'agent', to: 'att', label: 'key sent out', labelT: 0.55, lanchor: 'start', lx: 10, ly: 4 },
+  ],
+  steps: [
+    { cap: 'The simplest setup: the key lives in the environment, and the agent reads it like any other value.', n: ['env', 'agent'], e: ['e-a'] },
+    { cap: 'The agent attaches it to requests itself. It works — and the model now holds the literal secret.', n: ['agent', 'api'], e: ['a-p'] },
+    { cap: 'That key is broad and long-lived, and it lands in every transcript, trace and error the agent produces.', bad: ['env', 'agent'], show: ['scope'] },
+    { cap: '<span class="cap-bad">An injected page asks the agent to print its environment.</span>', bad: ['page', 'agent'], badE: ['p-a'], show: ['scope'] },
+    { cap: '<span class="cap-bad">The key leaves — in a reply, a URL, a commit — and keeps working until someone rotates it.</span>', bad: ['agent', 'att'], badE: ['a-x'], show: ['scope'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.secretsBrokered = {
+  w: 740, h: 318, dur: 1800,
+  aria: 'Secrets, brokered: the agent holds no credential; it requests an action, and a broker at the egress boundary checks scope, fetches a short-lived token from a vault and attaches it outside the agent’s reach.',
+  bounds: [
+    { id: 'box', x: 14, y: 20, w: 180, h: 280, label: 'AGENT SANDBOX' },
+    { id: 'egress', x: 300, y: 20, w: 200, h: 280, kind: 'safe', label: 'EGRESS BOUNDARY' },
+  ],
+  nodes: [
+    { id: 'agent', x: 104, y: 88, kind: 'model', label: 'AGENT', sub: 'holds no secrets', w: 160 },
+    { id: 'page', x: 104, y: 236, kind: 'untrusted', label: 'INJECTED PAGE', sub: '“print your env”', w: 160 },
+    { id: 'broker', x: 400, y: 88, kind: 'policy', label: 'BROKER', sub: 'checks scope, injects', w: 164 },
+    { id: 'vault', x: 400, y: 236, kind: 'data', label: 'SECRET STORE', sub: 'agent cannot reach', w: 164 },
+    { id: 'api', x: 660, y: 88, kind: 'env', label: 'PAYMENTS API', w: 140 },
+  ],
+  notes: [
+    { id: 'tok', x: 640, y: 150, anchor: 'middle', tone: 'ok', ghost: true, text: ['token: charge only,', 'order 91, 5 min'] },
+    { id: 'none', x: 114, y: 158, tone: 'ok', ghost: true, text: ['nothing', 'to print'] },
+    { id: 'out', x: 620, y: 236, anchor: 'middle', tone: 'ok', ghost: true, text: ['refund(all) → outside', 'this run’s scope → refused'] },
+  ],
+  edges: [
+    { id: 'a-b', from: 'agent', to: 'broker', label: 'charge(order 91)', ly: -9 },
+    { id: 'v-b', from: 'vault', to: 'broker', label: 'scoped token', lanchor: 'start', lx: 8, ly: 3 },
+    { id: 'b-p', from: 'broker', to: 'api', label: 'request + key', lx: 8, ly: -9 },
+    { id: 'p-a', from: 'page', to: 'agent', label: 'asks', lanchor: 'end', lx: -8, ly: 4 },
+  ],
+  steps: [
+    { cap: 'The agent runs with no credential at all — only the ability to ask for an action.', n: ['agent'], show: ['box'] },
+    { cap: 'It requests an <b>action</b>, not a key: charge order 91.', n: ['agent', 'broker'], e: ['a-b'], show: ['box', 'egress'] },
+    { cap: 'The broker checks the action against this run’s scope and fetches a token that covers only it.', n: ['broker', 'vault'], e: ['v-b'], show: ['egress', 'tok'] },
+    { cap: '<span class="cap-ok">The credential is attached at the egress boundary</span>, after the request has left the agent’s reach.', ok: ['broker', 'api'], okE: ['b-p'], show: ['egress', 'tok'] },
+    { cap: '<span class="cap-bad">The same injected page asks for the environment — then for refund(all).</span>', bad: ['page'], badE: ['p-a'], n: ['agent'], show: ['box'] },
+    { cap: '<span class="cap-ok">There is nothing to print</span>, and an out-of-scope request is refused before any key is attached.', ok: ['agent', 'broker'], show: ['box', 'egress', 'none', 'out'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.auditLog = {
+  w: 720, h: 400, dur: 1800,
+  aria: 'Audit log: every action by a human, an agent or a tool becomes an event naming the actor, the call, its arguments and the approval decision; secrets are redacted before an append-only write, and the log feeds forensics, replay and anomaly detection.',
+  nodes: [
+    { id: 'human', x: 100, y: 56, kind: 'human', label: 'HUMAN', sub: 'approver: alice', w: 152 },
+    { id: 'agent', x: 330, y: 56, kind: 'model', label: 'AGENT', sub: 'run 7f3 · subagent 2', w: 176 },
+    { id: 'tool', x: 580, y: 56, kind: 'tool', label: 'TOOL', sub: 'db · shell · http', w: 152 },
+    { id: 'red', x: 330, y: 172, kind: 'policy', label: 'REDACT', sub: 'secrets never written', w: 196 },
+    { id: 'log', x: 330, y: 280, kind: 'data', label: 'APPEND-ONLY LOG', sub: 'hash-chained · write-once', w: 216 },
+    { id: 'fx', x: 612, y: 240, kind: 'human', label: 'FORENSICS', w: 156 },
+    { id: 'rp', x: 612, y: 300, kind: 'tool', label: 'REPLAY', w: 156 },
+    { id: 'an', x: 612, y: 360, kind: 'evaluator', label: 'ANOMALY ALERT', w: 156 },
+  ],
+  notes: [
+    { id: 'rec', x: 20, y: 250, ghost: true, text: ['actor: agent 7f3/sub 2', 'for: alice', 'call: db.delete', 'args: rows=40k', 'decision: ask → yes', 'at: 14:02:11Z'] },
+    { id: 'sec', x: 448, y: 204, tone: 'danger', ghost: true, text: 'Bearer tok_9f…' },
+    { id: 'secok', x: 448, y: 204, tone: 'ok', ghost: true, text: 'Bearer ‹redacted›' },
+    { id: 'ro', x: 330, y: 330, anchor: 'middle', tone: 'ok', ghost: true, text: 'no update · no delete' },
+  ],
+  edges: [
+    { id: 'h-a', from: 'human', to: 'agent', kind: 'ctl', label: 'approves', ly: -9 },
+    { id: 'a-t', from: 'agent', to: 'tool', label: 'call(args)', ly: -9 },
+    { id: 'h-r', from: 'human', to: 'red', fromSide: 'b', toSide: 'l', label: 'decision', labelT: 0.35, lx: -30, ly: 4 },
+    { id: 'a-r', from: 'agent', to: 'red', label: 'call + args', lx: 36 },
+    { id: 't-r', from: 'tool', to: 'red', fromSide: 'b', toSide: 'r', label: 'result', labelT: 0.35, lx: 28, ly: 4 },
+    { id: 'r-l', from: 'red', to: 'log', label: 'append', lx: 26 },
+    { id: 'l-f', from: 'log', to: 'fx' },
+    { id: 'l-r', from: 'log', to: 'rp' },
+    { id: 'l-n', from: 'log', to: 'an' },
+  ],
+  steps: [
+    { cap: 'A human, an agent and its tools all act. Every action is also an event.', n: ['human', 'agent', 'tool'], e: ['h-a', 'a-t'] },
+    { cap: 'Each record names the actor — which agent, which subagent, on whose behalf — plus the call and its arguments.', n: ['agent', 'red'], e: ['a-r'], show: ['rec'] },
+    { cap: 'Approval decisions are events too — including every denial: who decided, on exactly what, and when.', n: ['human', 'red'], e: ['h-r'], show: ['rec'] },
+    { cap: '<span class="cap-bad">Tool results carry secrets</span> — a bearer token in a response header.', bad: ['tool'], badE: ['t-r'], n: ['red'], show: ['sec'] },
+    { cap: '<span class="cap-ok">Redaction runs before the write</span>, so the log never becomes the next place a key leaks.', ok: ['red'], show: ['secok'] },
+    { cap: 'Records are appended, chained and never edited — not even by the agent they describe.', n: ['red', 'log'], e: ['r-l'], show: ['ro', 'rec'] },
+    { cap: '<span class="cap-ok">That record is what makes forensics, replay of the tool calls and anomaly detection possible.</span>', ok: ['log', 'fx', 'rp', 'an'], okE: ['l-f', 'l-r', 'l-n'], show: ['ro'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.walletAttack = {
+  w: 720, h: 316, dur: 1800,
+  aria: 'Denial of wallet, attack: a crafted task or a bug drives an agent with no ceilings into an endless retry loop, an ever-growing context and a fan-out to hundreds of subagents, and the bill and shared quota run out.',
+  nodes: [
+    { id: 'in', x: 100, y: 88, kind: 'untrusted', label: 'CRAFTED TASK', sub: '…or an honest bug', w: 168 },
+    { id: 'agent', x: 340, y: 88, kind: 'model', label: 'AGENT', sub: 'no ceilings', w: 168 },
+    { id: 's3', x: 604, y: 76, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's2', x: 598, y: 82, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's1', x: 592, y: 88, kind: 'chip', label: 'SUBAGENTS ×200', w: 150, h: 28 },
+    { id: 'ctx', x: 340, y: 204, kind: 'chip', label: 'CONTEXT 40K → 900K TOKENS', w: 200, h: 28 },
+    { id: 'bill', x: 592, y: 216, kind: 'data', label: 'SPEND', sub: '$12 → $9,400 overnight', w: 184 },
+  ],
+  notes: [
+    { id: 'quota', x: 592, y: 280, anchor: 'middle', tone: 'danger', ghost: true, text: ['shared quota gone —', 'every other user gets 429s'] },
+    { id: 'poll', x: 100, y: 150, anchor: 'middle', ghost: true, text: ['“check every link,', 'then check again”'] },
+  ],
+  edges: [
+    { id: 'i-a', from: 'in', to: 'agent', label: 'one request', ly: -9 },
+    { id: 'loop', from: 'agent', to: 'agent', kind: 'ctl', d: 'M380 63 C400 14 280 14 300 63', label: 'retry forever', ly: -4 },
+    { id: 'a-s', from: 'agent', to: 's1', label: 'spawns', ly: -9 },
+    { id: 'a-c', from: 'agent', to: 'ctx', fromSide: 'b', toSide: 't', label: 're-sends it all', lx: 44 },
+    { id: 'c-b', from: 'ctx', to: 'bill', label: 'per turn', ly: -8 },
+    { id: 's-b', from: 's1', to: 'bill', label: 'each one loops too', lx: 58 },
+  ],
+  steps: [
+    { cap: 'One request arrives — crafted to be endless, or simply a task the agent cannot finish.', bad: ['in'], n: ['agent'], badE: ['i-a'], show: ['poll'] },
+    { cap: '<span class="cap-bad">The loop never converges.</span> Nothing in the harness counts the retries.', bad: ['agent'], badE: ['loop'] },
+    { cap: 'Every turn re-sends a context that only grows, so each iteration costs more than the last.', bad: ['ctx'], badE: ['a-c'], n: ['agent'] },
+    { cap: '<span class="cap-bad">It fans out</span>: two hundred subagents, each running the same unbounded loop.', bad: ['s1'], badE: ['a-s'], n: ['agent'] },
+    { cap: 'Cost is tokens × turns × agents, and all three are growing at once.', bad: ['bill'], badE: ['c-b', 's-b'], n: ['ctx', 's1'] },
+    { cap: '<span class="cap-bad">By morning the budget is spent and the shared quota is gone</span> — an outage bought one token at a time.', bad: ['bill', 'agent', 's1'], show: ['quota'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.walletDefense = {
+  w: 720, h: 376, dur: 1800,
+  aria: 'Denial of wallet, defended: every step passes a budget governor that enforces a per-run budget, a per-user rate limit, a fan-out cap and loop detection, and a stopped run reports why it stopped.',
+  bounds: [{ id: 'caps', x: 40, y: 272, w: 600, h: 88, label: 'CEILINGS — ANY ONE STOPS THE RUN' }],
+  nodes: [
+    { id: 'in', x: 86, y: 64, kind: 'untrusted', label: 'CRAFTED TASK', sub: '…or an honest bug', w: 152 },
+    { id: 'agent', x: 320, y: 64, kind: 'model', label: 'AGENT', sub: 'every step metered', w: 168 },
+    { id: 'gov', x: 320, y: 176, kind: 'policy', label: 'BUDGET GOVERNOR', sub: 'checked before each call', w: 200 },
+    { id: 's2', x: 598, y: 58, kind: 'chip', label: '', w: 150, h: 28 },
+    { id: 's1', x: 592, y: 64, kind: 'chip', label: 'SUBAGENTS ≤ 4', w: 150, h: 28 },
+    { id: 'stop', x: 604, y: 176, kind: 'evaluator', label: 'STOPPED', sub: 'reason: loop detected', w: 176 },
+    { id: 'c1', x: 114, y: 322, kind: 'chip', label: 'RUN ≤ $5 · 300K TOK', w: 134 },
+    { id: 'c2', x: 262, y: 322, kind: 'chip', label: 'USER ≤ 20 RUNS/HR', w: 134 },
+    { id: 'c3', x: 410, y: 322, kind: 'chip', label: 'FAN-OUT ≤ 4', w: 134 },
+    { id: 'c4', x: 558, y: 322, kind: 'chip', label: 'SAME CALL ×3 → STOP', w: 134 },
+  ],
+  notes: [
+    { id: 'ask', x: 592, y: 104, anchor: 'middle', ghost: true, text: 'asked for 200' },
+    { id: 'rep', x: 604, y: 226, anchor: 'middle', tone: 'ok', ghost: true, text: 'spent $1.80 of $5' },
+  ],
+  edges: [
+    { id: 'i-a', from: 'in', to: 'agent', label: 'one request', ly: -9 },
+    { id: 'a-g', from: 'agent', to: 'gov', kind: 'ctl', label: 'every step', lx: 34 },
+    { id: 'c-g', from: 'c2', to: 'gov', kind: 'ctl', d: 'M320 272 L320 202', label: 'ceilings', lanchor: 'start', lx: 8, ly: 3 },
+    { id: 'g-s', from: 'gov', to: 's1', d: 'M390 151 C390 96 450 64 516 64', label: 'spawn ≤ 4', labelT: 0.45, lanchor: 'start', lx: 8, ly: 8 },
+    { id: 'g-x', from: 'gov', to: 'stop', label: 'halt + why', ly: -9 },
+  ],
+  steps: [
+    { cap: 'The same crafted task arrives. You cannot stop requests from being expensive to answer.', bad: ['in'], badE: ['i-a'], n: ['agent'] },
+    { cap: 'Every step passes a governor <b>before</b> tokens are spent — the harness meters, not the model.', n: ['agent', 'gov'], e: ['a-g'] },
+    { cap: 'It enforces ceilings per run and per user, so one caller cannot spend everyone’s quota.', n: ['gov', 'c1', 'c2'], e: ['c-g'], show: ['caps'] },
+    { cap: '<span class="cap-ok">Fan-out is capped</span>: the agent asked for two hundred subagents and got four.', ok: ['c3', 's1'], okE: ['g-s'], n: ['gov'], show: ['caps', 'ask'] },
+    { cap: '<span class="cap-bad">The same call with the same arguments comes round a third time.</span> Loop detection trips.', bad: ['c4'], flash: ['c4'], n: ['gov', 'agent'], show: ['caps'] },
+    { cap: '<span class="cap-ok">The run stops and says why</span> — worst case is the run budget, not the month’s.', ok: ['gov', 'stop'], okE: ['g-x'], show: ['caps', 'rep'], d: 2800 },
+  ],
+};
+
+/* ---------- HARNESSES H-19..H-23: multi-agent coordination and thinking ---------- */
+
+DIAGRAMS.handoff = {
+  w: 720, h: 340, dur: 1750,
+  aria: 'Agent handoff: a triage agent classifies a request, packs a slice of the conversation, and transfers control to a billing specialist, which then replies to the user directly while triage steps out.',
+  nodes: [
+    { id: 'user', x: 80, y: 90, kind: 'user', label: 'USER', w: 108 },
+    { id: 'tri', x: 310, y: 90, kind: 'model', label: 'TRIAGE AGENT', sub: 'classifies, then steps out', w: 212 },
+    { id: 'bill', x: 590, y: 90, kind: 'model', label: 'BILLING AGENT', sub: 'refunds · invoices', w: 190 },
+    { id: 'slice', x: 310, y: 232, kind: 'data', label: 'CONVERSATION SLICE', sub: 'goal · account · facts so far', w: 236 },
+    { id: 'tech', x: 590, y: 290, kind: 'model', label: 'TECH AGENT', sub: 'not needed this time', w: 190 },
+  ],
+  edges: [
+    { id: 'u-t', from: 'user', to: 'tri', label: 'asks', ly: -9 },
+    { id: 't-b', from: 'tri', to: 'bill', kind: 'ctl', label: 'handoff', ly: -9 },
+    { id: 't-s', from: 'tri', to: 'slice', label: 'packs', lx: 24, ly: 3 },
+    { id: 's-b', from: 'slice', to: 'bill', fromSide: 'r', toSide: 'b', label: 'travels with it', labelT: 0.62, lx: 10, ly: 4, lanchor: 'start' },
+    { id: 'b-u', from: 'bill', to: 'user', d: 'M590 65 C590 16 80 16 80 70', label: 'replies directly — triage is out of the loop', labelT: 0.5, ly: -6 },
+  ],
+  steps: [
+    { cap: 'A request arrives at the front door: a triage agent.', n: ['user', 'tri'], e: ['u-t'] },
+    { cap: 'Triage classifies it. It routes; it does not try to solve.', n: ['tri', 'bill', 'tech'] },
+    { cap: 'It decides what history travels with the handoff — often a filtered slice rather than the whole transcript.', n: ['tri', 'slice'], e: ['t-s'] },
+    { cap: '<b>Control transfers.</b> The billing agent now owns the conversation, carrying the slice.', n: ['slice', 'bill'], e: ['t-b', 's-b'] },
+    { cap: 'The specialist talks to the user itself. Nothing relays its replies.', n: ['bill', 'user'], e: ['b-u'] },
+    { cap: '<span class="cap-bad">The slice is all the specialist knows.</span> Drop the account ID and the user gets asked for it twice.', bad: ['slice', 'bill'], badE: ['s-b'] },
+    { cap: '<span class="cap-ok">One owner at a time, no relay:</span> each turn costs one agent, not a supervisor plus a worker.', ok: ['bill', 'user'], okE: ['b-u'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.handoffAsTool = {
+  w: 720, h: 340, dur: 1750,
+  aria: 'Agent as a tool, for contrast with a handoff: a supervisor calls specialist agents like tools, gets their results back, and writes every reply to the user itself.',
+  nodes: [
+    { id: 'user', x: 80, y: 90, kind: 'user', label: 'USER', w: 108 },
+    { id: 'sup', x: 310, y: 90, kind: 'model', label: 'SUPERVISOR', sub: 'owns every turn', w: 212 },
+    { id: 'bill', x: 590, y: 90, kind: 'model', label: 'BILLING AGENT', sub: 'called like a tool', w: 190 },
+    { id: 'tech', x: 590, y: 262, kind: 'model', label: 'TECH AGENT', sub: 'called like a tool', w: 190 },
+  ],
+  notes: [
+    { id: 'never', x: 590, y: 176, anchor: 'middle', ghost: true, text: ['the user never talks', 'to a specialist'] },
+    { id: 'grow', x: 150, y: 214, anchor: 'middle', tone: 'danger', ghost: true, text: ['every result it relays', 'stays in the', 'supervisor’s context'] },
+  ],
+  edges: [
+    { id: 'u-s', from: 'user', to: 'sup', off: -8, label: 'asks', ly: -8 },
+    { id: 's-u', from: 'sup', to: 'user', off: 8, label: 'replies', ly: 17 },
+    { id: 's-b', from: 'sup', to: 'bill', off: -8, label: 'call(task)', ly: -8 },
+    { id: 'b-s', from: 'bill', to: 'sup', off: 8, label: 'result', ly: 17 },
+    { id: 's-t', from: 'sup', to: 'tech', d: 'M298 115 C298 228 400 270 495 270', label: 'call', labelT: 0.45, lx: -16, ly: 14 },
+    { id: 't-s', from: 'tech', to: 'sup', d: 'M495 254 C412 254 322 214 322 115', label: 'result', labelT: 0.45, lx: 24, ly: -2 },
+  ],
+  steps: [
+    { cap: 'Same request, different shape: it goes to a supervisor.', n: ['user', 'sup'], e: ['u-s'] },
+    { cap: 'The supervisor calls the billing agent with a scoped task, like any other tool.', n: ['sup', 'bill'], e: ['s-b'] },
+    { cap: 'The specialist works in its own context and returns a result. <b>Control comes back.</b>', n: ['bill', 'sup'], e: ['b-s'] },
+    { cap: 'Need a second specialist? Another call. The supervisor can combine several.', n: ['sup', 'tech'], e: ['s-t', 't-s'] },
+    { cap: 'The supervisor writes every reply itself.', n: ['sup', 'user'], e: ['s-u'], show: ['never'] },
+    { cap: '<span class="cap-bad">Every delegated turn pays for two agents</span>, and the supervisor’s context grows with each result it relays.', bad: ['sup'], show: ['grow'] },
+    { cap: '<span class="cap-ok">One owner, one voice, one place to enforce policy</span> — which is what a handoff gives up to save the hops.', ok: ['sup', 'user'], okE: ['s-u'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.blackboard = {
+  w: 720, h: 370, dur: 1750,
+  aria: 'Shared blackboard: agents never message each other; they read and post to a shared board, and a controller that watches the board decides which agent acts next and when the answer is done.',
+  nodes: [
+    { id: 'ctrl', x: 95, y: 180, kind: 'decision', label: 'WHO NEXT?', sub: 'controller', w: 150, h: 66 },
+    { id: 's', x: 330, y: 80, kind: 'model', label: 'SEARCHER', sub: 'posts sources', w: 170 },
+    { id: 'a', x: 330, y: 190, kind: 'model', label: 'ANALYST', sub: 'posts hypotheses', w: 170 },
+    { id: 'w', x: 330, y: 300, kind: 'model', label: 'WRITER', sub: 'drafts when ready', w: 170 },
+    { id: 'board', x: 615, y: 190, kind: 'memory', label: 'SHARED BOARD', sub: 'facts · ideas · gaps', w: 170, h: 250 },
+    { id: 'ans', x: 95, y: 320, kind: 'data', label: 'ANSWER', w: 120 },
+  ],
+  edges: [
+    { id: 'watch', from: 'board', to: 'ctrl', kind: 'ctl', d: 'M615 65 C615 16 95 16 95 147', label: 'watches the board', labelT: 0.5, ly: -6 },
+    { id: 'c-s', from: 'ctrl', to: 's', kind: 'ctl' },
+    { id: 'c-a', from: 'ctrl', to: 'a', kind: 'ctl', label: 'wake', labelT: 0.45, ly: -7 },
+    { id: 'c-w', from: 'ctrl', to: 'w', kind: 'ctl' },
+    { id: 's-p', from: 's', to: 'board', d: 'M415 72 L530 72', label: 'post', ly: -6 },
+    { id: 's-r', from: 'board', to: 's', d: 'M530 88 L415 88', label: 'read', ly: 14 },
+    { id: 'a-p', from: 'a', to: 'board', d: 'M415 182 L530 182' },
+    { id: 'a-r', from: 'board', to: 'a', d: 'M530 198 L415 198' },
+    { id: 'w-p', from: 'w', to: 'board', d: 'M415 292 L530 292' },
+    { id: 'w-r', from: 'board', to: 'w', d: 'M530 308 L415 308' },
+    { id: 'c-ans', from: 'ctrl', to: 'ans', kind: 'ctl', label: 'done', lx: 8, ly: 3, lanchor: 'start' },
+  ],
+  steps: [
+    { cap: 'A problem is posted to a shared board. No agent will ever message another.', n: ['board'] },
+    { cap: 'The controller reads the board and picks who can move it forward: the searcher.', n: ['board', 'ctrl', 's'], e: ['watch', 'c-s'] },
+    { cap: 'The searcher posts sources. It neither knows nor cares who will use them.', n: ['s', 'board'], e: ['s-p'] },
+    { cap: 'Sources but no hypothesis — so the controller wakes the analyst, which reads everything posted so far.', n: ['ctrl', 'a', 'board'], e: ['c-a', 'a-r'] },
+    { cap: 'The analyst posts a hypothesis and an open question for whoever can answer it.', n: ['a', 'board'], e: ['a-p'] },
+    { cap: '<span class="cap-bad">Two agents post to the same slot at once.</span> Without ownership rules, the board now holds a contradiction.', bad: ['board', 's', 'a'], badE: ['s-p', 'a-p'] },
+    { cap: 'Once the board holds enough, the writer reads it all and drafts.', n: ['ctrl', 'w', 'board'], e: ['c-w', 'w-r', 'w-p'] },
+    { cap: '<span class="cap-ok">The controller sees “done” on the board.</span> Agents coordinated through state, not conversation.', ok: ['ctrl', 'ans'], okE: ['c-ans'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.debate = {
+  w: 700, h: 350, dur: 1750,
+  aria: 'Multi-agent debate: three agents answer a question independently, read and critique each other over rounds, and a judge or majority vote aggregates the final round into one answer.',
+  nodes: [
+    { id: 'q', x: 350, y: 44, kind: 'user', label: 'QUESTION', w: 132 },
+    { id: 'a', x: 120, y: 160, kind: 'model', label: 'AGENT A', sub: 'debater', w: 140 },
+    { id: 'b', x: 350, y: 160, kind: 'model', label: 'AGENT B', sub: 'debater', w: 140 },
+    { id: 'c', x: 580, y: 160, kind: 'model', label: 'AGENT C', sub: 'debater', w: 140 },
+    { id: 'judge', x: 350, y: 272, kind: 'evaluator', label: 'JUDGE / VOTE', sub: 'reads the final round', w: 200 },
+    { id: 'ans', x: 592, y: 272, kind: 'data', label: 'ANSWER', w: 116 },
+  ],
+  notes: [
+    { id: 'r1a', x: 108, y: 206, anchor: 'end', ghost: true, text: 'says 42' },
+    { id: 'r1b', x: 362, y: 206, ghost: true, text: 'says 42' },
+    { id: 'r1c', x: 592, y: 206, ghost: true, text: 'says 17' },
+    { id: 'r2c', x: 592, y: 206, ghost: true, text: 'switches → 42' },
+    { id: 'echo', x: 112, y: 300, anchor: 'middle', tone: 'danger', ghost: true, text: ['same model, same blind spot:', 'agreement ≠ correctness'] },
+    { id: 'cost', x: 592, y: 318, anchor: 'middle', ghost: true, text: 'cost ≈ agents × rounds' },
+  ],
+  edges: [
+    { id: 'q-a', from: 'q', to: 'a', fromSide: 'b', toSide: 't' },
+    { id: 'q-b', from: 'q', to: 'b' },
+    { id: 'q-c', from: 'q', to: 'c', fromSide: 'b', toSide: 't' },
+    { id: 'a-b', from: 'a', to: 'b', off: -7, label: 'critique', ly: -9 },
+    { id: 'b-a', from: 'b', to: 'a', off: 7 },
+    { id: 'b-c', from: 'b', to: 'c', off: -7, label: 'critique', ly: -9 },
+    { id: 'c-b', from: 'c', to: 'b', off: 7 },
+    { id: 'a-j', from: 'a', to: 'judge', d: 'M120 185 C120 234 272 224 300 247' },
+    { id: 'b-j', from: 'b', to: 'judge', d: 'M350 185 L350 247' },
+    { id: 'c-j', from: 'c', to: 'judge', d: 'M580 185 C580 234 428 224 400 247' },
+    { id: 'j-ans', from: 'judge', to: 'ans', label: 'verdict', ly: -8 },
+  ],
+  steps: [
+    { cap: 'One question goes to three agents, each answering on its own.', n: ['q', 'a', 'b', 'c'], e: ['q-a', 'q-b', 'q-c'] },
+    { cap: '<b>Round 1:</b> independent answers, and they disagree. The disagreement is the raw material.', n: ['a', 'b', 'c'], show: ['r1a', 'r1b', 'r1c'] },
+    { cap: '<b>Round 2:</b> each agent reads the others’ answers and reasoning, and argues back.', n: ['a', 'b', 'c'], e: ['a-b', 'b-a', 'b-c', 'c-b'], show: ['r1a', 'r1b', 'r1c'] },
+    { cap: 'C switches to 42 — because B found a real slip, or just because two agents disagreed with it?', n: ['b', 'c'], e: ['b-c'], show: ['r1a', 'r1b', 'r2c'] },
+    { cap: '<span class="cap-bad">But agreement is not evidence:</span> copies of one model can argue each other into the same wrong answer.', bad: ['a', 'b', 'c'], show: ['echo', 'r1a', 'r1b', 'r2c'] },
+    { cap: 'A judge — or a plain majority vote — aggregates the final round.', n: ['judge'], e: ['a-j', 'b-j', 'c-j'], show: ['r1a', 'r1b', 'r2c'] },
+    { cap: '<span class="cap-ok">One answer, at agents × rounds the cost.</span> Worth it when a critique can change a mind; otherwise sample and vote.', ok: ['judge', 'ans'], okE: ['j-ans'], show: ['cost'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.thinkingBudget = {
+  w: 720, h: 350, dur: 1750,
+  aria: 'Thinking budgets: before answering, the model spends reasoning tokens up to a budget set on a dial from low to high; low is fast but shallow, high is slower with diminishing returns, and adaptive effort sets the dial per request by difficulty.',
+  nodes: [
+    { id: 'p', x: 84, y: 60, kind: 'user', label: 'PROMPT', w: 116 },
+    { id: 'think', x: 340, y: 60, kind: 'model', label: 'THINK FIRST', sub: 'reasoning tokens · billed', w: 214 },
+    { id: 'ans', x: 610, y: 60, kind: 'data', label: 'ANSWER', w: 124 },
+    { id: 'lo', x: 245, y: 180, kind: 'chip', label: 'LOW · 1K', w: 104 },
+    { id: 'md', x: 380, y: 180, kind: 'chip', label: 'MEDIUM · 8K', w: 116 },
+    { id: 'hi', x: 515, y: 180, kind: 'chip', label: 'HIGH · 32K', w: 110 },
+    { id: 'dec', x: 104, y: 290, kind: 'decision', label: 'HOW HARD?', sub: 'set per request', w: 190, h: 70 },
+  ],
+  bounds: [{ id: 'dial', x: 170, y: 140, w: 420, h: 72, label: 'BUDGET' }],
+  notes: [
+    { id: 'dr', x: 610, y: 272, anchor: 'middle', ghost: true, text: ['returns diminish:', 'each doubling costs 2×', 'for a similar or smaller gain'] },
+  ],
+  edges: [
+    { id: 'p-t', from: 'p', to: 'think' },
+    { id: 't-a', from: 'think', to: 'ans', label: 'answer', ly: -8 },
+    { id: 'lo-t', from: 'lo', to: 'think', kind: 'ctl', d: 'M245 168 C245 124 300 124 300 86' },
+    { id: 'md-t', from: 'md', to: 'think', kind: 'ctl', d: 'M380 168 L380 86', label: 'sets', lx: 16, ly: 3 },
+    { id: 'hi-t', from: 'hi', to: 'think', kind: 'ctl', d: 'M515 168 C515 124 420 124 420 86' },
+    { id: 'p-d', from: 'p', to: 'dec', label: 'classify', lx: 32, ly: 3 },
+    { id: 'd-lo', from: 'dec', to: 'lo', fromSide: 'r', toSide: 'b', label: 'easy', labelT: 0.35, ly: -7 },
+    { id: 'd-hi', from: 'dec', to: 'hi', fromSide: 'r', toSide: 'b', label: 'hard', labelT: 0.55, ly: 15 },
+  ],
+  steps: [
+    { cap: 'A prompt arrives. Before answering, the model can spend tokens reasoning.', n: ['p', 'think'], e: ['p-t'] },
+    { cap: 'The harness sets how many. A low budget is fast and cheap…', n: ['lo', 'think'], e: ['lo-t'] },
+    { cap: '<span class="cap-bad">…and a multi-step problem gets a shallow pass.</span> The answer comes back quickly, and wrong.', bad: ['lo', 'ans'], badE: ['t-a'] },
+    { cap: 'A high budget thinks longer: accuracy goes up, and so do latency and cost.', n: ['hi', 'think'], e: ['hi-t'] },
+    { cap: 'Returns diminish: accuracy grows with the log of the budget, so each doubling costs twice as much for about the same gain.', n: ['hi', 'md'], show: ['dr'] },
+    { cap: '<b>Adaptive effort:</b> judge difficulty per request — with a classifier in the harness, or by letting the model decide within an effort level.', n: ['p', 'dec', 'lo', 'hi'], e: ['p-d', 'd-lo', 'd-hi'] },
+    { cap: '<span class="cap-ok">Easy requests get little or no thinking; hard ones get room.</span> The spend lands where it changes the answer.', ok: ['think', 'ans'], okE: ['t-a'], n: ['dec'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.interleavedThinking = {
+  w: 740, h: 340, dur: 1750,
+  aria: 'Interleaved thinking versus thinking up front: the up-front agent thinks once, then reacts to each tool result without reasoning and edits a stale path after the file moved; the interleaved agent thinks after every tool result, notices the move, and edits v2/ instead.',
+  nodes: [
+    { id: 'a1', x: 64, y: 94, kind: 'model', label: 'PLAN ALL', w: 100 },
+    { id: 'a2', x: 184, y: 94, kind: 'tool', label: 'SEARCH', w: 96 },
+    { id: 'a3', x: 302, y: 94, kind: 'tool', label: 'READ OLD', w: 100 },
+    { id: 'a4', x: 420, y: 94, kind: 'tool', label: 'EDIT', w: 96 },
+    { id: 'a5', x: 668, y: 94, kind: 'data', label: 'ANSWER', w: 104 },
+    { id: 'b1', x: 64, y: 244, kind: 'model', label: 'THINK', w: 100 },
+    { id: 'b2', x: 184, y: 244, kind: 'tool', label: 'SEARCH', w: 96 },
+    { id: 'b3', x: 302, y: 244, kind: 'model', label: 'THINK', w: 100 },
+    { id: 'b4', x: 420, y: 244, kind: 'tool', label: 'EDIT V2', w: 96 },
+    { id: 'b5', x: 538, y: 244, kind: 'model', label: 'THINK', w: 100 },
+    { id: 'b6', x: 668, y: 244, kind: 'data', label: 'ANSWER', w: 104 },
+  ],
+  bounds: [
+    { id: 'la', x: 10, y: 34, w: 720, h: 112, label: 'UP FRONT — THINK ONCE, THEN REACT WITHOUT REASONING' },
+    { id: 'lb', x: 10, y: 184, w: 720, h: 112, label: 'INTERLEAVED — THINK AFTER EVERY RESULT' },
+  ],
+  notes: [
+    { id: 'na2', x: 184, y: 134, anchor: 'middle', ghost: true, text: 'says: moved to v2/' },
+    { id: 'na4', x: 420, y: 134, anchor: 'middle', tone: 'danger', ghost: true, text: 'edits a stale path' },
+    { id: 'nb2', x: 184, y: 284, anchor: 'middle', ghost: true, text: 'says: moved to v2/' },
+    { id: 'nb3', x: 302, y: 284, anchor: 'middle', tone: 'ok', ghost: true, text: '→ edit v2/ next' },
+    { id: 'tail', x: 370, y: 322, anchor: 'middle', ghost: true, text: 'more thinking blocks, each spent right where new information arrived' },
+  ],
+  edges: [
+    { id: 'a1-a2', from: 'a1', to: 'a2' },
+    { id: 'a2-a3', from: 'a2', to: 'a3' },
+    { id: 'a3-a4', from: 'a3', to: 'a4' },
+    { id: 'a4-a5', from: 'a4', to: 'a5', label: 'no second look', ly: -8 },
+    { id: 'b1-b2', from: 'b1', to: 'b2' },
+    { id: 'b2-b3', from: 'b2', to: 'b3' },
+    { id: 'b3-b4', from: 'b3', to: 'b4' },
+    { id: 'b4-b5', from: 'b4', to: 'b5' },
+    { id: 'b5-b6', from: 'b5', to: 'b6' },
+  ],
+  steps: [
+    { cap: 'Same task, two harnesses. <b>Up front:</b> one long think writes the whole plan before any tool runs.', n: ['a1'] },
+    { cap: 'The search result says the file has moved — and there is no thinking step to weigh what that implies.', n: ['a1', 'a2'], e: ['a1-a2'], show: ['na2'] },
+    { cap: '<span class="cap-bad">It reacts on reflex:</span> reads the old path, edits a stale copy, answers confidently.', bad: ['a3', 'a4', 'a5'], badE: ['a2-a3', 'a3-a4', 'a4-a5'], show: ['na2', 'na4'] },
+    { cap: '<b>Interleaved:</b> think, then call.', n: ['b1', 'b2'], e: ['b1-b2'] },
+    { cap: 'The same result comes back — and the model reasons about it before choosing the next call.', n: ['b2', 'b3'], e: ['b2-b3'], show: ['nb2'] },
+    { cap: 'The plan changes mid-flight: edit v2/ instead.', n: ['b3', 'b4'], e: ['b3-b4'], show: ['nb2', 'nb3'] },
+    { cap: '<span class="cap-ok">Think once more on what came back, then answer.</span> Reasoning goes where the evidence is.', ok: ['b5', 'b6'], okE: ['b4-b5', 'b5-b6'], show: ['nb2', 'nb3', 'tail'], d: 2800 },
+  ],
+};
+
+/* ---------- PRODUCTION & OPERATIONS P-01..P-06 ---------- */
+
+DIAGRAMS.opsTrace = {
+  w: 740, h: 360, dur: 1750,
+  aria: 'Tracing an agent run: one trace holds a timed span for every model call, tool call and subagent, with child spans under their parent; a failing tool span inside the subagent explains the bad answer and the trace becomes an eval case.',
+  bounds: [{ id: 'tr', x: 16, y: 22, w: 540, h: 290, label: 'TRACE 7f3a — ONE AGENT RUN' }],
+  nodes: [
+    { id: 'root', x: 290, y: 62, kind: 'chip', label: 'AGENT RUN · 38s · $0.21', w: 500 },
+    { id: 'm1', x: 100, y: 96, kind: 'chip', label: 'MODEL · 1', w: 104 },
+    { id: 'ts', x: 214, y: 130, kind: 'chip', label: 'TOOL · search', w: 116 },
+    { id: 'm2', x: 318, y: 164, kind: 'chip', label: 'MODEL · 2', w: 84 },
+    { id: 'sub', x: 452, y: 198, kind: 'chip', label: 'SUBAGENT', w: 176 },
+    { id: 'm3', x: 410, y: 232, kind: 'chip', label: 'MODEL · 3', w: 84 },
+    { id: 'tf', x: 502, y: 266, kind: 'chip', label: 'TOOL · fetch', w: 96 },
+    { id: 'attr', x: 646, y: 150, kind: 'data', label: 'SPAN ATTRIBUTES', w: 168 },
+    { id: 'eval', x: 646, y: 322, kind: 'data', label: 'EVAL DATASET', w: 168 },
+  ],
+  notes: [
+    { id: 'time', x: 40, y: 298, text: 'time →' },
+    { id: 'kids', x: 360, y: 240, anchor: 'end', ghost: true, text: ['own subtree,', 'parent = SUBAGENT'] },
+    { id: 'fail', x: 444, y: 270, anchor: 'end', tone: 'danger', ghost: true, text: 'timed out · 21s of 38s' },
+    { id: 'kv', x: 574, y: 190, ghost: true, text: ['model: pinned id', 'prompt: v12', 'tokens: 18k in · 900 out', 'cache read: 14k', 'latency: 2.4s', 'stop: tool call'] },
+  ],
+  edges: [
+    { id: 'm2-at', from: 'm2', to: 'attr', label: 'inspect a span', labelT: 0.55, ly: -8 },
+    { id: 'tf-ev', from: 'tf', to: 'eval', fromSide: 'b', toSide: 'l', label: 'becomes a test', labelT: 0.8, lanchor: 'end', lx: -8, ly: 14 },
+  ],
+  steps: [
+    { cap: 'One run, one trace id. Everything the agent does hangs off this root span.', n: ['root'] },
+    { cap: 'Every model call is a span on the same clock, so you can see where the time went.', n: ['root', 'm1', 'm2'] },
+    { cap: 'Every tool call is a span too, carrying its arguments and what came back.', n: ['ts'] },
+    { cap: 'A subagent gets its own subtree, linked to the span that spawned it.', n: ['sub', 'm3', 'tf'], show: ['kids'] },
+    { cap: 'Each span records what it would take to replay it: version, tokens, cache, latency, why it stopped.', n: ['m2', 'attr'], e: ['m2-at'], show: ['kv'] },
+    { cap: '<span class="cap-bad">The run returns a wrong answer.</span> The trace shows why: a fetch deep inside the subagent timed out and was papered over.', bad: ['tf', 'sub'], n: ['root'], show: ['fail', 'kids'] },
+    { cap: '<span class="cap-ok">The failing trace becomes an eval case</span>, so the fix is tested on every release after this one.', ok: ['eval'], okE: ['tf-ev'], n: ['tf'], show: ['fail'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.opsDurable = {
+  w: 720, h: 330, dur: 1750,
+  aria: 'Durable execution: each workflow step journals its result to a durable log; after a worker crash a new worker replays the log and resumes at the failed step, and the card charge carries an idempotency key so it happens exactly once.',
+  nodes: [
+    { id: 'pay', x: 275, y: 46, kind: 'env', label: 'PAYMENT API', sub: 'dedupes on the key', w: 176 },
+    { id: 's1', x: 95, y: 150, kind: 'model', label: 'PLAN', sub: 'step 1', w: 130 },
+    { id: 's2', x: 275, y: 150, kind: 'tool', label: 'CHARGE CARD', sub: 'step 2 · side effect', w: 160 },
+    { id: 's3', x: 455, y: 150, kind: 'tool', label: 'SEND RECEIPT', sub: 'step 3 · side effect', w: 160 },
+    { id: 's4', x: 625, y: 150, kind: 'model', label: 'SUMMARIZE', sub: 'step 4', w: 130 },
+    { id: 'crash', x: 455, y: 94, kind: 'chip', label: 'WORKER CRASH ✗', w: 128, ghost: true },
+    { id: 'log', x: 275, y: 272, kind: 'memory', label: 'DURABLE LOG', sub: 'step → result · append-only', w: 250 },
+    { id: 'wk', x: 590, y: 272, kind: 'model', label: 'NEW WORKER', sub: 'after restart', w: 150 },
+  ],
+  edges: [
+    { id: 's1-s2', from: 's1', to: 's2' },
+    { id: 's2-s3', from: 's2', to: 's3' },
+    { id: 's3-s4', from: 's3', to: 's4' },
+    { id: 's2-p', from: 's2', to: 'pay', label: 'key = run42·step2', lanchor: 'end', lx: -8, ly: 4 },
+    { id: 's1-l', from: 's1', to: 'log', d: 'M95 175 C95 225 190 215 190 247', label: 'result 1', labelT: 0.3, lx: -30, ly: 4 },
+    { id: 's2-l', from: 's2', to: 'log', label: 'result 2', lanchor: 'start', lx: 8, ly: 4 },
+    { id: 'l-w', from: 'log', to: 'wk', label: 'replay', ly: -8 },
+    { id: 'w-s3', from: 'wk', to: 's3', fromSide: 't', toSide: 'b', label: 'resume at 3', labelT: 0.5, lanchor: 'start', lx: 12, ly: -8 },
+  ],
+  steps: [
+    { cap: 'A workflow is a list of steps, and two of them change the world outside the agent.', n: ['s1', 's2', 's3', 's4'] },
+    { cap: 'Each step’s result is journaled to a durable log before the next step starts.', n: ['s1', 's2', 'log'], e: ['s1-s2', 's1-l', 's2-l'] },
+    { cap: 'The charge carries an idempotency key built from the run and the step — never from the clock.', n: ['s2', 'pay'], e: ['s2-p'] },
+    { cap: '<span class="cap-bad">The worker dies halfway through step 3.</span> Without a log, the only option is to start again and re-run every step — and without a key, charge the card twice.', bad: ['s3', 'crash'], n: ['s2'], e: ['s2-s3'], show: ['crash'] },
+    { cap: 'A new worker replays the log: steps 1 and 2 return their recorded results without running again.', n: ['log', 'wk'], e: ['l-w'] },
+    { cap: 'Crash between the charge and the log write? The retry reuses the key, and the API returns the original charge.', n: ['s2'], ok: ['pay'], e: ['s2-p'] },
+    { cap: '<span class="cap-ok">Execution resumes at step 3.</span> The run survives the crash, the card is charged exactly once, and the receipt retries under its own key.', ok: ['wk', 's3', 's4'], okE: ['w-s3', 's3-s4'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.opsRateLimits = {
+  w: 740, h: 330, dur: 1750,
+  aria: 'Rate limits and backpressure: forty subagents share one API rate limit; firing at once produces a burst of 429s and synchronized retries, so calls go through a queue and a shared limiter, and a 429 backs off with jitter and re-enters the queue.',
+  nodes: [
+    { id: 'a1', x: 76, y: 70, kind: 'chip', label: 'SUBAGENT 1', w: 120, h: 26 },
+    { id: 'a2', x: 76, y: 116, kind: 'chip', label: 'SUBAGENT 2', w: 120, h: 26 },
+    { id: 'a3', x: 76, y: 162, kind: 'chip', label: 'SUBAGENT 3', w: 120, h: 26 },
+    { id: 'a4', x: 76, y: 208, kind: 'chip', label: '… SUBAGENT 40', w: 120, h: 26 },
+    { id: 'q', x: 250, y: 139, kind: 'data', label: 'QUEUE', sub: 'pending calls', w: 116 },
+    { id: 'lim', x: 432, y: 139, kind: 'policy', label: 'SHARED LIMITER', sub: '≤ 8 in flight', w: 150 },
+    { id: 'api', x: 640, y: 139, kind: 'env', label: 'MODEL API', sub: 'RPM · TPM', w: 150 },
+    { id: 'bo', x: 550, y: 270, kind: 'chip', label: 'BACKOFF + JITTER', w: 150, h: 28 },
+  ],
+  notes: [
+    { id: 'storm', x: 430, y: 84, anchor: 'middle', tone: 'danger', ghost: true, text: 'fixed 1s retry ×40 → 429 ×40' },
+  ],
+  edges: [
+    { id: 'burst', from: 'a1', to: 'api', ghost: true, d: 'M136 70 C164 70 178 62 200 56 C330 42 570 42 640 114', label: 'all 40 at once', labelT: 0.45, ly: -6 },
+    { id: 'burst2', from: 'a2', to: 'api', ghost: true, noArrow: true, d: 'M136 116 C170 116 172 70 200 56' },
+    { id: 'burst3', from: 'a3', to: 'api', ghost: true, noArrow: true, d: 'M136 162 C176 162 176 80 200 56' },
+    { id: 'burst4', from: 'a4', to: 'api', ghost: true, noArrow: true, d: 'M136 208 C180 208 180 88 200 56' },
+    { id: 'a1-q', from: 'a1', to: 'q', toSide: 'l' },
+    { id: 'a2-q', from: 'a2', to: 'q', toSide: 'l' },
+    { id: 'a3-q', from: 'a3', to: 'q', toSide: 'l' },
+    { id: 'a4-q', from: 'a4', to: 'q', toSide: 'l' },
+    { id: 'q-l', from: 'q', to: 'lim', label: 'admit', ly: -8 },
+    { id: 'l-a', from: 'lim', to: 'api', label: 'paced', ly: -8 },
+    { id: 'a-b', from: 'api', to: 'bo', label: '429 + retry-after', labelT: 0.5, lx: 58, ly: 4 },
+    { id: 'b-q', from: 'bo', to: 'q', d: 'M475 270 C330 270 250 245 250 164', label: 're-enqueue', labelT: 0.35, ly: 16 },
+  ],
+  steps: [
+    { cap: 'A lead agent fans out to forty subagents, and every one of them calls the same model API.', n: ['a1', 'a2', 'a3', 'a4'] },
+    { cap: '<span class="cap-bad">Unthrottled, they all fire at once.</span> The rate limit belongs to the organization, and the API answers the burst with 429s.', n: ['a1', 'a2', 'a3', 'a4'], bad: ['api'], badE: ['burst', 'burst2', 'burst3', 'burst4'], show: ['burst', 'burst2', 'burst3', 'burst4'] },
+    { cap: '<span class="cap-bad">Each waits the same fixed second and retries</span> — together. A synchronized retry is just a second burst.', bad: ['api', 'a1', 'a2', 'a3', 'a4'], badE: ['burst', 'burst2', 'burst3', 'burst4'], show: ['burst', 'burst2', 'burst3', 'burst4', 'storm'] },
+    { cap: 'Instead, calls go into one queue that the whole swarm shares.', n: ['a1', 'a2', 'a3', 'a4', 'q'], e: ['a1-q', 'a2-q', 'a3-q', 'a4-q'] },
+    { cap: 'A single limiter caps what is in flight and paces admissions to the limits the API reports.', n: ['q', 'lim', 'api'], e: ['q-l', 'l-a'] },
+    { cap: 'A 429 still happens now and then. It says how long to wait; add jitter so retries spread out.', n: ['api', 'bo'], e: ['a-b'] },
+    { cap: '<span class="cap-ok">The retry re-enters the queue, not the API.</span> Load arrives smoothly, and when the queue is full, callers wait instead of piling on.', ok: ['q', 'lim'], okE: ['b-q', 'q-l'], n: ['bo'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.opsStreaming = {
+  w: 740, h: 350, dur: 1750,
+  aria: 'Streaming: the model emits ordered events; text deltas render in the UI immediately, tool-call argument fragments accumulate in a buffer and are parsed only when the call ends, and a user cancel aborts the stream.',
+  bounds: [{ id: 'sse', x: 146, y: 30, w: 584, h: 72, label: 'EVENT STREAM · IN ORDER' }],
+  nodes: [
+    { id: 'model', x: 78, y: 76, kind: 'model', label: 'MODEL', w: 116 },
+    { id: 'c1', x: 196, y: 76, kind: 'chip', label: 'TEXT Δ', w: 72 },
+    { id: 'c2', x: 276, y: 76, kind: 'chip', label: 'TEXT Δ', w: 72 },
+    { id: 'c3', x: 380, y: 76, kind: 'chip', label: 'TOOL CALL START', w: 120 },
+    { id: 'c4', x: 484, y: 76, kind: 'chip', label: 'JSON Δ', w: 72 },
+    { id: 'c5', x: 564, y: 76, kind: 'chip', label: 'JSON Δ', w: 72 },
+    { id: 'c6', x: 660, y: 76, kind: 'chip', label: 'CALL END', w: 100 },
+    { id: 'ui', x: 236, y: 200, kind: 'env', label: 'UI', sub: 'renders as it lands', w: 170 },
+    { id: 'buf', x: 524, y: 200, kind: 'memory', label: 'ARG BUFFER', sub: 'collects JSON fragments', w: 180 },
+    { id: 'tool', x: 524, y: 306, kind: 'tool', label: 'TOOL RUNS', sub: 'complete input only', w: 170 },
+    { id: 'user', x: 78, y: 300, kind: 'human', label: 'USER', sub: 'presses stop', w: 120 },
+  ],
+  notes: [
+    { id: 'frag', x: 512, y: 254, anchor: 'end', tone: 'danger', ghost: true, text: '{"path": "/etc/pa  ← not an argument' },
+  ],
+  edges: [
+    { id: 'm-c', from: 'model', to: 'c1' },
+    { id: 'c1-ui', from: 'c1', to: 'ui', fromSide: 'b', toSide: 't' },
+    { id: 'c2-ui', from: 'c2', to: 'ui', fromSide: 'b', toSide: 't', label: 'render', labelT: 0.5, lx: 26, ly: 4 },
+    { id: 'c4-b', from: 'c4', to: 'buf', fromSide: 'b', toSide: 't' },
+    { id: 'c5-b', from: 'c5', to: 'buf', fromSide: 'b', toSide: 't', label: 'accumulate', labelT: 0.5, lx: 40, ly: 4 },
+    { id: 'c6-b', from: 'c6', to: 'buf', fromSide: 'b', toSide: 'r', label: 'parse now', labelT: 0.35, lx: 30, ly: 4 },
+    { id: 'b-t', from: 'buf', to: 'tool', label: 'valid input', lanchor: 'start', lx: 8, ly: 4 },
+    { id: 'cancel', from: 'user', to: 'model', kind: 'ctl', label: 'cancel', lanchor: 'start', lx: 8, ly: 4 },
+  ],
+  steps: [
+    { cap: 'Nothing waits for the whole response. The model emits a stream of small, ordered events.', n: ['model', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6'], e: ['m-c'] },
+    { cap: 'Text deltas render the moment they arrive: the user reads the first words while the rest is still being written.', n: ['c1', 'c2', 'ui'], e: ['c1-ui', 'c2-ui'] },
+    { cap: 'A tool call streams too — but its arguments arrive as fragments of JSON.', n: ['c3', 'c4', 'c5'] },
+    { cap: '<span class="cap-bad">Acting on a fragment is a bug.</span> Half an argument is not an argument.', bad: ['buf', 'c4'], show: ['frag'] },
+    { cap: 'So fragments accumulate in a buffer, and the arguments are parsed once, when the call ends.', n: ['c4', 'c5', 'c6', 'buf'], e: ['c4-b', 'c5-b', 'c6-b'] },
+    { cap: '<span class="cap-ok">Only then does the tool run</span>, with a complete, valid input.', ok: ['buf', 'tool'], okE: ['b-t'] },
+    { cap: 'The user presses stop mid-stream. The harness aborts the request itself, not just the view.', n: ['user', 'model'], e: ['cancel'] },
+    { cap: '<span class="cap-ok">Cancel is a normal ending:</span> partial text is kept and marked incomplete, and a half-built tool call is discarded, never run.', ok: ['user', 'ui'], n: ['model'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.opsRollout = {
+  w: 740, h: 340, dur: 1750,
+  aria: 'Versioning and rollout: prompt, pinned model and tool schemas ship as one release that passes an eval gate, runs in shadow, then as a canary watched by online metrics; a regression rolls back by pointing at the last good release.',
+  bounds: [{ id: 'bdl', x: 18, y: 14, w: 150, h: 140, label: 'BUNDLE' }],
+  nodes: [
+    { id: 'p', x: 93, y: 58, kind: 'chip', label: 'PROMPT v13', w: 126 },
+    { id: 'm', x: 93, y: 94, kind: 'chip', label: 'MODEL · PINNED ID', w: 126 },
+    { id: 't', x: 93, y: 130, kind: 'chip', label: 'TOOL SCHEMAS v4', w: 126 },
+    { id: 'rel', x: 290, y: 94, kind: 'data', label: 'RELEASE r42', sub: 'one id, all three', w: 150 },
+    { id: 'gate', x: 490, y: 94, kind: 'evaluator', label: 'EVAL GATE', sub: 'quality · cost · ms', w: 160 },
+    { id: 'sh', x: 430, y: 214, kind: 'chip', label: 'SHADOW', w: 90 },
+    { id: 'can', x: 540, y: 214, kind: 'chip', label: 'CANARY 5%', w: 96 },
+    { id: 'h50', x: 628, y: 214, kind: 'chip', label: '50%', w: 56 },
+    { id: 'h100', x: 694, y: 214, kind: 'chip', label: '100%', w: 56 },
+    { id: 'mon', x: 540, y: 300, kind: 'evaluator', label: 'ONLINE METRICS', sub: 'r42 vs r41, same traffic', w: 200 },
+    { id: 'old', x: 160, y: 300, kind: 'data', label: 'r41 · LAST GOOD', sub: 'never mutated', w: 170 },
+  ],
+  notes: [
+    { id: 'shn', x: 430, y: 246, anchor: 'middle', ghost: true, text: 'answers compared, never shown' },
+  ],
+  edges: [
+    { id: 'p-r', from: 'p', to: 'rel', toSide: 'l' },
+    { id: 'm-r', from: 'm', to: 'rel' },
+    { id: 't-r', from: 't', to: 'rel', toSide: 'l' },
+    { id: 'r-g', from: 'rel', to: 'gate', label: 'test', ly: -8 },
+    { id: 'g-s', from: 'gate', to: 'sh', fromSide: 'b', toSide: 't', label: 'pass', lx: -20, ly: 4 },
+    { id: 's-c', from: 'sh', to: 'can' },
+    { id: 'c-5', from: 'can', to: 'h50' },
+    { id: '5-1', from: 'h50', to: 'h100' },
+    { id: 'c-m', from: 'can', to: 'mon', kind: 'ctl', label: 'watch', lanchor: 'start', lx: 8, ly: 4 },
+    { id: 'm-o', from: 'mon', to: 'old', kind: 'ctl', label: 'regression → roll back', ly: -8 },
+  ],
+  steps: [
+    { cap: 'Three inputs that change independently decide most of an agent’s behavior: the prompt, the model and the tool schemas.', n: ['p', 'm', 't'] },
+    { cap: 'Pin all three into one immutable release id. The model is a pinned snapshot, never a moving alias.', n: ['p', 'm', 't', 'rel'], e: ['p-r', 'm-r', 't-r'] },
+    { cap: 'The release must clear an eval gate first: quality, cost and latency against the version it replaces.', n: ['rel', 'gate'], e: ['r-g'] },
+    { cap: 'Shadow: it runs on copies of real traffic with its write tools stubbed; answers are compared, never shown.', ok: ['gate'], n: ['sh'], okE: ['g-s'], show: ['shn'] },
+    { cap: 'Canary: 5% of real users, watched against the old release on the same metrics. It widens only while it holds.', n: ['can', 'h50', 'h100', 'mon'], e: ['s-c', 'c-5', '5-1', 'c-m'] },
+    { cap: '<span class="cap-bad">Online metrics regress</span> on a slice of traffic the offline suite never covered.', bad: ['mon', 'can'], e: ['c-m'] },
+    { cap: '<span class="cap-ok">Rollback is a pointer flip to r41</span>, not a hotfix under pressure — because r41 was never edited in place.', ok: ['old'], okE: ['m-o'], n: ['mon'], d: 2600 },
+  ],
+};
+
+DIAGRAMS.opsCost = {
+  w: 740, h: 340, dur: 1750,
+  aria: 'Cost monitoring: usage from every call is priced and attributed to a run, tenant and release; the per-run cost distribution exposes a runaway outlier, a falling cache hit rate shows up as a cost regression, and budgets turn both into alerts.',
+  bounds: [{ id: 'dist', x: 488, y: 20, w: 236, h: 150, label: 'COST PER RUN · DISTRIBUTION' }],
+  nodes: [
+    { id: 'use', x: 96, y: 94, kind: 'data', label: 'USAGE PER CALL', sub: 'in · cache r/w · out', w: 160 },
+    { id: 'cost', x: 320, y: 94, kind: 'data', label: 'COST PER RUN', sub: 'feature · tenant · release', w: 190 },
+    { id: 'p50', x: 606, y: 64, kind: 'chip', label: 'p50 · $0.04', w: 140 },
+    { id: 'p95', x: 606, y: 100, kind: 'chip', label: 'p95 · $0.31', w: 140 },
+    { id: 'p99', x: 606, y: 136, kind: 'chip', label: 'p99 · $3.10', w: 140 },
+    { id: 'out', x: 606, y: 250, kind: 'data', label: 'RUN 9c1e · $41.80', sub: 'looped 212 steps', w: 180 },
+    { id: 'cache', x: 101, y: 250, kind: 'evaluator', label: 'CACHE HIT RATE', sub: '71% → 12% after deploy', w: 190 },
+    { id: 'alert', x: 360, y: 250, kind: 'policy', label: 'BUDGET ALERT', sub: 'per run · per tenant', w: 160 },
+  ],
+  edges: [
+    { id: 'u-c', from: 'use', to: 'cost', label: 'price', ly: -8 },
+    { id: 'c-d', from: 'cost', to: 'dist', d: 'M415 94 L488 94', label: 'aggregate', labelT: 0.5, ly: -7 },
+    { id: 'u-h', from: 'use', to: 'cache', fromSide: 'b', toSide: 't', label: 'reads ÷ input', lanchor: 'start', lx: 8, ly: 4 },
+    { id: 'p-o', from: 'p99', to: 'out', label: 'drill in', lanchor: 'start', lx: 8, ly: 4 },
+    { id: 'o-a', from: 'out', to: 'alert', label: 'over budget', ly: -8 },
+    { id: 'h-a', from: 'cache', to: 'alert', label: 'drop', ly: -8 },
+  ],
+  steps: [
+    { cap: 'Every call reports its usage: uncached input, cache reads, cache writes and output — each at a different price.', n: ['use'] },
+    { cap: 'Price each call and sum it by run, tagged with the feature, the tenant and the release that spent it.', n: ['use', 'cost'], e: ['u-c'] },
+    { cap: 'Look at the distribution, not the average. The typical run costs cents.', n: ['cost', 'p50', 'p95'], e: ['c-d'] },
+    { cap: '<span class="cap-bad">The tail is where the money goes:</span> one run cost a thousand times the median, because it never stopped looping.', bad: ['p99', 'out'], badE: ['p-o'] },
+    { cap: '<span class="cap-bad">Cache hit rate collapses after a deploy.</span> Nothing errors; every request just re-reads its whole prompt at full price.', bad: ['cache'], badE: ['u-h'], n: ['use'] },
+    { cap: 'Budgets per run and per tenant turn both into alerts within minutes, not on next month’s invoice.', n: ['alert', 'out', 'cache'], e: ['o-a', 'h-a'] },
+    { cap: '<span class="cap-ok">Every alert points at a run, a release and a trace</span> — the exact step that spent the money.', ok: ['alert'], n: ['out', 'cost'], d: 2600 },
   ],
 };
