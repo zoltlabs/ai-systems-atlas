@@ -1,5 +1,6 @@
 import { SITE } from '../site';
 import { COLLECTIONS, PLATE_LOOKUP, COL_ORDER } from '../data/collections.js';
+import { sourcesForPlate } from '../data/sources.js';
 
 export type Plate = {
   slug: string; code: string; title: string; def: string; insight: string; failure: string;
@@ -7,6 +8,7 @@ export type Plate = {
   modes?: { id: string; label: string; cls?: string; dg: string }[];
   related?: [string, string][];
 };
+export type Source = { id: string; title: string; author: string; year: number; kind: string; url: string };
 export type Collection = {
   title: string; short: string; prefix: string; intro: string; plates: Plate[];
   defenses?: [string, string][];
@@ -61,6 +63,7 @@ export function plateJsonLd(colId: string, p: Plate) {
     isPartOf: { '@type': 'CollectionPage', name: col.title, url: absolute(`/${colId}`) },
     author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
     publisher: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+    citation: sourcesForPlate(colId, p.slug).map(source => source.url),
     proficiencyLevel: 'Expert',
     inLanguage: 'en',
   };

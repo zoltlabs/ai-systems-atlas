@@ -4,6 +4,7 @@ import Diagram from './Diagram.astro';
 import { DIAGRAMS } from '../data/diagrams.js';
 import type { Plate } from '../lib/seo';
 import { plateUrl } from '../lib/seo';
+import { sourcesForPlate } from '../data/sources.js';
 
 interface Props { colId: string; p: Plate; routed?: boolean; heading?: 'h1' | 'h3'; }
 const { colId, p, routed = false, heading = 'h3' } = Astro.props;
@@ -13,6 +14,7 @@ const CUSTOM_HEIGHTS: Record<string, number> = { map: 470, regression: 340, taxo
 const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
 const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
 const Heading = heading;
+const sources = sourcesForPlate(colId, p.slug);
 ---
 <article class="plate" id={`plate-${p.slug}`}>
   <div class="plate-head">
@@ -33,5 +35,23 @@ const Heading = heading;
   </div>
   {p.related && p.related.length > 0 && (
     <div class="plate-related"><span class="rlabel">Related</span>{p.related.map(([t, r]) => <a class="chip" href={r}>{t}</a>)}</div>
+  )}
+  {sources.length > 0 && (
+    <section class="plate-sources" aria-labelledby={`sources-${p.slug}`}>
+      <div class="sources-head">
+        <h4 id={`sources-${p.slug}`}>Sources &amp; further reading</h4>
+        <span>{sources.length} selected references</span>
+      </div>
+      <ol>
+        {sources.map(source => (
+          <li>
+            <a href={source.url} target="_blank" rel="noreferrer">
+              <span class="source-title">{source.title}</span>
+              <span class="source-meta">{source.author} · {source.year} · {source.kind}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
   )}
 </article>

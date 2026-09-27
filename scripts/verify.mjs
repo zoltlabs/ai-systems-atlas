@@ -9,10 +9,25 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { serveDist } from './serve.mjs';
+import { COLLECTIONS } from '../src/data/collections.js';
+import { SOURCES, PLATE_SOURCE_IDS } from '../src/data/sources.js';
 
 const SITE = 'https://aisystemsatlas.com';
 const fail = [];
 const ok = (cond, msg) => { if (!cond) fail.push(msg); };
+
+for (const [colId, collection] of Object.entries(COLLECTIONS)) {
+  for (const plate of collection.plates) {
+    const key = `${colId}/${plate.slug}`;
+    const ids = PLATE_SOURCE_IDS[key] || [];
+    ok(ids.length >= 2, `${key}: fewer than two sources`);
+    ok(new Set(ids).size === ids.length, `${key}: duplicate source`);
+    for (const id of ids) {
+      ok(Boolean(SOURCES[id]), `${key}: unknown source id ${id}`);
+      ok(SOURCES[id]?.url.startsWith('https://'), `${key}: source ${id} is not HTTPS`);
+    }
+  }
+}
 
 if (!fs.existsSync('dist/index.html')) { console.error('dist/ not found — run `npm run build` first'); process.exit(1); }
 const smIndex = fs.readFileSync('dist/sitemap-index.xml', 'utf8');
@@ -46,6 +61,10 @@ for (const u of urls) {
   ok(/name="description" content="[^"]+"/.test(html), `${u}: missing meta description`);
   ok(html.includes(`<link rel="canonical" href="${u}">`) || html.includes(`<link rel="canonical" href="${u}"/>`), `${u}: canonical mismatch`);
   ok(html.includes('application/ld+json'), `${u}: missing JSON-LD`);
+  if (pathName.split('/').length === 3) {
+    ok(html.includes('Sources &amp; further reading'), `${u}: missing visible sources`);
+    ok(html.includes('"citation"'), `${u}: missing JSON-LD citations`);
+  }
   ok(/property="twitter:card"|name="twitter:card"/.test(html), `${u}: missing twitter card`);
   const og = /property="og:image" content="([^"]+)"/.exec(html);
   ok(og, `${u}: missing og:image`);

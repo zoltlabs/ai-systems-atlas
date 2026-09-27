@@ -248,6 +248,17 @@ main{min-height:70vh}
   transition:border-color .15s,color .15s;
 }
 .chip:hover{border-color:var(--accent);color:var(--accent-ink)}
+.plate-sources{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.sources-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:9px}
+.sources-head h4{margin:0;font-size:13.5px;color:var(--ink);letter-spacing:.01em}
+.sources-head span{font-size:11.5px;color:var(--ink3);white-space:nowrap}
+.plate-sources ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.plate-sources li{min-width:0}
+.plate-sources a{display:block;height:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none;background:var(--panel);transition:border-color .15s,background .15s}
+.plate-sources a:hover{border-color:var(--accent);background:var(--panel2)}
+.source-title{display:block;font-size:12.5px;font-weight:650;line-height:1.35;color:var(--ink2)}
+.source-meta{display:block;margin-top:4px;font-size:10.5px;line-height:1.35;color:var(--ink3)}
+@media(max-width:720px){.plate-sources ol{grid-template-columns:1fr}.sources-head{align-items:flex-start;flex-direction:column;gap:2px}}
 
 /* ---------- diagram svg semantics ---------- */
 .dg .nd-shape{fill:var(--node-fill);stroke:var(--node-line);stroke-width:1.2;transition:stroke .25s,fill .25s}
