@@ -68,6 +68,18 @@ export const CARD_MINIS = {
       { from: 'te', to: 'di', kind: 'ctl' }, { from: 'di', to: 'ed', kind: 'ctl' },
     ],
   },
+  tools: {
+    w: 270, h: 132, aria: 'A model fanning out calls to three tools in one turn',
+    nodes: [
+      { id: 'm', x: 58, y: 66, kind: 'chip', label: 'MODEL', w: 84 },
+      { id: 's', x: 206, y: 22, kind: 'chip', label: 'SEARCH', w: 88 },
+      { id: 'r', x: 206, y: 66, kind: 'chip', label: 'READ', w: 88 },
+      { id: 'w', x: 206, y: 110, kind: 'chip', label: 'WRITE', w: 88 },
+    ],
+    edges: [
+      { from: 'm', to: 's' }, { from: 'm', to: 'r' }, { from: 'm', to: 'w' },
+    ],
+  },
   ops: {
     w: 270, h: 132, aria: 'Trace waterfall: one run span with model, tool and model call spans beneath it in time order',
     nodes: [

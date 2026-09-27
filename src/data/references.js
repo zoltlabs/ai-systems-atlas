@@ -190,6 +190,57 @@ export const REFERENCES = {
     url: 'https://git-scm.com/docs/git-worktree',
   },
 
+  /* ---------- tools and protocols ---------- */
+  anthropicAdvancedToolUse: {
+    title: 'Introducing advanced tool use on the Claude Developer Platform',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/advanced-tool-use',
+  },
+  anthropicCodeExecMcp: {
+    title: 'Code execution with MCP: building more efficient AI agents',
+    where: 'Anthropic Engineering, 2025',
+    url: 'https://www.anthropic.com/engineering/code-execution-with-mcp',
+  },
+  anthropicMcpLaunch: {
+    title: 'Introducing the Model Context Protocol',
+    where: 'Anthropic, 2024',
+    url: 'https://www.anthropic.com/news/model-context-protocol',
+  },
+  claudeCodeMcp: {
+    title: 'Connect Claude Code to tools via MCP',
+    where: 'Claude Code docs',
+    url: 'https://code.claude.com/docs/en/mcp',
+  },
+  claudeDefineTools: {
+    title: 'Define tools',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools',
+  },
+  claudeHandleToolCalls: {
+    title: 'Handle tool calls',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls',
+  },
+  claudeParallelToolUse: {
+    title: 'Parallel tool use',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use',
+  },
+  claudeToolSearch: {
+    title: 'Tool search tool',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool',
+  },
+  claudeStructuredOutputs: {
+    title: 'Structured outputs',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/structured-outputs',
+  },
+  claudeStrictToolUse: {
+    title: 'Strict tool use',
+    where: 'Claude Platform docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use',
+  },
   /* ---------- Anthropic research and product docs ---------- */
   anthropicAgentEvals: {
     title: 'Demystifying evals for AI agents',

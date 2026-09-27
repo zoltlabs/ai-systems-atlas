@@ -14,11 +14,10 @@ const B = COL_BLURB as Record<string, string>;
 const total = colOrder.reduce((s, c) => s + collections[c].plates.length, 0);
 const cardMeta: Record<string, string> = {
   harnesses: 'comparison map', security: 'attack ⇄ defense toggles', evals: 'failure taxonomy', context: 'budget builder', 'coding-agents': 'single vs multi',
+  tools: 'wrapper ⇄ agent-shaped toggles',
   ops: 'span waterfall',
 };
-const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding',
-  ops: 'ops',
-};
+const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding', tools: 'tools', ops: 'ops' };
 ---
 <Base title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} path="/" jsonLd={siteJsonLd()}>
   <main class="wrap">
