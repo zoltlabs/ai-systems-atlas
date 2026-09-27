@@ -130,6 +130,7 @@ one. A reader's explicit choice always beats the OS.
   drop-shadow stacking; the single `--shadow` token is for hover lift and the palette only.
 - Plate anatomy, in order, always: title row (code badge + h3 + deep-link route on the right)
   → one-line definition → diagram shell (panel + control bar → optional inspector) →
+  step-by-step walkthrough (collapsed `<details>`, server-rendered captions) →
   meta grid (Key insight | Failure mode) → Further reading → Related chips. Further reading
   is external and Related is internal, and internal navigation closes the plate.
 - Wide content (diagrams, tables, the map) scrolls inside its own `overflow-x: auto`
@@ -211,7 +212,7 @@ resolution beat — land the risk, then the fix.
 - Annotations live around the diagram, not in paragraphs below it.
 - Preview (stub) modules are honestly labeled ("Preview — full interactive plates in
   progress") and still fully designed: code, title, mini diagram, one insight line.
-- Plate codes are per-collection series (`H-`, `S-`, `E-`, `X-`, `G-`), sequential, never
+- Plate codes are per-collection series (`H-`, `S-`, `E-`, `X-`, `G-`, `T-`, `P-`), sequential, never
   reused after removal.
 
 ---

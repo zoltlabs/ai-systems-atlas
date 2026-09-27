@@ -3,8 +3,9 @@
 **Understand AI systems visually.** — [aisystemsatlas.com](https://aisystemsatlas.com)
 
 An interactive visual atlas of AI agent architecture: harness patterns, safety and
-security, evals, context engineering and memory, and coding-agent architectures.
-82 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
+security, evals, context engineering and memory, coding-agent architectures, tools and
+protocols, and production operations.
+107 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
 cited sources, ⌘K search, and attack/defense or variant toggles where the concept calls for
 one. Light/dark/system theming; self-hosted fonts; no third-party requests at runtime.
 
@@ -39,7 +40,7 @@ Deployed on Vercel.
 
 ## Routes
 
-- `/` · `/harnesses` · `/security` · `/evals` · `/context` · `/coding-agents` · `/tools`
+- `/` · `/harnesses` · `/security` · `/evals` · `/context` · `/coding-agents` · `/tools` · `/ops`
 - `/[collection]/[slug]` for every plate, e.g. `/harnesses/actor-verifier`,
   `/security/indirect-prompt-injection?mode=secure`
 - Legacy hash URLs (`#/harnesses/react`) redirect client-side to the real path.
@@ -80,7 +81,7 @@ and every pull request.
    expressed with the grammar, add a custom renderer to `src/scripts/custom.js` (it must
    still use the tokens and panel chrome) and any data it needs to `src/data/custom-data.js`.
 2. **Add the plate entry** to its collection in `src/data/collections.js`: `slug`, `code`
-   (per-collection series `H-`/`S-`/`E-`/`X-`/`G-`/`T-`, sequential, never reused), `title`,
+   (per-collection series `H-`/`S-`/`E-`/`X-`/`G-`/`T-`/`P-`, sequential, never reused), `title`,
    `dg` (or `modes` for a variant toggle, or `custom`), `def`, `insight`, `failure`,
    `related` (real paths, e.g. `/harnesses/react`), `refs` (1–3 keys from
    `src/data/references.js` — add the source there first, and only after opening it), and
