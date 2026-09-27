@@ -730,7 +730,7 @@ const TOOLS_COLLECTION = {
   title: 'Tools & Protocols',
   short: 'Tools',
   prefix: 'T',
-  intro: 'Tools are how an agent touches the world, and the seam between model and tool is where a surprising share of agent bugs live. These six plates cover how a tool should be shaped for a model rather than a programmer, how MCP connects any tool to any host, how large catalogues stay out of the window, and what happens to a call on the way out and its result on the way back.',
+  intro: 'Tools are how an agent touches the world, and the seam between model and tool is where a surprising share of agent bugs live. These plates cover how a tool should be shaped for a model rather than a programmer, how MCP connects any tool to any host, how large catalogues stay out of the window, and what happens to a call on the way out and its result on the way back.',
   plates: [
     P({ slug: 'tool-design', code: 'T-01', title: 'Designing Tools for Agents',
       modes: [
@@ -825,20 +825,22 @@ COLLECTIONS.context.plates.push(...EXT_CONTEXT_PLATES, ...EXT_CONTEXT_PLATES_2);
 COLLECTIONS['coding-agents'].plates.push(...EXT_CODING_PLATES, ...EXT_CODING_PLATES_2);
 COLLECTIONS.tools = TOOLS_COLLECTION;
 
+export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents', 'tools', 'ops'];
 /* rebuild the search index now that every collection is final */
-for (const [colId, col] of Object.entries(COLLECTIONS)) {
+/* iterate COL_ORDER (not insertion order) so search results follow the nav */
+for (const colId of COL_ORDER) {
+  const col = COLLECTIONS[colId];
   SEARCH_INDEX.push({ col: col.short, code: '', title: col.title, route: `/${colId}`, kw: col.intro });
   for (const p of col.plates) SEARCH_INDEX.push({ col: col.short, code: p.code, title: p.title, route: `/${colId}/${p.slug}`, kw: (p.kw || '') + ' ' + p.def });
 }
 SEARCH_INDEX.push({ col: 'Harnesses', code: '', title: 'Pattern Comparison Map', route: '/harnesses', kw: 'map compare when to use complexity autonomy cost' });
 
 export const PLATE_LOOKUP = {};
-for (const [colId, col] of Object.entries(COLLECTIONS)) for (const p of col.plates) PLATE_LOOKUP[colId + '/' + p.slug] = p;
+for (const colId of COL_ORDER) for (const p of COLLECTIONS[colId].plates) PLATE_LOOKUP[colId + '/' + p.slug] = p;
 
 
-export const COL_ORDER = ['harnesses', 'security', 'evals', 'context', 'coding-agents', 'tools', 'ops'];
 export const COL_BLURB = {
-  harnesses: 'Twenty-three recurring architectures, from a single forward pass to multi-agent teams and agents that run for days.',
+  harnesses: 'The recurring architectures, from a single forward pass to multi-agent teams and agents that run for days.',
   security: 'Agents possess authority. The ways untrusted text borrows it — and the boundaries that stop it.',
   evals: 'Outcome checks, trajectory review, judges you can trust — and whether the number is signal.',
   context: 'What earns a place in the window, in what order, and how memory brings the right things back.',

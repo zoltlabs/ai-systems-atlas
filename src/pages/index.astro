@@ -17,7 +17,6 @@ const cardMeta: Record<string, string> = {
   tools: 'wrapper ⇄ agent-shaped toggles',
   ops: 'span waterfall',
 };
-const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'security', evals: 'evals', context: 'context', 'coding-agents': 'coding', tools: 'tools', ops: 'ops' };
 ---
 <Base title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} path="/" jsonLd={siteJsonLd()}>
   <main class="wrap">
@@ -37,7 +36,7 @@ const miniKey: Record<string, string> = { harnesses: 'harnesses', security: 'sec
       <div class="cards">
         {colOrder.map((id, i) => (
           <a class="card" href={`/${id}`}>
-            <div class="card-fig"><Diagram mini def={M[miniKey[id]]} /></div>
+            <div class="card-fig"><Diagram mini def={M[id]} /></div>
             <div class="card-body">
               <h3>{collections[id].title.replace('Agent Harness Patterns', 'Agent Harnesses').replace('Agent Safety & Security', 'Safety & Security').replace('Context Engineering & Memory', 'Context & Memory').replace('Coding-Agent Architectures', 'Coding Agents')}</h3>
               <p>{B[id]}</p>

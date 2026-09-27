@@ -58,6 +58,12 @@ const searchJson = JSON.stringify(SEARCH_INDEX).replace(/</g, '\\u003c');
   {SITE.twitter && <meta name="twitter:site" content={SITE.twitter} />}
 
 
+  <noscript><style>
+    /* no JS, no diagram: open the text walkthrough instead of pointing at a closed <details> */
+    .plate-steps::details-content{content-visibility:visible;display:contents}
+    .plate-steps summary{pointer-events:none;padding-left:14px;border-bottom:1px solid var(--line);border-radius:10px 10px 0 0}
+    .plate-steps summary::before{display:none}
+  </style></noscript>
   {ld.map(o => <script type="application/ld+json" set:html={JSON.stringify(o).replace(/</g, '\\u003c')} />)}
 
   <script is:inline>
@@ -75,6 +81,17 @@ const searchJson = JSON.stringify(SEARCH_INDEX).replace(/</g, '\\u003c');
     <nav class="nav-links" aria-label="Collections">
       {colOrder.map(c => <a href={`/${c}`} aria-current={activeCol === c ? 'page' : undefined}>{collections[c].short}</a>)}
     </nav>
+    <script is:inline>
+      /* before first paint: bring the current collection into view when the tabs overflow, and
+         fade whichever edge still has links beyond it (the scroll hint) */
+      (function () {
+        var n = document.currentScript.previousElementSibling, a = n.querySelector('[aria-current]');
+        function c() { if (a && n.scrollWidth > n.clientWidth) n.scrollLeft += a.getBoundingClientRect().left - n.getBoundingClientRect().left - (n.clientWidth - a.offsetWidth) / 2; f(); }
+        function f() { var m = n.scrollWidth - n.clientWidth; n.classList.toggle('fade-l', m > 1 && n.scrollLeft > 1); n.classList.toggle('fade-r', m > 1 && n.scrollLeft < m - 1); }
+        c(); n.addEventListener('scroll', f, { passive: true }); addEventListener('resize', f);
+        if (document.fonts) document.fonts.ready.then(c); /* webfont swap changes the widths */
+      })();
+    </script>
     <button class="nav-theme" type="button" data-theme-btn aria-label="Theme: system. Switch to light." title="Theme: system — switch to light">
       <svg data-icon="system" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2.4A5.6 5.6 0 0 1 8 13.6z" fill="currentColor"/></svg>
       <svg data-icon="light" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v1.8M8 13.2V15M15 8h-1.8M2.8 8H1M12.9 3.1l-1.3 1.3M4.4 11.6l-1.3 1.3M12.9 12.9l-1.3-1.3M4.4 4.4L3.1 3.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>

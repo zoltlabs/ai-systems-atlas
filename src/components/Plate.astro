@@ -1,6 +1,6 @@
 ---
-/* Plate anatomy (DESIGN.md §4): title row → definition → diagram shell → meta grid →
-   Further reading → Related. */
+/* Plate anatomy (DESIGN.md §4): title row → definition → diagram shell → step-by-step
+   walkthrough → meta grid → Further reading → Related. */
 import Diagram from './Diagram.astro';
 import { DIAGRAMS } from '../data/diagrams.js';
 import type { Plate } from '../lib/seo';
@@ -15,7 +15,7 @@ const CUSTOM_HEIGHTS: Record<string, number> = { map: 470, regression: 340, taxo
 const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: D.mismatchUnlucky } : undefined;
 const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
 const Heading = heading;
-const refs: { url: string; title: string; where: string }[] = resolveRefs(p.refs);
+const refs = resolveRefs(p.refs);
 /* Server-rendered walkthrough: the same step captions the engine animates, as real HTML so
    they are indexable, screen-reader reachable and a no-JS fallback. Custom renderers have no
    steps and get none (their text lives in the renderer; we don't invent any). */
@@ -24,7 +24,6 @@ const walk = p.custom ? [] : modes
   ? modes.map(m => ({ id: m.id, label: m.label as string | undefined, cls: m.cls, caps: capsOf(m.def) })).filter(m => m.caps.length)
   : [{ id: 'main', label: undefined, cls: undefined, caps: capsOf(D[p.dg!]) }].filter(m => m.caps.length);
 const walkCount = walk.reduce((n, m) => n + m.caps.length, 0);
-const ModeHeading = heading === 'h1' ? 'h2' : 'h4';
 ---
 <article class="plate" id={`plate-${p.slug}`}>
   <div class="plate-head">
@@ -37,16 +36,17 @@ const ModeHeading = heading === 'h1' ? 'h2' : 'h4';
   {p.custom
     ? <Diagram custom={p.custom} data={customData} minHeight={CUSTOM_HEIGHTS[p.custom]} />
     : modes
-      ? <Diagram modes={modes} routed={routed} />
-      : <Diagram def={D[p.dg!]} />}
+      ? <Diagram modes={modes} routed={routed} walkthrough={walk.length > 0} />
+      : <Diagram def={D[p.dg!]} walkthrough={walk.length > 0} />}
   {walk.length > 0 && (
     <details class="plate-steps">
       <summary>Step-by-step walkthrough<span class="ps-count">{walk.length > 1 ? `${walk.length} variants · ${walkCount} steps` : `${walkCount} steps`}</span></summary>
       <div class={walk.length > 1 ? 'ps-body ps-modes' : 'ps-body'}>
         {walk.map(m => (
           <section class={`ps-mode${m.cls ? ' ' + m.cls : ''}`} data-walk={m.id}>
-            {m.label && <ModeHeading class="ps-label">{m.label}</ModeHeading>}
-            <ol>{m.caps.map(c => <li set:html={c} />)}</ol>
+            {/* mode labels are list captions, not page sections — no heading level */}
+            {m.label && <p class="ps-label" id={`walk-${p.slug}-${m.id}`}>{m.label}</p>}
+            <ol aria-labelledby={m.label ? `walk-${p.slug}-${m.id}` : undefined}>{m.caps.map(c => <li set:html={c} />)}</ol>
           </section>
         ))}
       </div>

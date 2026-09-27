@@ -25,7 +25,7 @@ const jsonLd = [
       <nav class="crumb" aria-label="Breadcrumb">
         <a href="/">Atlas</a><span class="sep">/</span>
         <span>Part of <a href={`/${colId}`}>{col.title}</a></span>
-        <span class="sep">·</span><span>Plate {index + 1} of {total}</span>
+        <span class="sep sep-pos" aria-hidden="true">·</span><span class="pos">Plate {index + 1} of {total}</span>
       </nav>
     </div>
     <Plate colId={colId!} p={p} routed heading="h1" />

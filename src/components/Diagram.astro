@@ -11,8 +11,10 @@ interface Props {
   routed?: boolean;                // this plate owns the URL → ?mode= is read/written
   minHeight?: number;              // placeholder height for custom renderers
   mini?: boolean;                  // card mini (static, hover-animated)
+  walkthrough?: boolean;           // a text walkthrough follows (Plate.astro) → the no-JS note points at it
 }
-const { def, modes, custom, data, routed = false, minHeight, mini = false } = Astro.props;
+const { def, modes, custom, data, routed = false, minHeight, mini = false, walkthrough = false } = Astro.props;
+const nojs = 'This diagram is interactive and needs JavaScript.' + (walkthrough ? ' The step-by-step walkthrough below describes it in text.' : '');
 const first = def || (modes && modes[0]?.def);
 const payload = mini ? def : def ? def : modes ? modes : data;
 const json = payload ? JSON.stringify(payload).replace(/<\//g, '<\\/') : null;
@@ -24,7 +26,7 @@ const style = custom && minHeight ? `min-height:${minHeight}px` : mini && first 
 ---
 <div {...attrs} style={style}>
   {!mini && !custom && first && (
-    <><div class="dg-panel"><div class="dg-ph" style={`max-width:${first.w}px;aspect-ratio:${first.w}/${first.h}`}><noscript><p class="dg-nojs">This diagram is interactive and needs JavaScript. The step-by-step walkthrough below describes it in text.</p></noscript></div></div><div class="dg-bar"></div></>
+    <><div class="dg-panel"><div class="dg-ph" style={`max-width:${first.w}px;aspect-ratio:${first.w}/${first.h}`}><noscript><p class="dg-nojs">{nojs}</p></noscript></div></div><div class="dg-bar"></div></>
   )}
   {json && <script type="application/json" set:html={json} />}
 </div>

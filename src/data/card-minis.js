@@ -54,7 +54,7 @@ export const CARD_MINIS = {
       { from: 'lt', to: 'st', kind: 'ctl' },
     ],
   },
-  coding: {
+  'coding-agents': {
     w: 270, h: 140, aria: 'Explore, plan, edit, test loop with a diagnose branch',
     nodes: [
       { id: 'ex', x: 62, y: 22, kind: 'chip', label: 'EXPLORE', w: 88 },

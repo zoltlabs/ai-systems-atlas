@@ -198,8 +198,9 @@ resolution beat — land the risk, then the fix.
 
 ## 7. Content rules
 
-- Plate format is fixed: **Title · one-line definition · interactive diagram · Key insight ·
-  Failure mode · Further reading · Related.** Definition ≤ 1 sentence; insight and failure
+- Plate format is fixed: **Title · one-line definition · interactive diagram · step-by-step
+  walkthrough (generated from the step captions) · Key insight · Failure mode · Further
+  reading · Related.** Definition ≤ 1 sentence; insight and failure
   ≤ 2 sentences each.
 - **Every plate cites its sources.** 1–3 entries, by key, from the library in
   `src/data/references.js` — never an inline URL, so each source is defined once and stays

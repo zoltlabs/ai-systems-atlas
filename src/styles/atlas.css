@@ -78,6 +78,11 @@ svg text{user-select:none}
 .brand svg{display:block}
 .nav-links{display:flex;gap:2px;margin-left:8px;overflow-x:auto;scrollbar-width:none;flex:1}
 .nav-links::-webkit-scrollbar{display:none}
+/* scroll hint: the inline script in Base.astro sets fade-l / fade-r while links sit past that
+   edge (the mask reads alpha only, so the gradient colour is irrelevant) */
+.nav-links{--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--fl),#000 calc(100% - var(--fr)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--fl),#000 calc(100% - var(--fr)),transparent)}
+.nav-links.fade-l{--fl:28px}
+.nav-links.fade-r{--fr:28px}
 .nav-links a{
   font-size:14px;font-weight:600;color:var(--ink2);text-decoration:none;
   padding:5px 10px;border-radius:6px;white-space:nowrap;
@@ -93,6 +98,17 @@ svg text{user-select:none}
 .nav-search:hover{border-color:var(--ink3)}
 .nav-search kbd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;background:var(--kbd-bg);border-radius:4px;padding:1px 5px;color:var(--ink2)}
 @media(max-width:720px){.nav-search .nslabel{display:none}}
+/* seven collections: tighter tabs where one row is only just wide enough */
+@media(min-width:881px) and (max-width:1000px){.nav-in{gap:14px}.nav-links{margin-left:0}.nav-links a{padding:5px 7px}}
+/* narrower: the collection tabs get their own full-width row under brand + controls; they all
+   fit from ~560px, and below that the row scrolls with the edge fade as its hint */
+@media(max-width:880px){
+  .nav-in{flex-wrap:wrap;height:auto;gap:0 16px;padding-top:9px}
+  .brand{margin-right:auto;height:34px}
+  .nav-theme{margin-right:-8px}
+  .nav-links{order:3;flex:1 0 100%;margin:4px -10px 0;padding-bottom:8px}
+  .plate{scroll-margin-top:112px}
+}
 
 .nav-theme{
   display:flex;align-items:center;justify-content:center;
@@ -155,8 +171,13 @@ main{min-height:70vh}
 }
 .card:nth-child(1),.card:nth-child(2){grid-column:span 3}
 @media(max-width:880px){.cards{grid-template-columns:1fr 1fr}.card,.card:nth-child(1),.card:nth-child(2){grid-column:span 2}}
-@media(min-width:881px) and (max-width:1024px){.card{grid-column:span 3}}
-/* the 2-then-3 rhythm leaves an orphan past five cards: six → two rows of three; seven → 2 · 3 · 2 */
+/* 881–1024px: two per row; an odd count ends on a row of three instead of a lone half-width card */
+@media(min-width:881px) and (max-width:1024px){
+  .card{grid-column:span 3}
+  .cards:has(> .card:nth-child(odd):last-child) > .card:nth-last-child(-n+3){grid-column:span 2}
+}
+/* 1025px+: a 2-then-3 rhythm, which leaves an orphan past five cards: six → two rows of three;
+   seven → 2 · 3 · 2 */
 @media(min-width:1025px){
   .cards:has(> .card:nth-child(6):last-child) > .card{grid-column:span 2}
   .card:nth-child(6):nth-last-child(2),.card:nth-child(7):last-child{grid-column:span 3}
@@ -532,6 +553,8 @@ body{margin:0}
 .crumb a{color:var(--ink2);text-decoration:none;font-weight:600}
 .crumb a:hover{color:var(--accent-ink)}
 .crumb .sep{color:var(--ink3)}
+/* phones: the plate position takes its own line rather than leaving a dangling "·" */
+@media(max-width:640px){.crumb .sep-pos{display:none}.crumb .pos{flex-basis:100%}}
 .plate-page .plate{padding-top:28px}
 .plate-nav{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px;padding-top:24px;border-top:1px solid var(--line)}
 @media(max-width:640px){.plate-nav{grid-template-columns:1fr}}
@@ -586,7 +609,7 @@ footer a:hover{color:var(--accent-ink)}
 .plate-steps summary:hover{background:var(--panel2)}
 .plate-steps summary:hover::before{border-color:var(--ink)}
 .plate-steps[open] summary{border-bottom:1px solid var(--line);border-radius:10px 10px 0 0}
-.plate-steps .ps-count{font-size:13px;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums}
+.plate-steps .ps-count{font-size:13px;font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums}
 .ps-body{padding:12px 16px 14px}
 .ps-modes{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px}
 @media(max-width:720px){.ps-modes{grid-template-columns:1fr}}
@@ -597,7 +620,7 @@ footer a:hover{color:var(--accent-ink)}
 .ps-label{font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink);margin:0 0 6px;line-height:1.4;letter-spacing:0}
 .plate-steps ol{margin:0;padding-left:26px;display:flex;flex-direction:column;gap:4px;max-width:65ch}
 .plate-steps li{font-size:14.5px;line-height:1.55;color:var(--ink2);padding-left:2px}
-.plate-steps li::marker{color:var(--ink3);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.plate-steps li::marker{color:var(--ink2);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .plate-steps b{color:var(--ink);font-weight:600}
 .plate-steps .cap-bad{color:var(--danger)}
 .plate-steps .cap-ok{color:var(--ok)}

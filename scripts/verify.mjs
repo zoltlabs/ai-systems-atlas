@@ -68,14 +68,28 @@ for (const u of urls) {
     if (pathName.split('/').length === 3) ok(imgPath === `/og${pathName}.png`, `${u}: plate OG image is not per-plate (${imgPath})`);
   }
 
-  // server-rendered walkthrough: every non-empty step caption is in the HTML as a list item
+  // server-rendered walkthrough: one <section data-walk> per mode (in mode order) whose <li>s are
+  // that diagram's step captions, in order and word for word — so the list's "3." is the
+  // player's "3/6". An empty caption would make them drift, so non-custom plates may not have one.
   const plate = pathName.split('/').length === 3 ? PLATE_LOOKUP[pathName.slice(1)] : null;
   if (plate && !plate.custom) {
-    const defs = plate.modes ? plate.modes.map(m => DIAGRAMS[m.dg]) : [DIAGRAMS[plate.dg]];
-    const want = defs.reduce((n, d) => n + (d?.steps || []).filter(st => st.cap && st.cap.trim()).length, 0);
+    const strip = h => h.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const want = (plate.modes || [{ id: 'main', dg: plate.dg }]).map(m => {
+      const steps = DIAGRAMS[m.dg]?.steps || [];
+      steps.forEach((st, i) => ok(typeof st.cap === 'string' && st.cap.trim(), `${u}: diagram ${m.dg} step ${i + 1} has an empty caption`));
+      return { id: m.id, caps: steps.map(st => strip(st.cap || '')).filter(Boolean) };
+    }).filter(m => m.caps.length);
     const walk = /<details class="plate-steps">([\s\S]*?)<\/details>/.exec(html);
-    const got = walk ? (walk[1].match(/<li>/g) || []).length : 0;
-    ok(want > 0 && got === want, `${u}: walkthrough has ${got} steps, expected ${want}`);
+    const got = walk ? [...walk[1].matchAll(/<section[^>]*\sdata-walk="([^"]*)"[^>]*>([\s\S]*?)<\/section>/g)]
+      .map(([, id, body]) => ({ id, caps: [...body.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x => strip(x[1])) })) : [];
+    ok(want.length > 0, `${u}: plate has no step captions to walk through`);
+    ok(got.map(m => m.id).join() === want.map(m => m.id).join(), `${u}: walkthrough sections [${got.map(m => m.id)}], expected [${want.map(m => m.id)}]`);
+    for (const [i, w] of want.entries()) {
+      const g = got[i];
+      if (!g || g.id !== w.id) continue;
+      ok(g.caps.length === w.caps.length, `${u}: walkthrough "${w.id}" has ${g.caps.length} steps, expected ${w.caps.length}`);
+      w.caps.forEach((c, j) => ok(g.caps[j] === c, `${u}: walkthrough "${w.id}" step ${j + 1} is "${g.caps[j]}", expected "${c}"`));
+    }
   }
 
   // runtime: console errors + mobile overflow

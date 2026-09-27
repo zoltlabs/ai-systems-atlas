@@ -31,7 +31,7 @@ Deployed on Vercel.
 | `src/styles/fonts.css` · `src/fonts/` | Self-hosted woff2 faces and their `@font-face` rules. Generated — run `npm run fonts`, don't edit. |
 | `src/scripts/custom.js` | Custom renderers: comparison map, regression chart, taxonomy, outcome/process mismatch, anatomy, budget builder. |
 | `src/components/Diagram.astro` | A diagram mount point. Inlines the definition as JSON next to the mount and renders a same-size placeholder (no layout shift). |
-| `src/components/Plate.astro` | Plate anatomy: title row → definition → diagram shell → Key insight / Failure mode → Related. |
+| `src/components/Plate.astro` | Plate anatomy: title row → definition → diagram shell → step-by-step walkthrough (server-rendered from the step captions) → Key insight / Failure mode → Further reading → Related. |
 | `src/pages/` | `/`, `/[collection]`, `/[collection]/[slug]`, `/404`, and the `/og/*` render targets used to generate share images. |
 | `scripts/og.mjs` | Screenshots every `/og/*` target at 1200×630 into `public/og/`. |
 | `scripts/shots.mjs` | Parity screenshots (home, collections, plates × light/dark/390px). |
