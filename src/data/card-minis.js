@@ -74,7 +74,7 @@ export const CARD_MINIS = {
       { id: 'm', x: 58, y: 66, kind: 'chip', label: 'MODEL', w: 84 },
       { id: 's', x: 206, y: 22, kind: 'chip', label: 'SEARCH', w: 88 },
       { id: 'r', x: 206, y: 66, kind: 'chip', label: 'READ', w: 88 },
-      { id: 'w', x: 206, y: 110, kind: 'chip', label: 'WRITE', w: 88 },
+      { id: 'w', x: 206, y: 110, kind: 'chip', label: 'FETCH', w: 88 },
     ],
     edges: [
       { from: 'm', to: 's' }, { from: 'm', to: 'r' }, { from: 'm', to: 'w' },
