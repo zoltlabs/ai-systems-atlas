@@ -3556,39 +3556,42 @@ DIAGRAMS.debate = {
 };
 
 DIAGRAMS.thinkingBudget = {
-  w: 720, h: 350, dur: 1750,
-  aria: 'Thinking budgets: before answering, the model spends reasoning tokens up to a budget set on a dial from low to high; low is fast but shallow, high is slower with diminishing returns, and adaptive effort sets the dial per request by difficulty.',
+  w: 720, h: 390, dur: 1750,
+  aria: 'Adaptive thinking is the current control: effort sets depth, and an easy request can skip reasoning entirely. A fixed budget_tokens cap is legacy — it thinks on every request, is deprecated on Claude 4.6, and Claude 4.7 and later reject it with a 400.',
   nodes: [
-    { id: 'p', x: 84, y: 60, kind: 'user', label: 'PROMPT', w: 116 },
-    { id: 'think', x: 340, y: 60, kind: 'model', label: 'THINK FIRST', sub: 'reasoning tokens · billed', w: 214 },
-    { id: 'ans', x: 610, y: 60, kind: 'data', label: 'ANSWER', w: 124 },
-    { id: 'lo', x: 245, y: 180, kind: 'chip', label: 'LOW · 1K', w: 104 },
-    { id: 'md', x: 380, y: 180, kind: 'chip', label: 'MEDIUM · 8K', w: 116 },
-    { id: 'hi', x: 515, y: 180, kind: 'chip', label: 'HIGH · 32K', w: 110 },
-    { id: 'dec', x: 104, y: 290, kind: 'decision', label: 'HOW HARD?', sub: 'set per request', w: 190, h: 70 },
+    { id: 'p', x: 96, y: 78, kind: 'user', label: 'PROMPT', w: 120 },
+    { id: 'dec', x: 300, y: 86, kind: 'decision', label: 'ADAPTIVE', sub: 'think at all?', w: 156, h: 64 },
+    { id: 'skip', x: 548, y: 58, kind: 'chip', label: 'EASY · SKIP', w: 130 },
+    { id: 'think', x: 548, y: 128, kind: 'model', label: 'THINK', sub: 'depth = effort', w: 160 },
+    { id: 'ans', x: 600, y: 220, kind: 'data', label: 'ANSWER', w: 120 },
+    { id: 'leg', x: 110, y: 300, kind: 'policy', label: 'budget_tokens', sub: 'legacy · fixed cap', w: 180 },
+    { id: 'always', x: 370, y: 300, kind: 'model', label: 'THINKS EVERY TIME', sub: 'easy and hard alike', w: 200 },
+    { id: 'rej', x: 590, y: 300, kind: 'untrusted', label: '4.7+ · HTTP 400', w: 170 },
   ],
-  bounds: [{ id: 'dial', x: 170, y: 140, w: 420, h: 72, label: 'BUDGET' }],
+  bounds: [
+    { id: 'now', x: 230, y: 12, w: 476, h: 164, label: 'CURRENT · EFFORT + ADAPTIVE' },
+  ],
   notes: [
-    { id: 'dr', x: 610, y: 272, anchor: 'middle', ghost: true, text: ['returns diminish:', 'each doubling costs 2×', 'for a similar or smaller gain'] },
+    { id: 'dep', x: 250, y: 360, anchor: 'middle', tone: 'danger', ghost: true, text: 'Claude 4.6: deprecated, still accepted' },
   ],
   edges: [
-    { id: 'p-t', from: 'p', to: 'think' },
-    { id: 't-a', from: 'think', to: 'ans', label: 'answer', ly: -8 },
-    { id: 'lo-t', from: 'lo', to: 'think', kind: 'ctl', d: 'M245 168 C245 124 300 124 300 86' },
-    { id: 'md-t', from: 'md', to: 'think', kind: 'ctl', d: 'M380 168 L380 86', label: 'sets', lx: 16, ly: 3 },
-    { id: 'hi-t', from: 'hi', to: 'think', kind: 'ctl', d: 'M515 168 C515 124 420 124 420 86' },
-    { id: 'p-d', from: 'p', to: 'dec', label: 'classify', lx: 32, ly: 3 },
-    { id: 'd-lo', from: 'dec', to: 'lo', fromSide: 'r', toSide: 'b', label: 'easy', labelT: 0.35, ly: -7 },
-    { id: 'd-hi', from: 'dec', to: 'hi', fromSide: 'r', toSide: 'b', label: 'hard', labelT: 0.55, ly: 15 },
+    { id: 'p-d', from: 'p', to: 'dec' },
+    { id: 'd-s', from: 'dec', to: 'skip', label: 'easy', ly: -8 },
+    { id: 'd-t', from: 'dec', to: 'think', label: 'hard', ly: 10 },
+    { id: 's-a', from: 'skip', to: 'ans', fromSide: 'b', toSide: 't' },
+    { id: 't-a', from: 'think', to: 'ans', fromSide: 'b', toSide: 't' },
+    { id: 'p-l', from: 'p', to: 'leg', kind: 'ctl', label: 'old client', lx: -40 },
+    { id: 'l-a', from: 'leg', to: 'always', label: 'fixed cap', ly: -8 },
+    { id: 'a-r', from: 'always', to: 'rej', label: '4.7+', ly: -8 },
   ],
   steps: [
-    { cap: 'A prompt arrives. Before answering, the model can spend tokens reasoning.', n: ['p', 'think'], e: ['p-t'] },
-    { cap: 'The harness sets how many. A low budget is fast and cheap…', n: ['lo', 'think'], e: ['lo-t'] },
-    { cap: '<span class="cap-bad">…and a multi-step problem gets a shallow pass.</span> The answer comes back quickly, and wrong.', bad: ['lo', 'ans'], badE: ['t-a'] },
-    { cap: 'A high budget thinks longer: accuracy goes up, and so do latency and cost.', n: ['hi', 'think'], e: ['hi-t'] },
-    { cap: 'Returns diminish: accuracy grows with the log of the budget, so each doubling costs twice as much for about the same gain.', n: ['hi', 'md'], show: ['dr'] },
-    { cap: '<b>Adaptive effort:</b> judge difficulty per request — with a classifier in the harness, or by letting the model decide within an effort level.', n: ['p', 'dec', 'lo', 'hi'], e: ['p-d', 'd-lo', 'd-hi'] },
-    { cap: '<span class="cap-ok">Easy requests get little or no thinking; hard ones get room.</span> The spend lands where it changes the answer.', ok: ['think', 'ans'], okE: ['t-a'], n: ['dec'], d: 2800 },
+    { cap: 'A prompt arrives. <b>Adaptive thinking</b> — the current mode — decides whether this request needs reasoning at all.', n: ['p', 'dec'], e: ['p-d'], show: ['now'] },
+    { cap: '<span class="cap-ok">An easy input can skip thinking</span> and answer directly. A fixed budget cannot: it spends reasoning tokens on every request.', ok: ['skip'], okE: ['d-s'], n: ['dec'], show: ['now'] },
+    { cap: 'A hard input thinks, and <b>effort</b> sets the depth. There is no budget_tokens dial on this path.', n: ['dec', 'think'], e: ['d-t'], show: ['now'] },
+    { cap: 'Either way the answer comes back. The tokens went to the request that needed them.', n: ['skip', 'think', 'ans'], e: ['s-a', 't-a'], show: ['now'] },
+    { cap: '<b>Legacy:</b> manual <b>budget_tokens</b> is a fixed cap. The model thinks on every request, easy ones included.', n: ['p', 'leg', 'always'], e: ['p-l', 'l-a'] },
+    { cap: '<span class="cap-bad">On Claude 4.6 that mode is deprecated</span> — requests still succeed. <span class="cap-bad">Claude 4.7 and later reject it with a 400.</span>', bad: ['leg', 'always', 'rej'], badE: ['l-a', 'a-r'], show: ['dep'] },
+    { cap: '<span class="cap-ok">Migrate to thinking type adaptive and set effort.</span> Easy requests stay cheap; hard ones still get room.', ok: ['dec', 'think', 'ans'], okE: ['d-t', 't-a'], n: ['p'], show: ['now'], d: 2800 },
   ],
 };
 
@@ -3869,5 +3872,178 @@ DIAGRAMS.opsCost = {
     { cap: '<span class="cap-bad">Cache hit rate collapses after a deploy.</span> Nothing errors; every request just re-reads its whole prompt at full price.', bad: ['cache'], badE: ['u-h'], n: ['use'] },
     { cap: 'Budgets per run and per tenant turn both into alerts within minutes, not on next month’s invoice.', n: ['alert', 'out', 'cache'], e: ['o-a', 'h-a'] },
     { cap: '<span class="cap-ok">Every alert points at a run, a release and a trace</span> — the exact step that spent the money.', ok: ['alert'], n: ['out', 'cost'], d: 2600 },
+  ],
+};
+
+/* ---------- freshness audit: T-07, T-08, P-07, P-08 ---------- */
+
+DIAGRAMS.mcpAuth = {
+  w: 720, h: 360, dur: 1750,
+  aria: 'MCP authorization in revision 2025-11-25: a remote server points the client at an OAuth and OpenID Connect authorization server, the user consents to scopes, and the access token stays on the client request — never in the model context. A missing token is refused by the server.',
+  bounds: [{ id: 'host', x: 16, y: 118, w: 250, h: 120, label: 'HOST · TOKEN STAYS HERE' }],
+  nodes: [
+    { id: 'model', x: 130, y: 178, kind: 'model', label: 'MODEL', sub: 'sees results, not tokens', w: 190 },
+    { id: 'client', x: 360, y: 178, kind: 'chip', label: 'MCP CLIENT', w: 130 },
+    { id: 'server', x: 580, y: 178, kind: 'tool', label: 'REMOTE SERVER', sub: 'revision 2025-11-25', w: 200 },
+    { id: 'as', x: 580, y: 52, kind: 'policy', label: 'AUTHZ SERVER', sub: 'OAuth · OIDC discovery', w: 200 },
+    { id: 'user', x: 330, y: 52, kind: 'human', label: 'USER', sub: 'consents to scopes', w: 150 },
+    { id: 'leak', x: 130, y: 300, kind: 'untrusted', label: 'TOKEN IN THE PROMPT', sub: 'the model can print it', w: 210 },
+  ],
+  notes: [
+    { id: 'hdr', x: 470, y: 300, anchor: 'middle', ghost: true, text: ['token rides the MCP request,', 'not the context window'] },
+  ],
+  edges: [
+    { id: 'm-c', from: 'model', to: 'client', kind: 'ctl' },
+    { id: 'c-s', from: 'client', to: 'server', label: 'tool call', ly: -8 },
+    { id: 's-as', from: 'server', to: 'as', label: 'discover', lx: 28 },
+    { id: 'u-as', from: 'user', to: 'as', label: 'consent', ly: -8 },
+    { id: 'as-c', from: 'as', to: 'client', label: 'scoped token', labelT: 0.45, lx: -20, ly: -6 },
+    { id: 'c-l', from: 'client', to: 'leak', kind: 'ctl', label: 'if you paste it', lx: -20 },
+  ],
+  steps: [
+    { cap: 'A remote MCP server is not a child process you already trust. Revision 2025-11-25 expects it to name who may call it.', n: ['server'], show: ['host'] },
+    { cap: 'The client discovers the authorization server from the server’s metadata — OAuth protected-resource metadata, and OpenID Connect discovery.', n: ['server', 'as'], e: ['s-as'] },
+    { cap: 'The user consents to scopes. A later call can ask for more, incrementally, instead of one blanket grant up front.', n: ['user', 'as'], e: ['u-as'] },
+    { cap: '<span class="cap-ok">The token comes back to the client</span> and rides on the MCP request. The model still only sees tool definitions and results.', ok: ['client', 'server'], okE: ['as-c', 'c-s'], n: ['model'], e: ['m-c'], show: ['host', 'hdr'] },
+    { cap: '<span class="cap-bad">Pasting the token into the prompt</span> puts a credential where persuasion can print it. The window is not a keychain.', bad: ['leak'], badE: ['c-l'], n: ['client'] },
+    { cap: '<span class="cap-ok">No token, or the wrong audience, and the server refuses the call.</span> Authorization is the server’s, not a line in the system prompt.', ok: ['as', 'server'], n: ['client'], show: ['hdr'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.mcpVsA2a = {
+  w: 740, h: 360, dur: 1750,
+  aria: 'MCP versus A2A: MCP connects a model to tool servers through a client, while A2A v1.0 connects agents. An agent publishes an Agent Card, another agent discovers it, and work moves as a Task without sharing tools or memory.',
+  bounds: [
+    { id: 'mcp', x: 12, y: 16, w: 716, h: 148, label: 'MCP · MODEL TO TOOLS' },
+    { id: 'a2a', x: 12, y: 184, w: 716, h: 160, label: 'A2A v1.0 · AGENT TO AGENT · LINUX FOUNDATION' },
+  ],
+  nodes: [
+    { id: 'model', x: 110, y: 86, kind: 'model', label: 'MODEL', sub: 'never sees the server', w: 170 },
+    { id: 'client', x: 340, y: 86, kind: 'chip', label: 'CLIENT', w: 110 },
+    { id: 'srv', x: 560, y: 86, kind: 'tool', label: 'MCP SERVER', sub: 'tools · resources · prompts', w: 210 },
+    { id: 'agA', x: 110, y: 260, kind: 'model', label: 'AGENT A', sub: 'keeps its own tools', w: 170 },
+    { id: 'card', x: 360, y: 250, kind: 'data', label: 'AGENT CARD', sub: 'skills · endpoint · auth', w: 190 },
+    { id: 'agB', x: 590, y: 250, kind: 'model', label: 'AGENT B', sub: 'opaque internals', w: 170 },
+    { id: 'task', x: 590, y: 318, kind: 'chip', label: 'TASK', w: 90 },
+  ],
+  notes: [
+    { id: 'no', x: 200, y: 318, anchor: 'middle', tone: 'danger', ghost: true, text: 'a tool server is not a colleague' },
+  ],
+  edges: [
+    { id: 'm-c', from: 'model', to: 'client', kind: 'ctl' },
+    { id: 'c-s', from: 'client', to: 'srv', label: 'call a tool', ly: -8 },
+    { id: 'a-card', from: 'agA', to: 'card', label: 'discover', ly: -8 },
+    { id: 'card-b', from: 'card', to: 'agB', label: 'delegate', ly: -8 },
+    { id: 'b-t', from: 'agB', to: 'task', label: 'lifecycle', lx: 28 },
+  ],
+  steps: [
+    { cap: 'Two protocols, two seams. <b>MCP</b> connects a model to tools. <b>A2A</b> connects an agent to another agent.', show: ['mcp', 'a2a'] },
+    { cap: 'MCP: the host starts a client per server. The client learns the tools, resources and prompts, and the model calls through it.', n: ['model', 'client', 'srv'], e: ['m-c', 'c-s'], show: ['mcp'] },
+    { cap: 'A2A v1.0, hosted at the Linux Foundation: Agent B publishes an <b>Agent Card</b> — identity, skills, endpoint, how to authenticate.', n: ['card', 'agB'], show: ['a2a'] },
+    { cap: 'Agent A discovers that card and delegates. It does not receive B’s tools, memory, or prompt.', n: ['agA', 'card', 'agB'], e: ['a-card', 'card-b'], show: ['a2a'] },
+    { cap: 'The unit of work is a <b>Task</b>: stateful, cancellable, with a lifecycle the caller can poll or stream.', n: ['agB', 'task'], e: ['b-t'], show: ['a2a'] },
+    { cap: '<span class="cap-bad">One protocol will not do the other job.</span> An Agent Card is not a tool manifest, and a tool server does not own the conversation.', bad: ['srv', 'card'], show: ['no', 'mcp', 'a2a'] },
+    { cap: '<span class="cap-ok">MCP when the model needs a capability. A2A when one agent should hand a task to another</span> and both internals stay opaque.', ok: ['srv', 'task', 'agA'], n: ['model', 'agB'], show: ['mcp', 'a2a'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.serverCompact = {
+  w: 740, h: 360, dur: 1750,
+  aria: 'Server-side threshold compaction: when input tokens cross a trigger, the API applies compact_20260112, replaces older turns with a compaction block, and keeps recent turns verbatim so the model continues inside the window.',
+  nodes: [
+    { id: 'old', x: 108, y: 70, kind: 'data', label: 'OLDER TURNS', sub: 'the part that grew', w: 168 },
+    { id: 'api', x: 378, y: 70, kind: 'model', label: 'API', sub: 'compact_20260112', w: 176 },
+    { id: 'block', x: 628, y: 70, kind: 'data', label: 'COMPACTION BLOCK', sub: 'summary, server-written', w: 188 },
+    { id: 'tail', x: 378, y: 196, kind: 'chip', label: 'RECENT TURNS · VERBATIM', w: 220 },
+    { id: 'model', x: 628, y: 286, kind: 'model', label: 'MODEL CONTINUES', sub: 'summary, then the tail', w: 200 },
+    { id: 'own', x: 108, y: 286, kind: 'untrusted', label: 'YOUR SUMMARIZER', sub: 'a second prompt to maintain', w: 190 },
+  ],
+  notes: [
+    { id: 'beta', x: 378, y: 132, anchor: 'middle', ghost: true, text: ['beta header', 'compact-2026-01-12'] },
+  ],
+  edges: [
+    { id: 'o-a', from: 'old', to: 'api', label: 'over the trigger', ly: -8 },
+    { id: 'a-b', from: 'api', to: 'block', label: 'summarize', ly: -8 },
+    { id: 't-m', from: 'tail', to: 'model', label: 'kept', ly: 8 },
+    { id: 'b-m', from: 'block', to: 'model' },
+    { id: 'o-own', from: 'old', to: 'own', kind: 'ctl', label: 'or you do it', lx: -28 },
+  ],
+  steps: [
+    { cap: 'A long agent transcript crosses the token trigger. Something has to leave the window before the next turn.', n: ['old'] },
+    { cap: '<b>Threshold compaction</b> sends the <b>compact_20260112</b> strategy. The API writes the summary; you do not run a second model call to do it.', n: ['old', 'api'], e: ['o-a'], show: ['beta'] },
+    { cap: 'Older turns become one compaction block. The API drops what the block replaces when you send it back.', n: ['api', 'block'], e: ['a-b'] },
+    { cap: '<span class="cap-ok">Recent turns stay verbatim</span> — the file you just opened, the error you just read — instead of being paraphrased with the rest.', ok: ['tail'], n: ['block'] },
+    { cap: 'The model continues from the summary, then those exact turns.', n: ['block', 'tail', 'model'], e: ['b-m', 't-m'] },
+    { cap: '<span class="cap-bad">A summarizer you wrote yourself</span> is still available, and it is now the path you maintain: the prompt, the rewrite, and whatever it silently drops.', bad: ['own'], badE: ['o-own'], n: ['old'] },
+    { cap: '<span class="cap-ok">On demand, the same idea uses a newer beta</span> — you ask for the summary when you choose. Threshold compaction is the one that fires inside an ordinary request.', ok: ['api', 'model'], n: ['block', 'tail'], show: ['beta'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.contextEdit = {
+  w: 720, h: 330, dur: 1750,
+  aria: 'Context editing clears old tool results once the conversation crosses a token threshold. The API replaces each cleared result with a placeholder and can keep the original tool call, so the model knows the call happened without rereading the payload.',
+  nodes: [
+    { id: 'r1', x: 110, y: 64, kind: 'chip', label: 'TOOL RESULT · OLD', w: 170 },
+    { id: 'r2', x: 300, y: 64, kind: 'chip', label: 'TOOL RESULT · OLD', w: 170 },
+    { id: 'r3', x: 500, y: 64, kind: 'chip', label: 'TOOL RESULT · LAST', w: 180 },
+    { id: 'api', x: 250, y: 170, kind: 'policy', label: 'CONTEXT EDITING', sub: 'clear_tool_uses_20250919', w: 250 },
+    { id: 'ph', x: 130, y: 270, kind: 'data', label: 'PLACEHOLDER', sub: 'result removed', w: 170 },
+    { id: 'keep', x: 400, y: 270, kind: 'data', label: 'CALL STILL VISIBLE', sub: 'what was asked', w: 190 },
+    { id: 'model', x: 620, y: 270, kind: 'model', label: 'MODEL', w: 130 },
+  ],
+  notes: [
+    { id: 'beta', x: 560, y: 170, anchor: 'middle', ghost: true, text: ['beta header', 'context-management-2025-06-27'] },
+  ],
+  edges: [
+    { id: 'r-a', from: 'r1', to: 'api', label: 'over the trigger', ly: -8 },
+    { id: 'a-p', from: 'api', to: 'ph', label: 'clear oldest', lx: -20 },
+    { id: 'a-k', from: 'api', to: 'keep' },
+    { id: 'k-m', from: 'keep', to: 'model' },
+    { id: 'p-m', from: 'ph', to: 'model', d: 'M215 270 C400 318 540 318 555 270' },
+  ],
+  steps: [
+    { cap: 'Tool results are usually the bulk of a long agent window: file dumps, logs, search hits.', n: ['r1', 'r2', 'r3'] },
+    { cap: '<b>Context editing</b> is the server-side rule for that slice. Past a token threshold it clears the oldest tool results, not a summary of the whole transcript.', n: ['r1', 'api'], e: ['r-a'], show: ['beta'] },
+    { cap: 'Each cleared result is replaced with a placeholder, so the model can tell that something was removed.', n: ['api', 'ph'], e: ['a-p'] },
+    { cap: '<span class="cap-ok">The tool call itself can stay.</span> The model still sees what it asked for, without the payload it has already used.', ok: ['keep'], okE: ['a-k'], n: ['api'] },
+    { cap: 'The newest result is the one you keep. Clearing is oldest-first, and you choose the trigger.', n: ['r3', 'model'], e: ['k-m'] },
+    { cap: '<span class="cap-bad">This is not compaction.</span> Nothing was summarized. A fact that lived only inside a cleared tool result is gone unless you wrote it down elsewhere.', bad: ['ph'], n: ['r1'], e: ['p-m'] },
+    { cap: '<span class="cap-ok">Use editing to shed observations, compaction to fold the story,</span> and a memory tool for what must outlive both.', ok: ['api', 'model'], n: ['keep', 'ph'], show: ['beta'], d: 2800 },
+  ],
+};
+
+DIAGRAMS.effortRoute = {
+  w: 720, h: 360, dur: 1750,
+  aria: 'Adaptive effort routing: each request is judged easy or hard. Easy requests skip thinking or take a low effort; hard requests take a high effort. A fixed budget thinks on both and is the legacy cost.',
+  nodes: [
+    { id: 'in', x: 100, y: 86, kind: 'user', label: 'REQUEST', w: 130 },
+    { id: 'dec', x: 310, y: 90, kind: 'decision', label: 'EFFORT', sub: 'per request', w: 150, h: 64 },
+    { id: 'easy', x: 548, y: 56, kind: 'chip', label: 'EASY · LOW OR SKIP', w: 170 },
+    { id: 'hard', x: 548, y: 132, kind: 'model', label: 'HARD · HIGH', sub: 'thinks deeper', w: 170 },
+    { id: 'ans', x: 600, y: 228, kind: 'data', label: 'ANSWER', w: 120 },
+    { id: 'fix', x: 140, y: 250, kind: 'policy', label: 'FIXED BUDGET', sub: 'legacy · every request', w: 190 },
+    { id: 'bill', x: 420, y: 280, kind: 'data', label: 'THE BILL', sub: 'easy traffic at hard prices', w: 210 },
+  ],
+  bounds: [{ id: 'now', x: 230, y: 12, w: 476, h: 168, label: 'CURRENT · ADAPTIVE EFFORT' }],
+  notes: [
+    { id: 'same', x: 160, y: 330, anchor: 'middle', ghost: true, text: ['the model can choose,', 'or a router in front of it'] },
+  ],
+  edges: [
+    { id: 'i-d', from: 'in', to: 'dec' },
+    { id: 'd-e', from: 'dec', to: 'easy', label: 'easy', ly: -8 },
+    { id: 'd-h', from: 'dec', to: 'hard', label: 'hard', ly: 12 },
+    { id: 'e-a', from: 'easy', to: 'ans', fromSide: 'b', toSide: 't' },
+    { id: 'h-a', from: 'hard', to: 'ans', fromSide: 'b', toSide: 't' },
+    { id: 'i-f', from: 'in', to: 'fix', kind: 'ctl', label: 'one setting', lx: -36 },
+    { id: 'f-b', from: 'fix', to: 'bill', label: 'always thinks', ly: -8 },
+  ],
+  steps: [
+    { cap: 'Traffic is not one difficulty. A router — or the model’s own adaptive thinking — looks at this request, not at the worst one you have ever seen.', n: ['in', 'dec'], e: ['i-d'], show: ['now'] },
+    { cap: '<span class="cap-ok">Easy requests take low effort, or skip thinking.</span> Adaptive mode is allowed to answer without a reasoning pass.', ok: ['easy'], okE: ['d-e'], n: ['dec'], show: ['now'] },
+    { cap: 'Hard requests take high effort. Depth moves; the model does not.', n: ['dec', 'hard'], e: ['d-h'], show: ['now'] },
+    { cap: 'Both paths return an answer. The difference is what you paid to get there.', n: ['easy', 'hard', 'ans'], e: ['e-a', 'h-a'], show: ['now'] },
+    { cap: '<b>A fixed budget is the legacy route.</b> It thinks on the easy request too, at the price you set for the hard one.', n: ['in', 'fix'], e: ['i-f'] },
+    { cap: '<span class="cap-bad">That bill is mostly easy traffic.</span> On Claude 4.6 the manual token budget is deprecated; on 4.7 and later the API rejects it.', bad: ['fix', 'bill'], badE: ['f-b'], show: ['same'] },
+    { cap: '<span class="cap-ok">Route effort the way you route models:</span> cheap for the median request, room for the tail. Measure both, or the router will hide a quality drop inside a lower invoice.', ok: ['dec', 'ans'], n: ['easy', 'hard'], show: ['now', 'same'], d: 2800 },
   ],
 };

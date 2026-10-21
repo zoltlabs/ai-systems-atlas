@@ -5,7 +5,7 @@
 An interactive visual atlas of AI agent architecture: harness patterns, safety and
 security, evals, context engineering and memory, coding-agent architectures, tools and
 protocols, and production operations.
-107 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
+111 plates, each a step-animated SVG diagram with a real URL, per-page SEO, an OG card,
 cited sources, ⌘K search, and attack/defense or variant toggles where the concept calls for
 one. Light/dark/system theming; self-hosted fonts; no third-party requests at runtime.
 

@@ -4,6 +4,8 @@ import { COLLECTIONS, PLATE_LOOKUP, COL_ORDER } from '../data/collections.js';
 export type Plate = {
   slug: string; code: string; title: string; def: string; insight: string; failure: string;
   dg?: string; custom?: string; kw?: string; refs?: string[];
+  /** OWASP Agentic Top 10 id, rendered as a badge on security plates. */
+  asi?: string;
   modes?: { id: string; label: string; cls?: string; dg: string }[];
   related?: [string, string][];
 };
