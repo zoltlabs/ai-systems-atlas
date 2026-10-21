@@ -16,6 +16,19 @@ const customData = p.custom === 'mismatch' ? { lucky: D.mismatchLucky, unlucky: 
 const modes = p.modes?.map(m => ({ id: m.id, label: m.label, cls: m.cls, def: D[m.dg] }));
 const Heading = heading;
 const refs = resolveRefs(p.refs);
+/* OWASP Top 10 for Agentic Applications (2026). The badge is the tag; the name is the tooltip. */
+const ASI_NAME: Record<string, string> = {
+  ASI01: 'Agent goal hijack',
+  ASI02: 'Tool misuse',
+  ASI03: 'Identity and privilege abuse',
+  ASI04: 'Agentic supply chain',
+  ASI05: 'Unexpected code execution',
+  ASI06: 'Memory and context poisoning',
+  ASI07: 'Insecure inter-agent communication',
+  ASI08: 'Cascading failures',
+  ASI09: 'Human-agent trust exploitation',
+  ASI10: 'Rogue agents',
+};
 /* Server-rendered walkthrough: the same step captions the engine animates, as real HTML so
    they are indexable, screen-reader reachable and a no-JS fallback. Custom renderers have no
    steps and get none (their text lives in the renderer; we don't invent any). */
@@ -28,7 +41,7 @@ const walkCount = walk.reduce((n, m) => n + m.caps.length, 0);
 <article class="plate" id={`plate-${p.slug}`}>
   <div class="plate-head">
     <div>
-      <Heading class="plate-title"><span class="code-badge">{p.code}</span><span>{p.title}</span></Heading>
+      <Heading class="plate-title"><span class="code-badge">{p.code}</span>{p.asi && <span class="code-badge" title={`OWASP ${p.asi} · ${ASI_NAME[p.asi] ?? p.asi}`}>{p.asi}</span>}<span>{p.title}</span></Heading>
     </div>
     <a class="plate-link" href={route} title="Deep link to this plate">{route}</a>
   </div>

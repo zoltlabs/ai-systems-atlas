@@ -91,7 +91,7 @@ export const REFERENCES = {
   },
   anthropicThinkTool: {
     title: 'The “think” tool: enabling Claude to stop and think in complex tool use situations',
-    where: 'Anthropic Engineering, 2025',
+    where: 'Anthropic Engineering, 2025 — historical, pre-native',
     url: 'https://www.anthropic.com/engineering/claude-think-tool',
   },
   anthropicVisibleThinking: {
@@ -100,14 +100,24 @@ export const REFERENCES = {
     url: 'https://www.anthropic.com/news/visible-extended-thinking',
   },
   claudeDocsThinking: {
-    title: 'Thinking — including interleaved thinking between tool calls',
+    title: 'Thinking — adaptive thinking interleaves between tool calls on its own',
     where: 'Claude API docs',
     url: 'https://platform.claude.com/docs/en/build-with-claude/thinking',
   },
   claudeDocsExtendedThinking: {
-    title: 'Extended thinking — setting and tuning a thinking budget',
-    where: 'Claude API docs',
+    title: 'Extended thinking — manual budget_tokens (legacy)',
+    where: 'Claude API docs — legacy',
     url: 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking',
+  },
+  claudeThinkingMigration: {
+    title: 'Migrating from budget_tokens to adaptive thinking',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/extended-thinking#migrating-to-adaptive-thinking',
+  },
+  claudeDocsThinkingTroubleshooting: {
+    title: 'Troubleshooting thinking — which models reject budget_tokens',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/thinking-troubleshooting',
   },
   claudeDocsEffort: {
     title: 'Effort — trading thoroughness for token efficiency',
@@ -180,9 +190,24 @@ export const REFERENCES = {
     url: 'https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks',
   },
   mcpSpec: {
-    title: 'Model Context Protocol — specification',
-    where: 'modelcontextprotocol.io',
-    url: 'https://modelcontextprotocol.io/',
+    title: 'Model Context Protocol specification — revision 2025-11-25',
+    where: 'modelcontextprotocol.io, 2025',
+    url: 'https://modelcontextprotocol.io/specification/2025-11-25',
+  },
+  mcpChangelog: {
+    title: 'MCP specification changelog — revision 2025-11-25',
+    where: 'modelcontextprotocol.io, 2025',
+    url: 'https://modelcontextprotocol.io/specification/2025-11-25/changelog.md',
+  },
+  mcpAuthorization: {
+    title: 'MCP authorization — OAuth 2.0 and OpenID Connect discovery',
+    where: 'modelcontextprotocol.io, 2025',
+    url: 'https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization',
+  },
+  mcpTasks: {
+    title: 'MCP Tasks — experimental durable requests (revision 2025-11-25)',
+    where: 'modelcontextprotocol.io, 2025',
+    url: 'https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks',
   },
   gitWorktree: {
     title: 'git-worktree — manage multiple working trees',
@@ -259,8 +284,8 @@ export const REFERENCES = {
   },
   anthropicSweBench: {
     title: 'Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet',
-    where: 'Anthropic Research, 2025',
-    url: 'https://www.anthropic.com/research/swe-bench-sonnet',
+    where: 'Anthropic, 2025',
+    url: 'https://www.anthropic.com/news/swe-bench-sonnet',
   },
   anthropicSandboxing: {
     title: 'Beyond permission prompts: making Claude Code more secure and autonomous',
@@ -361,6 +386,78 @@ export const REFERENCES = {
     title: 'Model IDs and versioning',
     where: 'Claude API docs',
     url: 'https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions',
+  },
+
+  /* ---------- 2025–26 developments (freshness audit) ---------- */
+  openaiSweVerified: {
+    title: 'Why we no longer evaluate SWE-bench Verified',
+    where: 'OpenAI, 2026',
+    url: 'https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/',
+  },
+  openaiSwePro: {
+    title: 'Separating signal from noise in coding evaluations',
+    where: 'OpenAI, 2026',
+    url: 'https://openai.com/index/separating-signal-from-noise-coding-evaluations/',
+  },
+  scaleSweProV2: {
+    title: 'SWE-Bench Pro V2: a cleaner, harder-to-game leaderboard',
+    where: 'Scale Labs, 2026',
+    url: 'https://labs.scale.com/blog/swe-bench-pro-v2',
+  },
+  owaspAgentic: {
+    title: 'OWASP Top 10 for Agentic Applications for 2026',
+    where: 'OWASP GenAI Security Project, 2025',
+    url: 'https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/',
+  },
+  owaspAgenticAsi: {
+    title: 'OWASP Top 10 for Agentic Applications — ASI01 to ASI10',
+    where: 'OWASP GenAI Security Project, 2025',
+    url: 'https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/',
+  },
+  a2aSpec: {
+    title: 'Agent2Agent (A2A) Protocol specification',
+    where: 'A2A Protocol, v1.0',
+    url: 'https://a2a-protocol.org/latest/specification/',
+  },
+  a2aLf: {
+    title: 'Linux Foundation launches the Agent2Agent Protocol project',
+    where: 'Linux Foundation, 2025',
+    url: 'https://www.linuxfoundation.org/press/linux-foundation-launches-the-agent2agent-protocol-project-to-enable-secure-intelligent-communication-between-ai-agents',
+  },
+  claudeCompaction: {
+    title: 'Compaction — server-side summaries for long conversations',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/compaction',
+  },
+  claudeCompactionThreshold: {
+    title: 'Compaction at a token threshold — compact_20260112',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/compaction-threshold',
+  },
+  claudeContextEditing: {
+    title: 'Context editing — clear old tool results and thinking blocks',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/build-with-claude/context-editing',
+  },
+  claudeMemoryTool: {
+    title: 'Memory tool — files that persist across conversations',
+    where: 'Claude API docs',
+    url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool',
+  },
+  openaiFunctionCalling: {
+    title: 'Function calling',
+    where: 'OpenAI API docs',
+    url: 'https://developers.openai.com/api/docs/guides/function-calling',
+  },
+  openaiStructured: {
+    title: 'Structured model outputs',
+    where: 'OpenAI API docs',
+    url: 'https://developers.openai.com/api/docs/guides/structured-outputs',
+  },
+  openaiReasoning: {
+    title: 'Reasoning models — effort scales with the task',
+    where: 'OpenAI API docs',
+    url: 'https://developers.openai.com/api/docs/guides/reasoning',
   },
 };
 

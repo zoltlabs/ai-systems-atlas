@@ -215,7 +215,9 @@ main{min-height:70vh}
 .plate.hl .dg-panel{border-color:var(--accent)}
 .plate-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;align-items:baseline;margin-bottom:6px}
 .plate-code{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink3)}
-.plate-head h3{font-size:26px;margin:0 0 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.plate-head h1,.plate-head h3{margin:0 0 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.plate-head h1{font-size:clamp(32px,4.6vw,44px)}
+.plate-head h3{font-size:26px}
 .plate-def{color:var(--ink2);max-width:62ch;margin:0 0 18px;font-size:17px}
 .plate-link{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink3);text-decoration:none;white-space:nowrap}
 .plate-link:hover{color:var(--accent-ink)}
